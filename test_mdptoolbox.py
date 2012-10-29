@@ -5,7 +5,7 @@ Created on Sun May 27 23:16:57 2012
 @author: -
 """
 
-from mdp import MDP
+from mdp import MDP, QLearning
 from numpy import array, eye, matrix, ones
 from numpy.random import randint
 from scipy.sparse import eye as speye
@@ -72,3 +72,4 @@ def test_check_square_stochastic_array_Rtranspose():
     R = array([ones(DIM), ones(DIM)])
     assert inst.check(P, R) == (True, "R is wrong way")
     
+inst = QLearning()
