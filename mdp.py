@@ -32,8 +32,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from numpy import abs, array, diag, matrix, mean, ndarray, ones, zeros
+from numpy import absolute, array, diag, matrix, mean, ndarray, ones, zeros
 from numpy.random import rand
+from numpy.random import randint as randi
 from math import ceil, log, sqrt
 from random import randint, random
 from scipy.sparse import csr_matrix as sparse
@@ -59,7 +60,7 @@ mdperr = {
     "PyMDPtoolbox: Each element of an object array for transition "
     "probabilities and rewards must contain an SxS ndarray or matrix; i.e. "
     "P[a].shape = (S, S) or R[a].shape = (S, S).",
-"P_ndarray" :
+"P_type" :
     "PyMDPtoolbox: The transition probabilities must be in a numpy array; "
     "i.e. type(P) is ndarray.",
 "P_shape" :
@@ -70,9 +71,9 @@ mdperr = {
     "PyMDPtoolbox: Incompatibility between P and R dimensions.",
 "prob_in01" :
     "PyMDPtoolbox: Probability p must be in [0; 1].",
-"R_ndarray" :
+"R_type" :
     "PyMDPtoolbox: The rewards must be in a numpy array; i.e. type(R) is "
-    "ndarray.",
+    "ndarray, or numpy matrix; i.e. type(R) is matrix.",
 "R_shape" :
     "PyMDPtoolbox: The reward matrix R must be an array of shape (A, S, S) or "
     "(S, A) with S : number of states greater than 0 and A : number of actions "
@@ -106,6 +107,24 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     ----------
     P : transition probability matrix (A, S, S)
     R : reward matrix (S, A)
+    
+    Examples
+    --------
+    >>> import mdp
+    >>> P, R = mdp.exampleForest()
+    >>> P
+    array([[[ 0.1,  0.9,  0. ],
+            [ 0.1,  0. ,  0.9],
+            [ 0.1,  0. ,  0.9]],
+
+           [[ 1. ,  0. ,  0. ],
+            [ 1. ,  0. ,  0. ],
+            [ 1. ,  0. ,  0. ]]])
+    >>> R
+    array([[ 0.,  0.],
+           [ 0.,  1.],
+           [ 4.,  2.]])
+    
     """
     if (S <= 1):
         raise ValueError(mdperr["S_gt_1"])
@@ -155,12 +174,18 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     is_sparse : false to have matrices in plain format, true to have sparse
         matrices optional (default false).
     mask : matrix with 0 and 1 (0 indicates a place for a zero
-           probability), optional (SxS) (default, random )
+           probability), optional (SxS) (default, random)
     
     Returns
     ----------
     P : transition probability matrix (SxSxA)
     R : reward matrix (SxSxA)
+
+    Examples
+    --------
+    >>> import mdp
+    >>> P, R = mdp.exampleRand(5, 3)
+
     """
     if (S < 1 or A < 1):
         raise ValueError(mdperr["SA_gt_1"])
@@ -172,13 +197,11 @@ def exampleRand(S, A, is_sparse=False, mask=None):
         raise TypeError(mdperr["mask_numpy"])
     
     if mask == None:
-        mask = rand(S, S)
-        r = random()
-        mask[mask < r] = 0
-        mask[mask >= r] = 1
-        for s in range(S):
-            if mask[s, :].sum() == 0:
-                mask[s, randint(0, S - 1)] = 1
+        mask = rand(A, S, S)
+        for a in range(A):
+            r = random()
+            mask[a][mask[a] < r] = 0
+            mask[a][mask[a] >= r] = 1
     
     if is_sparse:
         # definition of transition matrix : square stochastic matrix
@@ -186,8 +209,10 @@ def exampleRand(S, A, is_sparse=False, mask=None):
         # definition of reward matrix (values between -1 and +1)
         R = zeros((A, ), dtype=object)
         for a in range(A):
-            PP = mask * rand(S, S)
+            PP = mask[a] * rand(S, S)
             for s in range(S):
+                if (mask[a, s, :].sum() == 0):
+                    PP[s, randint(0, S - 1)] = 1
                 PP[s, :] = PP[s, :] / PP[s, :].sum()
             P[a] = sparse(PP)
             R[a] = sparse(mask * (2 * rand(S, S) - ones((S, S))))
@@ -197,14 +222,16 @@ def exampleRand(S, A, is_sparse=False, mask=None):
         # definition of reward matrix (values between -1 and +1)
         R = zeros((A, S, S))
         for a in range(A):
-            P[a, :, :] = mask * rand(S, S)
+            P[a, :, :] = mask[a] * rand(S, S)
             for s in range(S):
+                if (mask[a, s, :].sum() == 0):
+                    P[a, s, randint(0, S - 1)] = 1
                 P[a, s, :] = P[a, s, :] / P[a, s, :].sum()
-            R[a, :, :] = mask * (2 * rand(S, S) - ones((S, S)))
+            R[a, :, :] = mask[a] * (2 * rand(S, S) - ones((S, S), dtype=int))
     
     return (P, R)
 
-class MDP():
+class MDP(object):
     """The Markov Decision Problem Toolbox."""
     
     def __init__(self):
@@ -257,10 +284,10 @@ class MDP():
         # be converted to an object array. A numpy object array is similar to a
         # MATLAB cell array.
         if (not type(P) is ndarray):
-            raise TypeError(mdperr["P_ndarray"])
+            raise TypeError(mdperr["P_type"])
         
         if (not type(R) is ndarray):
-            raise TypeError(mdperr["R_ndarray"])
+            raise TypeError(mdperr["R_type"])
             
         if (P.dtype == object):
             if (P.ndim > 1):
@@ -342,7 +369,7 @@ class MDP():
         s1, s2 = Z.shape
         if (s1 != s2):
            raise ValueError(mdperr["mat_square"])
-        elif (abs(Z.sum(axis=1) - ones(s2))).max() > 10**(-12):
+        elif (absolute(Z.sum(axis=1) - ones(s2))).max() > 10**(-12):
             raise ValueError(mdperr["mat_stoch"])
         elif ((type(Z) is ndarray) or (type(Z) is matrix)) and (Z < 0).any():
             raise ValueError(mdperr["mat_nonneg"])
@@ -360,7 +387,7 @@ class MDP():
         """Computes the reward for the system in one state chosing an action
         
         Arguments
-        --------------------------------------------------------------
+        ---------
         Let S = number of states, A = number of actions
             P(SxSxA)  = transition matrix 
                 P could be an array with 3 dimensions or  a cell array (1xA), 
@@ -370,7 +397,7 @@ class MDP():
                 (1xA), each cell containing a sparse matrix (SxS) or a 2D 
                 array(SxA) possibly sparse  
         Evaluation
-        -------------------------------------------------------------
+        ----------
             PR(SxA)   = reward matrix
         """
         # make P be an object array with (S, S) shaped array elements
@@ -438,8 +465,93 @@ class LP(MDP):
 
 class PolicyIteration(MDP):
     """Resolution of discounted MDP with policy iteration algorithm.
+    
+    Examples
+    --------
+    >>> import mdp
+    >>> P, R = mdp.exampleRand(5, 3)
+    >>> pi = mdp.PolicyIteration(P, R, 0.9)
+    >>> pi.iterate()
+    
     """
-    pass
+    
+    def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=1000, initial_value=0):
+        """"""
+        MDP.__init__(self)
+        
+        self.check(transitions, reward)
+        
+        self.S = transitions.shape[1]
+        
+        self.A = transitions.shape[0]
+        
+        self.P = transitions
+        
+        self.R = reward
+        
+        #self.computePR(transitions, reward)
+        
+        if (initial_value == 0):
+            self.value = zeros((self.S))
+            #self.value = matrix(zeros((self.S, 1)))
+        else:
+            if (len(initial_value) != self.S):
+                raise TypeError("The initial value must be length S")
+            
+            self.value = matrix(initial_value)
+        
+        self.policy = randi(0, self.A, self.S)
+
+        self.discount = discount
+        if (discount < 1):
+            # compute a bound for the number of iterations
+            #self.max_iter = self.boundIter(epsilon)
+            self.max_iter = 5000
+            # computation of threshold of variation for V for an epsilon-optimal policy
+            self.thresh = epsilon * (1 - self.discount) / self.discount
+        else: # discount == 1
+            # bound for the number of iterations
+            self.max_iter = max_iter
+            # threshold of variation for V for an epsilon-optimal policy
+            self.thresh = epsilon 
+        
+        self.iter = 0
+        
+        self.time = None
+    
+    def iterate(self):
+        """"""
+        done = False
+        stop_criterion = 0.01
+        
+        while not done:
+            stop = False
+            while not stop:
+                change = 0
+                for s in range(self.S):
+                    v = self.value[s]
+                    a = self.policy[s]
+                    self.value[s] = (self.P[a, s, :] * (self.R[a, s, :] +
+                        (self.discount * self.value))).sum()
+                    change = max(change, abs(v - self.value[s]))
+                
+                if change < stop_criterion:
+                    stop = True
+            
+            policy_stable = True
+            for s in range(self.S):
+                b = self.policy[s]
+                self.policy[s] = (self.P[:, s, :] * (self.R[:, s, :] +
+                        (self.discount * self.value))).sum(1).argmax()
+                if b !=  self.policy[s]:
+                    policy_stable = False
+            
+            if policy_stable:
+                done = True
+        
+        # store value and policy as tuples
+        self.value = tuple(array(self.value).reshape(self.S).tolist())
+        self.policy = tuple(array(self.policy).reshape(self.S).tolist())
 
 class PolicyIterationModified(MDP):
     """Resolution of discounted MDP with modified policy iteration algorithm.
@@ -485,10 +597,10 @@ class QLearning(MDP):
     >>> ql.iterate()
     >>> ql.Q
     array([[  0.        ,   0.        ],
-           [ 19.33424718,  22.59057966],
-           [ 93.26171093,  81.5913097 ]])
+           [  0.01062959,   0.79870231],
+           [ 10.08191776,   0.35309404]])
     >>> ql.value
-    array([  0.        ,  22.59057966,  93.26171093])
+    array([  0.        ,   0.79870231,  10.08191776])
     >>> ql.policy
     array([0, 1, 0])
     
@@ -499,12 +611,14 @@ class QLearning(MDP):
     >>> ql = mdp.QLearning(P, R, 0.9)
     >>> ql.iterate()
     >>> ql.Q
-    array([[ 94.58710689,  99.99027483],
-           [ 16.9150663 ,  19.99761987]])
+    array([[ 94.99525115,  99.99999007],
+           [ 53.92930199,   5.57331205]])
     >>> ql.value
-    array([ 99.99027483,  19.99761987])
+    array([ 99.99999007,  53.92930199])
     >>> ql.policy
-    array([1, 1])
+    array([1, 0])
+    >>> ql.time
+    0.6501460075378418
     
     """
     
@@ -542,7 +656,7 @@ class QLearning(MDP):
         self.time = time()
         
         # initial state choice
-        s = randint(0, self.S - 1)
+        # s = randint(0, self.S - 1)
         
         for n in range(self.n_iter):
             
@@ -562,7 +676,7 @@ class QLearning(MDP):
             # Simulating next state s_new and reward associated to <s,s_new,a>
             p_s_new = random()
             p = 0
-            s_new = 0
+            s_new = -1
             while ((p < p_s_new) and (s_new < s)):
                 s_new = s_new + 1
                 p = p + self.P[a][s, s_new]
@@ -576,7 +690,7 @@ class QLearning(MDP):
             
             # Updating the value of Q   
             # Decaying update coefficient (1/sqrt(n+2)) can be changed
-            delta = r + self.discount * self.Q[s_new, ].max() - self.Q[s, a]
+            delta = r + self.discount * self.Q[s_new, :].max() - self.Q[s, a]
             dQ = (1 / sqrt(n + 2)) * delta
             self.Q[s, a] = self.Q[s, a] + dQ
             
@@ -584,7 +698,7 @@ class QLearning(MDP):
             s = s_new
             
             # Computing and saving maximal values of the Q variation
-            self.discrepancy.append(abs(dQ))
+            self.discrepancy.append(absolute(dQ))
             
             # Computing means all over maximal Q variations values
             if ((n % 100) == 99):
@@ -595,7 +709,7 @@ class QLearning(MDP):
             self.value = self.Q.max(axis=1)
             self.policy = self.Q.argmax(axis=1)
             
-            self.time = time() - self.time
+        self.time = time() - self.time
 
 class RelativeValueIteration(MDP):
     """Resolution of MDP with average reward with relative value iteration
@@ -725,7 +839,7 @@ class ValueIteration(MDP):
         MDP.__init__(self)
         
         self.check(transitions, reward)
-
+        
         self.computePR(transitions, reward)
         
         # initialization of optional arguments
@@ -820,10 +934,11 @@ class ValueIteration(MDP):
                 done = True 
                 if self.verbose:
                     print("...iterations stopped by maximum number of iteration condition")
-
-        self.value = array(self.value).reshape(self.S)
-        self.policy = array(self.policy).reshape(self.S)
-
+        
+        # store value and policy as tuples
+        self.value = tuple(array(self.value).reshape(self.S).tolist())
+        self.policy = tuple(array(self.policy).reshape(self.S).tolist())
+        
         self.time = time() - self.time
 
 class ValueIterationGS(MDP):
