@@ -5,12 +5,12 @@ Created on Sun May 27 23:16:57 2012
 @author: -
 """
 
-from math import factorial
 from mdp import exampleForest, exampleRand, MDP, PolicyIteration, ValueIteration
 from numpy import array, eye, matrix, zeros
 from numpy.random import rand
 from scipy.sparse import eye as speye
 from scipy.sparse import csr_matrix as sparse
+from scipy.stats.distributions import poisson
 
 inst = MDP()
 
@@ -144,24 +144,33 @@ def test_JacksCarRental():
     P = zeros((A, S, S))
     R = zeros((A, S, S))
     for a in range(A):
-        for s in range(S):
-            for s1 in range(S):
-                ncL1s = int(s / 21)
-                ncL2s = s - ncL1s * 21
-                ncL1s1 = int(s1 / 21)
-                ncL2s1 = s - ncL1s * 21
-                ncs = ncL1s + ncL2s
-                ncs1 = ncL1s1 + ncL2s1
+        for s in range(21):
+            for s1 in range(21):
+                c1s = int(s / 21)
+                c2s = s - c1s * 21
+                c1s1 = int(s1 / 21)
+                c2s1 = s - c1s * 21
+                cs = c1s + c2s
+                cs1 = c1s1 + c2s1
                 netmove = 5 - a
-                pL1 = 
-                pL2 = 
-                p = ((3 ** n)/factorial(3)) * exp(-3)
-                P[a, s, s1] = 
-                R[a, s, s1] = 10 * (ncs - ncs1) - 2 * abs(a)
+                if (s1 < s):
+                    pass
+                else:
+                    pass
+                P[a, s, s1] = 1
+                R[a, s, s1] = 10 * (cs - cs1) - 2 * abs(a)
     
-    inst = ValueIteration(P, R, 0.9)
+    inst = PolicyIteration(P, R, 0.9)
     inst.iterate()
-    assert (inst.policy == )
+    #assert (inst.policy == )
+
+def test_JacksCarRental2():
+    pass
+
+def test_GamblersProblem():
+    inst = ValueIteration()
+    inst.iterate()
+    #assert (inst.policy == )
 
 # checkSquareStochastic: not square, stochastic and non-negative
 
