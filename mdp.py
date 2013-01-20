@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2011, 2012 Steven Cordwell
+Copyright (c) 2011, 2012, 2013 Steven Cordwell
 Copyright (c) 2009, Iadine Chadès
 Copyright (c) 2009, Marie-Josée Cros
 Copyright (c) 2009, Frédérick Garcia
@@ -244,16 +244,19 @@ class MDP(object):
         
         Updates the value function and the Vprev-improving policy.
         
-        Updates
+        Returns
         -------
-        self.value : new value function
-        self.policy : Vprev-improving policy
+        (policy, value) : tuple of new policy and its value
         """
         Q = matrix(zeros((self.S, self.A)))
         for aa in range(self.A):
             Q[:, aa] = self.R[:, aa] + (self.discount * self.P[aa] * self.value)
         
-        # update the value and policy
+        # Which way is better? if choose the first way, then the classes that
+        # call this function must be changed
+        # 1. Return, (policy, value)
+        # return (Q.argmax(axis=1), Q.max(axis=1))
+        # 2. change self.policy and self.value directly
         self.value = Q.max(axis=1)
         self.policy = Q.argmax(axis=1)
     
