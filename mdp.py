@@ -574,7 +574,67 @@ class PolicyIteration(MDP):
 class PolicyIterationModified(MDP):
     """Resolution of discounted MDP with modified policy iteration algorithm.
     """
-    pass
+    
+    def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10):
+      """"""
+      
+        MDP.__init__(self, discount, max_iter):
+        
+        if epsilon <= 0:
+            raise ValueError("epsilon must be greater than 0")
+        
+        self.check(transitions, reward)
+        
+        self.computePR(transitions, reward)
+        
+        # computation of threshold of variation for V for an epsilon-optimal policy
+        if self.discount != 1:
+            self.thresh = epsilon * (1 - self.discount) / self.discount
+        else:
+            self.thresh = epsilon
+        
+        if discount == 1:
+            self.value = matrix(zeros((self.S, 1)))
+        else:
+            # min(min()) is not right
+            self.value = 1 / (1 - discount) * min(min(self.PR)) * ones((self.S, 1)) 
+        
+        self.iter = 0
+    
+    def iterate(self):
+        """"""
+        
+        if self.verbose:
+            print('  Iteration  V_variation')
+        
+	self.time = time()
+    
+    done = False
+    while not done:
+        self.iter = self.iter + 1
+        
+        Vnext, policy = bellmanOperator(self.P, self.PR, self.discount, self.V)
+        #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
+        
+        variation = mdp_span(Vnext - V);
+        if self.verbose:
+             print("      %s         %s" % (self.iter, variation))
+        
+        V = Vnext
+        if variation < thresh:
+            done = True
+        else:
+	    is_verbose = False
+            if self.verbose:
+                self.verbose = False
+                is_verbose = True
+            
+            V = evalPolicyIterative(P, PR, discount, policy, V, epsilon, max_iter)
+            
+            if is_verbose:
+                self.verbose = True
+       
+        self.time = time() - self.time
 
 class QLearning(MDP):
     """Evaluates the matrix Q, using the Q learning algorithm.
