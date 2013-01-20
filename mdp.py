@@ -526,7 +526,7 @@ class PolicyIteration(MDP):
             #self.value = matrix(zeros((self.S, 1)))
         else:
             if (len(initial_value) != self.S):
-                raise TypeError("The initial value must be length S")
+                raise ValueError("The initial value must be length S")
             
             self.value = matrix(initial_value)
         
@@ -799,9 +799,9 @@ class ValueIteration(MDP):
     
     Description
     -----------
-    mdp_value_iteration applies the value iteration algorithm to solve
+    mdp.ValueIteration applies the value iteration algorithm to solve
     discounted MDP. The algorithm consists in solving Bellman's equation
-    iteratively. 
+    iteratively.
     Iterating is stopped when an epsilon-optimal policy is found or after a
     specified number (max_iter) of iterations. 
     This function uses verbose and silent modes. In verbose mode, the function
@@ -813,7 +813,6 @@ class ValueIteration(MDP):
     
     Parameters
     ----------
-    
     P : transition matrix 
         P could be a numpy ndarray with 3 dimensions (AxSxS) or a 
         numpy ndarray of dytpe=object with 1 dimenion (1xA), each 
@@ -836,12 +835,12 @@ class ValueIteration(MDP):
     Data Attributes
     ---------------
     value : value function
-        A vector which stores the optimal value function. It exists only after
-        the iterate() method has been called. Shape is (S, ).
+        A vector which stores the optimal value function. Prior to calling the
+        iterate() method it has a value of None. Shape is (S, ).
     policy : epsilon-optimal policy
-        A vector which stores the optimal policy. It exists only after
-        the iterate() method has been called. Shape is (S, ).
-    iter : number of done iterations
+        A vector which stores the optimal policy. Prior to calling the
+        iterate() method it has a value of None. Shape is (S, ).
+    iter : number of iterations taken to complete the computation
         An integer
     time : used CPU time
         A float
@@ -982,6 +981,10 @@ class ValueIteration(MDP):
     def iterate(self):
         """
         """
+        
+        if self.verbose:
+            print('  Iteration  V_variation')
+        
         self.time = time()
         done = False
         while not done:
