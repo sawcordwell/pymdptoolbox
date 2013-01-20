@@ -236,7 +236,25 @@ class MDP(object):
     
     def __init__(self):
         """"""
+        # the verbosity is by default turned off
         self.verbose = False
+        
+        # These are some placeholder attributes that need to be overridden in
+        # child classes.
+        # S is the number of states
+        self.S = None
+        # A is the number of actions
+        self.A = None
+        # R is the reward matrix
+        self.R = None
+        # P is the probability-transition matrix
+        self.P = None
+        # policy is the optimal control policy
+        self.policy = None
+        # value is a vector of expected future values for each state
+        self.value = None
+        # discount is the per time step discount factor
+        self.discount = None
     
     def bellmanOperator(self):
         """
