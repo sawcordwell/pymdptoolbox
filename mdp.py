@@ -454,6 +454,12 @@ class MDP(object):
                 self.P[aa] = matrix(self.P[aa])
         if (type(self.R) is ndarray):
             self.R = matrix(self.R)
+
+    def iterate(self):
+        """This is a placeholder method. Child classes should define their own
+        iterate() method.
+        """
+        raise NotImplementedError("You should create an iterate method.")
     
     def getSpan(self, W):
         """Returns the span of W
