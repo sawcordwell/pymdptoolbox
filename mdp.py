@@ -572,7 +572,41 @@ class PolicyIteration(MDP):
         self.policy = tuple(array(self.policy).reshape(self.S).tolist())
 
 class PolicyIterationModified(MDP):
-    """Resolution of discounted MDP with modified policy iteration algorithm.
+    """Resolution of discounted MDP  with policy iteration algorithm
+    
+    Arguments
+    ---------
+    Let S = number of states, A = number of actions
+    P(SxSxA) = transition matrix 
+             P could be an array with 3 dimensions or 
+             a cell array (1xA), each cell containing a matrix (SxS) possibly sparse
+    R(SxSxA) or (SxA) = reward matrix
+             R could be an array with 3 dimensions (SxSxA) or 
+             a cell array (1xA), each cell containing a sparse matrix (SxS) or
+             a 2D array(SxA) possibly sparse  
+    discount = discount rate, in ]0, 1[
+    policy0(S) = starting policy, optional 
+    max_iter = maximum number of iteration to be done, upper than 0, 
+             optional (default 1000)
+    eval_type = type of function used to evaluate policy: 
+             0 for mdp_eval_policy_matrix, else mdp_eval_policy_iterative
+             optional (default 0)
+    
+    Data Attributes
+    ---------------
+    V(S)   = value function 
+    policy(S) = optimal policy
+    iter     = number of done iterations
+    cpu_time = used CPU time
+    
+    Notes
+    -----
+    In verbose mode, at each iteration, displays the number 
+    of differents actions between policy n-1 and n
+    
+    Examples
+    --------
+    >>> import mdp
     """
     
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10):
@@ -1019,6 +1053,151 @@ class ValueIteration(MDP):
         self.time = time() - self.time
 
 class ValueIterationGS(MDP):
-    """Resolution of discounted MDP with value iteration Gauss-Seidel algorithm.
-    """
-    raise NotImplementedError("This class has not been implemented yet.")
+    """Resolution of discounted MDP with value iteration Gauss-Seidel algorithm
+    
+    Arguments
+    ---------
+    Let S = number of states, A = number of actions
+    P(SxSxA)  = transition matrix 
+             P could be an array with 3 dimensions or 
+             a cell array (1xA), each cell containing a matrix (SxS) possibly sparse
+    R(SxSxA) or (SxA) = reward matrix
+             R could be an array with 3 dimensions (SxSxA) or 
+             a cell array (1xA), each cell containing a sparse matrix (SxS) or
+             a 2D array(SxA) possibly sparse  
+    discount  = discount rate in ]0; 1]
+              beware to check conditions of convergence for discount = 1.
+    epsilon   = epsilon-optimal policy search, upper than 0,
+              optional (default : 0.01)
+    max_iter  = maximum number of iteration to be done, upper than 0, 
+              optional (default : computed)
+    V0(S)     = starting value function, optional (default : zeros(S,1))
+    
+    Evaluation
+    ----------
+    policy(S) = epsilon-optimal policy
+    iter      = number of done iterations
+    cpu_time  = used CPU time
+    
+    Notes
+    -----
+    In verbose mode, at each iteration, displays the variation of V
+    and the condition which stopped iterations: epsilon-optimum policy found
+    or maximum number of iterations reached.
+    
+    Examples
+    --------
+"""
+    def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10, initial_value=0):
+        """"""
+        
+        MDP.__init__(self, discount, max_iter):
+        
+        
+        # initialization of optional arguments
+        if (initial_value == 0):
+            self.value = matrix(zeros((self.S, 1)))
+        else:
+            if (initial_value.size != self.S):
+                raise ValueError("The initial value must be length S")
+            self.value = matrix(initial_value)
+        if epsilon <= 0:
+            raise ValueError("epsilon must be greater than 0")
+        
+        #if discount == 1  
+        #    disp('--------------------------------------------------------')
+        #    disp('MDP Toolbox WARNING: check conditions of convergence.')
+        #    disp('With no discount, convergence is not always assumed.')
+        #    disp('--------------------------------------------------------')
+        #end;
+     
+        PR = self.computePR(P,R)
+     
+        #% initialization of optional arguments
+        #if nargin < 6; V0 = zeros(S,1); end;
+        #if nargin < 4; epsilon = 0.01; end;
+        #% compute a bound for the number of iterations
+        #if discount ~= 1
+        #    computed_max_iter = mdp_value_iteration_bound_iter(P, R, discount, epsilon, V0);
+        #end;
+        #if nargin < 5
+        #    if discount ~= 1
+        #        max_iter = computed_max_iter;
+        #    else   
+        #        max_iter = 1000;
+        #    end;
+        #else
+        #    if discount ~= 1 && max_iter > computed_max_iter
+        #        disp(['MDP Toolbox WARNING: max_iter is bounded by ' num2str(computed_max_iter,'%12.1f') ])
+        #        max_iter = computed_max_iter;
+        #    end;
+        #end;
+        #% computation of threshold of variation for V for an epsilon-optimal policy
+        #if discount ~= 1
+        #    thresh = epsilon * (1-discount)/discount
+        #else 
+        #    thresh = epsilon
+        self.discount = discount
+        if (discount < 1):
+            # compute a bound for the number of iterations
+            #self.max_iter = self.boundIter(epsilon)
+            self.max_iter = 5000
+            # computation of threshold of variation for V for an epsilon-optimal policy
+            self.thresh = epsilon * (1 - self.discount) / self.discount
+        else: # discount == 1
+            # bound for the number of iterations
+            self.max_iter = max_iter
+            # threshold of variation for V for an epsilon-optimal policy
+            self.thresh = epsilon
+     
+        self.iter = 0
+    
+    def iterate():
+        """"""
+        V = self.initial_value
+        
+        done = False
+        
+        if self.verbose:
+            print('  Iteration  V_variation')
+        
+        self.time = time()
+        
+        while not done
+            self.iter = self.iter + 1
+            
+            Vprev = self.value
+            
+            for s = range(self.S):
+                for a = range(self.A):
+                    if iscell(P):
+                        Q(a) =  PR(s,a)  +  discount * P{a}(s,:) * V 
+                    else:
+                        Q(a) =  PR(s,a)  +  discount * P(s,:,a) * V
+                V(s) = max(Q)
+            
+            variation = self.getSpan(V - Vprev)
+            
+            if self.verbose:
+                print("      %s         %s" % (self.iter, variation))
+            
+            if variation < thresh: 
+                done = True
+                if self.verbose:
+                    print('MDP Toolbox : iterations stopped, epsilon-optimal policy found')
+             
+            elif self.iter == self.max_iter
+                done = True 
+                if self.verbose: 
+                    print('MDP Toolbox : iterations stopped by maximum number of iteration condition')
+             
+        for s = range(S):
+            for a = range(A):
+                if iscell(P):
+                    Q(a) =  PR(s,a) + P{a}(s,:) * discount * V
+                else:
+                    Q(a) =  PR(s,a) + P(s,:,a) * discount * V
+            
+            [V(s) , policy(s,1)] = max(Q)
+
+        self.time = time() - self.time
