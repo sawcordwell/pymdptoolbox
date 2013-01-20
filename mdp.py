@@ -405,7 +405,7 @@ class MDP(object):
     def computePpolicyPRpolicy(self):
         """Computes the transition matrix and the reward matrix for a policy.
         """
-        pass    
+        raise NotImplementedError("This method has not been implemented yet.")  
     
     def computePR(self, P, R):
         """Computes the reward for the system in one state chosing an action
