@@ -609,31 +609,31 @@ class PolicyIterationModified(MDP):
         
 	self.time = time()
     
-    done = False
-    while not done:
-        self.iter = self.iter + 1
-        
-        Vnext, policy = bellmanOperator(self.P, self.PR, self.discount, self.V)
-        #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
-        
-        variation = mdp_span(Vnext - V);
-        if self.verbose:
-             print("      %s         %s" % (self.iter, variation))
-        
-        V = Vnext
-        if variation < thresh:
-            done = True
-        else:
-	    is_verbose = False
+        done = False
+        while not done:
+            self.iter = self.iter + 1
+            
+            Vnext, policy = self.bellmanOperator(self.P, self.PR, self.discount, self.V)
+            #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
+            
+            variation = mdp_span(Vnext - V);
             if self.verbose:
-                self.verbose = False
-                is_verbose = True
+                print("      %s         %s" % (self.iter, variation))
             
-            V = evalPolicyIterative(P, PR, discount, policy, V, epsilon, max_iter)
-            
-            if is_verbose:
-                self.verbose = True
-       
+            V = Vnext
+            if variation < thresh:
+                done = True
+            else:
+                is_verbose = False
+                if self.verbose:
+                    self.verbose = False
+                    is_verbose = True
+                
+                V = self.evalPolicyIterative(self.P, self.PR, self.discount, self.policy, self.V, self.epsilon, self.max_iter)
+                
+                if is_verbose:
+                    self.verbose = True
+        
         self.time = time() - self.time
 
 class QLearning(MDP):
