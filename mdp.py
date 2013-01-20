@@ -874,7 +874,7 @@ class ValueIteration(MDP):
             self.value = matrix(zeros((self.S, 1)))
         else:
             if (initial_value.size != self.S):
-                raise TypeError("The initial value must be length S")
+                raise ValueError("The initial value must be length S")
             
             self.value = matrix(initial_value)
         
