@@ -533,17 +533,7 @@ class PolicyIteration(MDP):
         self.policy = randi(0, self.A, self.S)
 
         self.discount = discount
-        if (discount < 1):
-            # compute a bound for the number of iterations
-            #self.max_iter = self.boundIter(epsilon)
-            self.max_iter = 5000
-            # computation of threshold of variation for V for an epsilon-optimal policy
-            self.thresh = epsilon * (1 - self.discount) / self.discount
-        else: # discount == 1
-            # bound for the number of iterations
-            self.max_iter = max_iter
-            # threshold of variation for V for an epsilon-optimal policy
-            self.thresh = epsilon 
+        self.max_iter = max_iter
         
         self.iter = 0
     
