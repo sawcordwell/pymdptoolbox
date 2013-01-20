@@ -486,12 +486,12 @@ class MDP(object):
 class FiniteHorizon(MDP):
     """Resolution of finite-horizon MDP with backwards induction.
     """
-    pass
+    raise NotImplementedError("This class has not been implemented yet.")
 
 class LP(MDP):
     """Resolution of discounted MDP with linear programming.
     """
-    pass
+    raise NotImplementedError("This class has not been implemented yet.")
 
 class PolicyIteration(MDP):
     """Resolution of discounted MDP with policy iteration algorithm.
@@ -791,7 +791,7 @@ class RelativeValueIteration(MDP):
     """Resolution of MDP with average reward with relative value iteration
     algorithm.
     """
-    pass
+    raise NotImplementedError("This class has not been implemented yet.")
 
 class ValueIteration(MDP):
     """
@@ -1018,4 +1018,4 @@ class ValueIteration(MDP):
 class ValueIterationGS(MDP):
     """Resolution of discounted MDP with value iteration Gauss-Seidel algorithm.
     """
-    pass
+    raise NotImplementedError("This class has not been implemented yet.")
