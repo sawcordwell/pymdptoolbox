@@ -239,6 +239,9 @@ class MDP(object):
         # the verbosity is by default turned off
         self.verbose = False
         
+        # Initially the time taken to perform the computations is set to None
+        self.time = None
+        
         # These are some placeholder attributes that need to be overridden in
         # child classes.
         # S is the number of states
@@ -543,8 +546,6 @@ class PolicyIteration(MDP):
             self.thresh = epsilon 
         
         self.iter = 0
-        
-        self.time = None
     
     def iterate(self):
         """"""
@@ -674,8 +675,6 @@ class QLearning(MDP):
         #self.dQ = zeros(self.S, self.A)
         self.mean_discrepancy = []
         self.discrepancy = []
-        
-        self.time = None
         
     def iterate(self):
         """
@@ -892,8 +891,6 @@ class ValueIteration(MDP):
             self.thresh = epsilon 
         
         self.iter = 0
-        
-        self.time = None
     
     def boundIter(self, epsilon):
         """Computes a bound for the number of iterations for the value iteration
