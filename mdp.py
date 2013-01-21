@@ -1014,11 +1014,91 @@ class QLearning(MDP):
         self.iter = self.max_iter
 
 class RelativeValueIteration(MDP):
-    """Resolution of MDP with average reward with relative value iteration
-    algorithm.
+    """Resolution of MDP with average reward with relative value iteration 
+    algorithm 
+    
+    Arguments
+    ---------
+    Let S = number of states, A = number of actions
+    P(SxSxA) = transition matrix 
+             P could be an array with 3 dimensions or 
+             a cell array (1xA), each cell containing a matrix (SxS) possibly sparse
+    R(SxSxA) or (SxA) = reward matrix
+             R could be an array with 3 dimensions (SxSxA) or 
+             a cell array (1xA), each cell containing a sparse matrix (SxS) or
+             a 2D array(SxA) possibly sparse  
+    epsilon  = epsilon-optimal policy search, upper than 0, 
+             optional (default: 0.01)
+    max_iter = maximum number of iteration to be done, upper than 0,
+             optional (default 1000)
+    
+    Evaluation
+    ----------
+    policy(S)       = epsilon-optimal policy
+    average_reward  = average reward of the optimal policy
+    cpu_time = used CPU time
+    
+    Notes
+    -----
+    In verbose mode, at each iteration, displays the span of U variation
+    and the condition which stopped iterations : epsilon-optimum policy found
+    or maximum number of iterations reached.
+    
+    Examples
+    --------
     """
-    pass
-    #raise NotImplementedError("This class has not been implemented yet.")
+    
+    def __init__(self, transitions, reward, epsilon=0.01, max_iter=1000):
+        
+        MDP.__init__(self,  transitions, reward, None, max_iter)
+        
+        if epsilon <= 0:
+            print('MDP Toolbox ERROR: epsilon must be upper than 0')
+    
+        if iscell(P):
+            S = size(P[1], 1)
+        else:
+            S = size(P, 1)
+    
+        self.U = zeros(S, 1)
+        self.gain = U(S)
+    
+    def iterate(self):
+        """"""
+        
+        done = False
+        if self.verbose:
+            print('  Iteration  U_variation')
+        
+        self.time = time()
+        
+        while not done:
+            
+            self.iter = self.iter + 1;
+            
+            Unext, policy = self.bellmanOperator(self.P, self.PR, 1, self.U)
+            Unext = Unext - self.gain
+            
+            variation = self.getSpan(Unext - self.U)
+            
+            if self.verbose:
+                print("      %s         %s" % (self.iter, variation))
+
+            if variation < self.epsilon:
+                 done = True
+                 average_reward = self.gain + min(Unext - self.U)
+                 if self.verbose:
+                     print('MDP Toolbox : iterations stopped, epsilon-optimal policy found')
+            elif self.iter == self.max_iter:
+                 done = True 
+                 average_reward = self.gain + min(Unext - self.U);
+                 if self.verbose:
+                     print('MDP Toolbox : iterations stopped by maximum number of iteration condition')
+            
+            self.U = Unext
+            self.gain = self.U(self.S)
+        
+        self.time = time() - self.time
 
 class ValueIteration(MDP):
     """
