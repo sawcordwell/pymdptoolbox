@@ -532,6 +532,10 @@ class MDP(object):
         """
         return (W.max() - W.min())
     
+    def setup(self):
+        """A helper function to perform various checks and preparations."""
+        pass
+    
     def setSilent(self):
         """Ask for running resolution functions of the MDP Toolbox in silent
         mode.
