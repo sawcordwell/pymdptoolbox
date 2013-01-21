@@ -84,7 +84,11 @@ mdperr = {
     "PyMDPtoolbox: Number of states S must be greater than 1.",
 "SA_gt_1" : 
     "PyMDPtoolbox: The number of states S and the number of actions A must be "
-    "greater than 1."
+    "greater than 1.",
+"discount_rng" : 
+    "PyMDPtoolbox: Discount rate must be in ]0; 1]",
+"maxi_min" :
+    "PyMDPtoolbox: The maximum number of iterations must be greater than 0"
 }
 
 def exampleForest(S=3, r1=4, r2=2, p=0.1):
@@ -234,7 +238,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
 class MDP(object):
     """The Markov Decision Problem Toolbox."""
     
-    def __init__(self):
+    def __init__(self, transitions, reward, discount, max_iter):
         """"""
         # the verbosity is by default turned off
         self.verbose = False
@@ -242,22 +246,22 @@ class MDP(object):
         # Initially the time taken to perform the computations is set to None
         self.time = None
         
-        # These are some placeholder attributes that need to be overridden in
-        # child classes.
-        # S is the number of states
-        self.S = None
-        # A is the number of actions
-        self.A = None
-        # R is the reward matrix
-        self.R = None
-        # P is the probability-transition matrix
-        self.P = None
-        # policy is the optimal control policy
-        self.policy = None
-        # value is a vector of expected future values for each state
-        self.value = None
-        # discount is the per time step discount factor
-        self.discount = None
+        if (discount <= 0) or (discount > 1):
+            raise ValueError(mdperr["discount_rng"])
+        else:
+            self.discount = discount
+        
+        if (max_iter <= 0):
+            raise ValueError(mdperr["maxi_min"])
+        else:
+            self.max_iter = max_iter
+        
+        self.check(transitions, reward)
+        
+        self.computePR(transitions, reward)
+        
+        # set the initial iteration count to zero
+        self.iter = 0
     
     def bellmanOperator(self):
         """
@@ -531,10 +535,6 @@ class MDP(object):
         sp(W) = max W(s) - min W(s)
         """
         return (W.max() - W.min())
-    
-    def setup(self):
-        """A helper function to perform various checks and preparations."""
-        pass
     
     def setSilent(self):
         """Ask for running resolution functions of the MDP Toolbox in silent
@@ -897,7 +897,7 @@ class QLearning(MDP):
         Then the length of this vector for the default value of N is 100 
         (N/100).
 
-    Examples
+    ExamplesPP[:, aa] = self.P[aa][:, ss]
     ---------
     >>> import mdp
     >>> P, R = mdp.exampleForest()
@@ -934,21 +934,13 @@ class QLearning(MDP):
         """Evaluation of the matrix Q, using the Q learning algorithm
         """
         
-        MDP.__init__(self)
+        # The following check won't be done in MDP()'s initialisation, so let's
+        # do it here
+        if (n_iter < 10000):
+            raise ValueError("PyMDPtoolbox: n_iter should be greater than 10000")
         
-        # Check of arguments
-        if (discount <= 0) or (discount >= 1):
-            raise ValueError("MDP Toolbox Error: Discount rate must be in ]0,1[")
-        elif (n_iter < 10000):
-            raise ValueError("MDP Toolbox Error: n_iter must be greater than 10000")
-        
-        self.check(transitions, reward)
-        
-        self.computePR(transitions, reward)
-        
-        self.discount = discount
-        
-        self.n_iter = n_iter
+        # after this n_iter will be known as self.max_iter
+        MDP.__init__(self, transitions, reward, discount, n_iter)
         
         # Initialisations
         self.Q = zeros((self.S, self.A))
@@ -964,7 +956,7 @@ class QLearning(MDP):
         # initial state choice
         # s = randint(0, self.S - 1)
         
-        for n in range(self.n_iter):
+        for n in range(self.max_iter):
             
             # Reinitialisation of trajectories every 100 transitions
             if ((n % 100) == 0):
@@ -1016,12 +1008,17 @@ class QLearning(MDP):
             self.policy = self.Q.argmax(axis=1)
             
         self.time = time() - self.time
+        
+        # rather than report that we have not done any iterations, assign the
+        # value of n_iter to self.iter
+        self.iter = self.max_iter
 
 class RelativeValueIteration(MDP):
     """Resolution of MDP with average reward with relative value iteration
     algorithm.
     """
-    raise NotImplementedError("This class has not been implemented yet.")
+    pass
+    #raise NotImplementedError("This class has not been implemented yet.")
 
 class ValueIteration(MDP):
     """
@@ -1141,11 +1138,7 @@ class ValueIteration(MDP):
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=1000, initial_value=0):
         """Resolution of discounted MDP with value iteration algorithm."""
         
-        MDP.__init__(self)
-        
-        self.check(transitions, reward)
-        
-        self.computePR(transitions, reward)
+        MDP.__init__(self, transitions, reward, discount, max_iter)
         
         # initialization of optional arguments
         if (initial_value == 0):
@@ -1153,23 +1146,19 @@ class ValueIteration(MDP):
         else:
             if (initial_value.size != self.S):
                 raise ValueError("The initial value must be length S")
-            
-            self.value = matrix(initial_value)
+            else:
+                self.value = matrix(initial_value)
         
-        self.discount = discount
-        if (discount < 1):
-            # compute a bound for the number of iterations
-            #self.max_iter = self.boundIter(epsilon)
-            self.max_iter = 5000
-            # computation of threshold of variation for V for an epsilon-optimal policy
+        if (self.discount < 1):
+            # compute a bound for the number of iterations and update the
+            # stored value of self.max_iter
+            self.boundIter(epsilon)
+            # computation of threshold of variation for V for an epsilon-
+            # optimal policy
             self.thresh = epsilon * (1 - self.discount) / self.discount
         else: # discount == 1
-            # bound for the number of iterations
-            self.max_iter = max_iter
             # threshold of variation for V for an epsilon-optimal policy
-            self.thresh = epsilon 
-        
-        self.iter = 0
+            self.thresh = epsilon
     
     def boundIter(self, epsilon):
         """Computes a bound for the number of iterations for the value iteration
@@ -1195,7 +1184,7 @@ class ValueIteration(MDP):
         h = zeros(self.S)
         
         for ss in range(self.S):
-            PP = zeros((self.S, self.A))
+            PP = matrix(zeros((self.S, self.A)))
             for aa in range(self.A):
                 PP[:, aa] = self.P[aa][:, ss]
             # the function "min()" without any arguments finds the
@@ -1203,10 +1192,13 @@ class ValueIteration(MDP):
             h[ss] = PP.min()
         
         k = 1 - h.sum()
-        V1 = self.bellmanOperator(self.value)
+        Vprev = self.value
+        self.bellmanOperator()
         # p 201, Proposition 6.6.5
-        max_iter = log( (epsilon * (1 - self.discount) / self.discount) / self.getSpan(V1 - self.value) ) / log(self.discount * k)
-        return ceil(max_iter)
+        max_iter = log( (epsilon * (1 - self.discount) / self.discount) / self.getSpan(self.value - Vprev) ) / log(self.discount * k)
+        self.value = Vprev
+        
+        self.max_iter = ceil(max_iter)
     
     def iterate(self):
         """

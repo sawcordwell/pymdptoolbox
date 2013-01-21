@@ -116,7 +116,7 @@ def test_exampleRand_dense_shape():
 
 def test_exampleRand_dense_check():
     P, R = exampleRand(STATES, ACTIONS)
-    inst.check(P, R)
+    assert inst.check(P, R) == None
 
 def test_exampleRand_sparse_shape():
     P, R = exampleRand(STATES, ACTIONS, is_sparse=True)
@@ -125,7 +125,7 @@ def test_exampleRand_sparse_shape():
 
 def test_exampleRand_sparse_check():
     P, R = exampleRand(STATES, ACTIONS, is_sparse=True)
-    inst.check(P, R)
+    assert inst.check(P, R) == None
 
 # ValueIteration
 
@@ -137,6 +137,12 @@ def test_ValueIteration():
     assert (inst.value == (40.048625392716822,  33.65371175967546))
     assert (inst.policy == (1, 0))
     assert (inst.iter == 26)
+
+def test_ValueIteration_boundIter():
+    P = array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
+    R = array([[5, 10], [-1, 2]])
+    inst = ValueIteration(P, R, 0.9, 0.01)
+    assert (inst.max_iter == 28)
 
 def test_JacksCarRental():
     S = 21 ** 2
