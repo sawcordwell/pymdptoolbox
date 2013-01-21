@@ -462,7 +462,7 @@ class MDP(object):
         """This is a placeholder method. Child classes should define their own
         iterate() method.
         """
-        raise NotImplementedError("You should create an iterate method.")
+        raise NotImplementedError("You should create an iterate() method.")
     
     def getSpan(self, W):
         """Returns the span of W
@@ -520,37 +520,109 @@ class FiniteHorizon(MDP):
     def __init__(self, P, R, discount, N, h):
         if N < 1:
             raise ValueError('MDP Toolbox ERROR: N must be upper than 0')
-        if discount <= 0 || discount > 1:
+        if discount <= 0 or discount > 1:
             raise ValueError('MDP Toolbox ERROR: Discount rate must be in ]0; 1]')
-    
-    if iscell(P):
-        S = size(P{1},1)
-    else:
-        S = size(P,1)
-    
-    V = zeros(S,N+1)
-    
-    if nargin == 5:
-        V(:,N+1) = h
-    
-    PR = mdp_computePR(P,R);
-    
+        
+        if iscell(P):
+            S = size(P[1],1)
+        else:
+            S = size(P,1)
+        
+        V = zeros(S,N+1)
+        
+        if nargin == 5:
+            V[:,N+1] = h
+        
+        PR = mdp_computePR(P,R);
+        
     def iterate():
         self.time = time()
         
-        for n=0:N-1:
-            [W,X]=mdp_bellman_operator(P,PR,discount,V(:,N-n+1))
-            V(:,N-n)=W
-            policy(:,N-n) = X
+        for n in range(N-1):
+            W, X = self.bellmanOperator(P,PR,discount,V[:,N-n+1])
+            V[:,N-n] = W
+            policy[:, N-n] = X
             #if mdp_VERBOSE
             #    disp(['stage:' num2str(N-n) '      policy transpose : ' num2str(policy(:,N-n)')])
         
         self.time = time() - self.time
 
 class LP(MDP):
-    """Resolution of discounted MDP with linear programming.
+    """Resolution of discounted MDP with linear programming
+
+    Arguments
+    ---------
+    Let S = number of states, A = number of actions
+    P(SxSxA) = transition matrix 
+             P could be an array with 3 dimensions or 
+             a cell array (1xA), each cell containing a matrix (SxS) possibly sparse
+    R(SxSxA) or (SxA) = reward matrix
+             R could be an array with 3 dimensions (SxSxA) or 
+             a cell array (1xA), each cell containing a sparse matrix (SxS) or
+             a 2D array(SxA) possibly sparse  
+    discount = discount rate, in ]0; 1[
+    h(S)     = terminal reward, optional (default [0; 0; ... 0] )
+    
+    Evaluation
+    ----------
+    V(S)   = optimal values
+    policy(S) = optimal policy
+    cpu_time = used CPU time
+    
+    Notes    
+    -----
+    In verbose mode, displays the current stage and policy transpose.
+    
+    Examples
+    --------
     """
-    raise NotImplementedError("This class has not been implemented yet.")
+
+    def __init__(self, P, R, discount):
+        
+        try:
+            from cvxopt import matrix, solvers
+        except ImportError:
+            raise ImportError("The python module cvxopt is required to use linear programming functionality.")
+        
+        self.linprog = solvers.lp
+
+        if discount <= 0 or discount >= 1:
+            print('MDP Toolbox ERROR: Discount rate must be in ]0; 1[')
+        
+        if iscell(P):
+            S = size(P[1],1)
+            A = length(P)
+        else:
+            S = size(P,1)
+            A = size(P,3)
+
+        PR = self.computePR(P,R)
+        
+        # The objective is to resolve : min V / V >= PR + discount*P*V
+        # The function linprog of the optimisation Toolbox of Mathworks resolves :
+        # min f'* x / M * x <= b
+        # So the objective could be expressed as : min V / (discount*P-I) * V <= - PR
+        # To avoid loop on states, the matrix M is structured following actions M(A*S,S)
+    
+        f = ones(S,1)
+    
+        M = []
+        if iscell(P):
+            for a in range(A):
+                M = hstack((M, discount * P[a] - speye(S)))
+        else:
+            for a in range(A):
+                M = hstack((M, discount * P[:,:,a] - speye(S)))
+    
+    def iterate(self, linprog):
+        
+        self.time = time()
+        
+        V = self.linprog(f, M, -PR)
+        
+        V, policy =  self.bellmanOperator(P, PR, discount, V)
+        
+        self.time = time() - self.time
 
 class PolicyIteration(MDP):
     """Resolution of discounted MDP with policy iteration algorithm.
@@ -669,9 +741,9 @@ class PolicyIterationModified(MDP):
     """
     
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10):
-      """"""
-      
-        MDP.__init__(self, discount, max_iter):
+        """"""
+        
+        MDP.__init__(self, discount, max_iter)
         
         if epsilon <= 0:
             raise ValueError("epsilon must be greater than 0")
@@ -700,7 +772,7 @@ class PolicyIterationModified(MDP):
         if self.verbose:
             print('  Iteration  V_variation')
         
-	self.time = time()
+        self.time = time()
     
         done = False
         while not done:
@@ -709,7 +781,7 @@ class PolicyIterationModified(MDP):
             Vnext, policy = self.bellmanOperator(self.P, self.PR, self.discount, self.V)
             #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
             
-            variation = mdp_span(Vnext - V);
+            variation = self.getSpan(Vnext - V);
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
             
@@ -1150,8 +1222,7 @@ class ValueIterationGS(MDP):
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10, initial_value=0):
         """"""
         
-        MDP.__init__(self, discount, max_iter):
-        
+        MDP.__init__(self, discount, max_iter)
         
         # initialization of optional arguments
         if (initial_value == 0):
@@ -1170,7 +1241,7 @@ class ValueIterationGS(MDP):
         #    disp('--------------------------------------------------------')
         #end;
      
-        PR = self.computePR(P,R)
+        PR = self.computePR(P, R)
      
         #% initialization of optional arguments
         #if nargin < 6; V0 = zeros(S,1); end;
@@ -1211,7 +1282,7 @@ class ValueIterationGS(MDP):
      
         self.iter = 0
     
-    def iterate():
+    def iterate(self, PR):
         """"""
         V = self.initial_value
         
@@ -1222,18 +1293,18 @@ class ValueIterationGS(MDP):
         
         self.time = time()
         
-        while not done
+        while not done:
             self.iter = self.iter + 1
             
             Vprev = self.value
             
-            for s = range(self.S):
-                for a = range(self.A):
+            for s in range(self.S):
+                for a in range(self.A):
                     if iscell(P):
-                        Q(a) =  PR(s,a)  +  discount * P{a}(s,:) * V 
+                        Q[a] =  PR[s,a]  +  discount * P[a][s,:] * V 
                     else:
-                        Q(a) =  PR(s,a)  +  discount * P(s,:,a) * V
-                V(s) = max(Q)
+                        Q[a] =  PR[s,a]  +  discount * P[s,:,a] * V
+                V[s] = max(Q)
             
             variation = self.getSpan(V - Vprev)
             
@@ -1245,18 +1316,18 @@ class ValueIterationGS(MDP):
                 if self.verbose:
                     print('MDP Toolbox : iterations stopped, epsilon-optimal policy found')
              
-            elif self.iter == self.max_iter
+            elif self.iter == self.max_iter:
                 done = True 
                 if self.verbose: 
                     print('MDP Toolbox : iterations stopped by maximum number of iteration condition')
              
-        for s = range(S):
-            for a = range(A):
+        for s in range(S):
+            for a in range(A):
                 if iscell(P):
-                    Q(a) =  PR(s,a) + P{a}(s,:) * discount * V
+                    Q[a] =  PR[s,a] + P[a][s,:] * discount * V
                 else:
-                    Q(a) =  PR(s,a) + P(s,:,a) * discount * V
+                    Q[a] =  PR[s,a] + P[s,:,a] * discount * V
             
-            [V(s) , policy(s,1)] = max(Q)
+            V[s], policy[s,1] = max(Q)
 
         self.time = time() - self.time
