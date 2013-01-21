@@ -312,7 +312,17 @@ class MDP(object):
         
         if (not type(R) is ndarray):
             raise TypeError(mdperr["R_type"])
-            
+        
+        # NumPy has an array type of 'object', which is roughly equivalent to
+        # the MATLAB cell array. These are most useful for storing sparse
+        # matrices as these can only have two dimensions whereas we want to be
+        # able to store a transition matrix for each action. If the dytpe of
+        # the transition probability array is object then we store this as
+        # P_is_object = True.
+        # If it is an object array, then it should only have one dimension
+        # otherwise fail with a message expalining why.
+        # If it is a normal array then the number of dimensions must be exactly
+        # three, otherwise fail with a message explaining why.
         if (P.dtype == object):
             if (P.ndim > 1):
                 raise ValueError(mdperr["obj_shape"])
@@ -323,7 +333,9 @@ class MDP(object):
                 raise ValueError(mdperr["P_shape"])
             else:
                 P_is_object = False
-            
+        
+        # As above but for the reward array. A difference is that the reward
+        # array can have either two or 3 dimensions.
         if (R.dtype == object):
             if (R.ndim > 1):
                 raise ValueError(mdperr["obj_shape"])
@@ -335,50 +347,99 @@ class MDP(object):
             else:
                 R_is_object = False
         
+        # We want to make sure that the transition probability array and the 
+        # reward array are in agreement. This means that both should show that
+        # there are the same number of actions and the same number of states.
+        # Furthermore the probability of transition matrices must be SxS in
+        # shape, so we check for that also.
         if P_is_object:
+            # If the user has put their transition matrices into a numpy array
+            # with dtype of 'object', then it is possible that they have made a
+            # mistake and not all of the matrices are of the same shape. So,
+            # here we record the number of actions and states that the first
+            # matrix in element zero of the object array says it has. After
+            # that we check that every other matrix also reports the same
+            # number of actions and states, otherwise fail with an error.
+            # aP: the number of actions in the transition array. This
+            # corresponds to the number of elements in the object array.
             aP = P.shape[0]
-            sP0 = P[0].shape[0]
-            sP1 = P[0].shape[1]
-            # check to see that the other object array elements are the same shape
+            # sP0: the number of states as reported by the number of rows of
+            # the transition matrix
+            # sP1: the number of states as reported by the number of columns of
+            # the transition matrix
+            sP0, sP1 = P[0].shape
+            # Now we check to see that every element of the object array holds
+            # a matrix of the same shape, otherwise fail.
             for aa in range(1, aP):
-                sP0aa = P[aa].shape[0]
-                sP1aa = P[aa].shape[1]
+                # sp0aa and sp1aa represents the number of states in each
+                # subsequent element of the object array. If it doesn't match
+                # what was found in the first element, then we need to fail
+                # telling the user what needs to be fixed.
+                sP0aa, sP1aa = P[aa].shape
                 if ((sP0aa != sP0) or (sP1aa != sP1)):
                     raise ValueError(mdperr["obj_square"])
         else:
+            # if we are using a normal array for this, then the first
+            # dimension should be the number of actions, and the second and 
+            # third should be the number of states
             aP, sP0, sP1 = P.shape
         
+        # the first dimension of the transition matrix must report the same
+        # number of states as the second dimension. If not then we are not
+        # dealing with a square matrix and it is not a valid transition
+        # probability. Also, if the number of actions is less than one, or the
+        # number of states is less than one, then it also is not a valid
+        # transition probability.
         if ((sP0 < 1) or (aP < 1) or (sP0 != sP1)):
             raise ValueError(mdperr["P_shape"])
         
+        # now we check that each transition matrix is square-stochastic. For
+        # object arrays this is the matrix held in each element, but for
+        # normal arrays this is a matrix formed by taking a slice of the array
         for aa in range(aP):
             if P_is_object:
                 self.checkSquareStochastic(P[aa])
             else:
                 self.checkSquareStochastic(P[aa, :, :])
-            aa = aa + 1
+            # aa = aa + 1 # why was this here?
         
         if R_is_object:
+            # if the rewarad array has an object dtype, then we check that
+            # each element contains a matrix of the same shape as we did 
+            # above with the transition array.
             aR = R.shape[0]
-            sR0 = R[0].shape[0]
-            sR1 = R[0].shape[1]
-            # check to see that the other object array elements are the same shape
+            sR0, sR1 = R[0].shape
             for aa in range(1, aR):
-                sR0aa = R[aa].shape[0]
-                sR1aa = R[aa].shape[1]
+                sR0aa, sR1aa = R[aa].shape
                 if ((sR0aa != sR0) or (sR1aa != sR1)):
                     raise ValueError(mdperr["obj_square"])
         elif (R.ndim == 3):
+            # This indicates that the reward matrices are constructed per 
+            # transition, so that the first dimension is the actions and
+            # the second two dimensions are the states.
             aR, sR0, sR1 = R.shape
         else:
+            # then the reward matrix is per state, so the first dimension is 
+            # the states and the second dimension is the actions.
             sR0, aR = R.shape
+            # this is added just so that the next check doesn't error out
+            # saying that sR1 doesn't exist
             sR1 = sR0
         
+        # the number of actions must be more than zero, the number of states
+        # must also be more than 0, and the states must agree
         if ((sR0 < 1) or (aR < 1) or (sR0 != sR1)):
             raise ValueError(mdperr["R_shape"])
-                
+        
+        # now we check to see that what the transition array is reporting and
+        # what the reward arrar is reporting agree as to the number of actions
+        # and states. If not then fail explaining the situation
         if (sP0 != sR0) or (aP != aR):
             raise ValueError(mdperr["PR_incompat"])
+            
+        # We are at the end of the checks, so if no exceptions have been raised
+        # then that means there are (hopefullly) no errors and we return None
+        return None
     
     def checkSquareStochastic(self, Z):
         """Check if Z is a square stochastic matrix
