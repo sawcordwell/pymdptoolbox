@@ -240,28 +240,36 @@ class MDP(object):
     
     def __init__(self, transitions, reward, discount, max_iter):
         """"""
-        # the verbosity is by default turned off
-        self.verbose = False
         
-        # Initially the time taken to perform the computations is set to None
-        self.time = None
+        if (type(discount) is int) or (type(discount) is float):
+            if (discount <= 0) or (discount > 1):
+                raise ValueError(mdperr["discount_rng"])
+            else:
+                self.discount = discount
+        elif not discount is None:
+            raise ValueError("PyMDPtoolbox: the discount must be a positive real number less than or equal to one.")
         
-        if (discount <= 0) or (discount > 1):
-            raise ValueError(mdperr["discount_rng"])
-        else:
-            self.discount = discount
-        
-        if (max_iter <= 0):
-            raise ValueError(mdperr["maxi_min"])
-        else:
-            self.max_iter = max_iter
+        if (type(max_iter) is int) or (type(max_iter) is float):
+            if (max_iter <= 0):
+                raise ValueError(mdperr["maxi_min"])
+            else:
+                self.max_iter = max_iter
+        elif not max_iter is None:
+            raise ValueError("PyMDPtoolbox: max_iter must be a positive real number greater than zero.")
         
         self.check(transitions, reward)
         
         self.computePR(transitions, reward)
         
+        # the verbosity is by default turned off
+        self.verbose = False
+        # Initially the time taken to perform the computations is set to None
+        self.time = None
         # set the initial iteration count to zero
         self.iter = 0
+        
+        self.value = None
+        self.policy = None
     
     def bellmanOperator(self):
         """
@@ -448,12 +456,14 @@ class MDP(object):
     def checkSquareStochastic(self, Z):
         """Check if Z is a square stochastic matrix
         
-        Arguments
-        --------------------------------------------------------------
-            Z = a numpy ndarray SxS, possibly sparse (csr_matrix)
+        Parameters
+        ----------
+        Z : a SxS matrix. It could be a numpy ndarray SxS, or a scipy.sparse 
+            csr_matrix
+        
         Evaluation
-        -------------------------------------------------------------
-            error_msg = error message or None if correct
+        ----------
+        Returns None if no error has been detected
         """
         s1, s2 = Z.shape
         if (s1 != s2):
@@ -582,33 +592,30 @@ class FiniteHorizon(MDP):
 
     """
 
-    def __init__(self, P, R, discount, N, h):
+    def __init__(self, transitions, reward, discount, N, h=None):
+        """"""
         if N < 1:
             raise ValueError('MDP Toolbox ERROR: N must be upper than 0')
-        if discount <= 0 or discount > 1:
-            raise ValueError('MDP Toolbox ERROR: Discount rate must be in ]0; 1]')
-        
-        if iscell(P):
-            S = size(P[1],1)
         else:
-            S = size(P,1)
+            self.N = N
         
-        V = zeros(S,N+1)
+        MDP.__init__(self, transitions, reward, discount, None)
         
-        if nargin == 5:
-            V[:,N+1] = h
+        self.value = zeros(self.S, N + 1)
         
-        PR = mdp_computePR(P,R);
+        if not h is None:
+            self.value[:, N + 1] = h
         
-    def iterate():
+    def iterate(self):
+        """"""
         self.time = time()
         
-        for n in range(N-1):
-            W, X = self.bellmanOperator(P,PR,discount,V[:,N-n+1])
-            V[:,N-n] = W
-            policy[:, N-n] = X
-            #if mdp_VERBOSE
-            #    disp(['stage:' num2str(N-n) '      policy transpose : ' num2str(policy(:,N-n)')])
+        for n in range(self.N - 1):
+            W, X = self.bellmanOperator(self.P, self.R, self.discount, self.value[:, self.N - n + 1])
+            self.value[:, self.N - n] = W
+            self.policy[:, self.N - n] = X
+            if self.verbose:
+                print("stage: %s ... policy transpose : %s") % (self.N - n, self.policy[:, self.N - n].T)
         
         self.time = time() - self.time
 
@@ -642,26 +649,18 @@ class LP(MDP):
     --------
     """
 
-    def __init__(self, P, R, discount):
+    def __init__(self, transitions, reward, discount):
+        """"""
         
         try:
             from cvxopt import matrix, solvers
+            self.linprog = solvers.lp
         except ImportError:
             raise ImportError("The python module cvxopt is required to use linear programming functionality.")
         
-        self.linprog = solvers.lp
+        from scipy.sparse import eye as speye
 
-        if discount <= 0 or discount >= 1:
-            print('MDP Toolbox ERROR: Discount rate must be in ]0; 1[')
-        
-        if iscell(P):
-            S = size(P[1],1)
-            A = length(P)
-        else:
-            S = size(P,1)
-            A = size(P,3)
-
-        PR = self.computePR(P,R)
+        MDP.__init__(self, transitions, reward, discount, None)
         
         # The objective is to resolve : min V / V >= PR + discount*P*V
         # The function linprog of the optimisation Toolbox of Mathworks resolves :
@@ -669,23 +668,22 @@ class LP(MDP):
         # So the objective could be expressed as : min V / (discount*P-I) * V <= - PR
         # To avoid loop on states, the matrix M is structured following actions M(A*S,S)
     
-        f = ones(S,1)
+        self.f = ones(self.S, 1)
     
-        M = []
-        if iscell(P):
-            for a in range(A):
-                M = hstack((M, discount * P[a] - speye(S)))
-        else:
-            for a in range(A):
-                M = hstack((M, discount * P[:,:,a] - speye(S)))
-    
-    def iterate(self, linprog):
+        self.M = zeros((self.A * self.S, self.S))
+        for aa in range(self.A):
+            pos = (aa + 1) * self.S
+            self.M[(pos - self.S):pos, :] = discount * self.P[aa] - speye(self.S, self.S)
         
+        self.M = matrix(self.M)
+    
+    def iterate(self):
+        """"""
         self.time = time()
         
-        V = self.linprog(f, M, -PR)
+        self.value = self.linprog(self.f, self.M, -self.R)
         
-        V, policy =  self.bellmanOperator(P, PR, discount, V)
+        self.value, self.policy =  self.bellmanOperator(self.P, self.R, self.discount, self.value)
         
         self.time = time() - self.time
 
@@ -808,14 +806,10 @@ class PolicyIterationModified(MDP):
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10):
         """"""
         
-        MDP.__init__(self, discount, max_iter)
+        MDP.__init__(self, transitions, reward, discount, max_iter)
         
         if epsilon <= 0:
             raise ValueError("epsilon must be greater than 0")
-        
-        self.check(transitions, reward)
-        
-        self.computePR(transitions, reward)
         
         # computation of threshold of variation for V for an epsilon-optimal policy
         if self.discount != 1:
@@ -827,9 +821,11 @@ class PolicyIterationModified(MDP):
             self.value = matrix(zeros((self.S, 1)))
         else:
             # min(min()) is not right
-            self.value = 1 / (1 - discount) * min(min(self.PR)) * ones((self.S, 1)) 
-        
-        self.iter = 0
+            self.value = 1 / (1 - discount) * min(min(self.R)) * ones((self.S, 1))
+    
+    def evalPolicyIterative(self):
+        """"""
+        pass
     
     def iterate(self):
         """"""
@@ -838,7 +834,7 @@ class PolicyIterationModified(MDP):
             print('  Iteration  V_variation')
         
         self.time = time()
-    
+        
         done = False
         while not done:
             self.iter = self.iter + 1
@@ -846,23 +842,23 @@ class PolicyIterationModified(MDP):
             Vnext, policy = self.bellmanOperator(self.P, self.PR, self.discount, self.V)
             #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
             
-            variation = self.getSpan(Vnext - V);
+            variation = self.getSpan(Vnext - self.value);
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
             
-            V = Vnext
-            if variation < thresh:
+            self.value = Vnext
+            if variation < self.thresh:
                 done = True
             else:
                 is_verbose = False
                 if self.verbose:
-                    self.verbose = False
+                    self.setSilent
                     is_verbose = True
                 
-                V = self.evalPolicyIterative(self.P, self.PR, self.discount, self.policy, self.V, self.epsilon, self.max_iter)
+                self.value = self.evalPolicyIterative()
                 
                 if is_verbose:
-                    self.verbose = True
+                    self.setVerbose
         
         self.time = time() - self.time
 
@@ -1055,13 +1051,8 @@ class RelativeValueIteration(MDP):
         if epsilon <= 0:
             print('MDP Toolbox ERROR: epsilon must be upper than 0')
     
-        if iscell(P):
-            S = size(P[1], 1)
-        else:
-            S = size(P, 1)
-    
-        self.U = zeros(S, 1)
-        self.gain = U(S)
+        self.U = zeros(self.S, 1)
+        self.gain = self.U[self.S]
     
     def iterate(self):
         """"""
@@ -1076,7 +1067,7 @@ class RelativeValueIteration(MDP):
             
             self.iter = self.iter + 1;
             
-            Unext, policy = self.bellmanOperator(self.P, self.PR, 1, self.U)
+            Unext, policy = self.bellmanOperator(self.P, self.R, 1, self.U)
             Unext = Unext - self.gain
             
             variation = self.getSpan(Unext - self.U)
@@ -1320,7 +1311,7 @@ class ValueIteration(MDP):
         
         self.time = time() - self.time
 
-class ValueIterationGS(MDP):
+class ValueIterationGS(ValueIteration):
     """Resolution of discounted MDP with value iteration Gauss-Seidel algorithm
     
     Arguments
@@ -1359,7 +1350,7 @@ class ValueIterationGS(MDP):
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10, initial_value=0):
         """"""
         
-        MDP.__init__(self, discount, max_iter)
+        MDP.__init__(self, transitions, reward, discount, max_iter)
         
         # initialization of optional arguments
         if (initial_value == 0):
@@ -1371,57 +1362,25 @@ class ValueIterationGS(MDP):
         if epsilon <= 0:
             raise ValueError("epsilon must be greater than 0")
         
-        #if discount == 1  
-        #    disp('--------------------------------------------------------')
-        #    disp('MDP Toolbox WARNING: check conditions of convergence.')
-        #    disp('With no discount, convergence is not always assumed.')
-        #    disp('--------------------------------------------------------')
-        #end;
-     
-        PR = self.computePR(P, R)
-     
-        #% initialization of optional arguments
-        #if nargin < 6; V0 = zeros(S,1); end;
-        #if nargin < 4; epsilon = 0.01; end;
-        #% compute a bound for the number of iterations
-        #if discount ~= 1
-        #    computed_max_iter = mdp_value_iteration_bound_iter(P, R, discount, epsilon, V0);
-        #end;
-        #if nargin < 5
-        #    if discount ~= 1
-        #        max_iter = computed_max_iter;
-        #    else   
-        #        max_iter = 1000;
-        #    end;
-        #else
-        #    if discount ~= 1 && max_iter > computed_max_iter
-        #        disp(['MDP Toolbox WARNING: max_iter is bounded by ' num2str(computed_max_iter,'%12.1f') ])
-        #        max_iter = computed_max_iter;
-        #    end;
-        #end;
-        #% computation of threshold of variation for V for an epsilon-optimal policy
-        #if discount ~= 1
-        #    thresh = epsilon * (1-discount)/discount
-        #else 
-        #    thresh = epsilon
-        self.discount = discount
+        if discount == 1:
+            print('PyMDPtoolbox WARNING: check conditions of convergence.'
+                  'With no discount, convergence is not always assumed.')
+        
         if (discount < 1):
             # compute a bound for the number of iterations
-            #self.max_iter = self.boundIter(epsilon)
-            self.max_iter = 5000
+            self.boundIter(epsilon)
+            print('MDP Toolbox WARNING: max_iter is bounded by %s') % self.max_iter
             # computation of threshold of variation for V for an epsilon-optimal policy
             self.thresh = epsilon * (1 - self.discount) / self.discount
         else: # discount == 1
-            # bound for the number of iterations
-            self.max_iter = max_iter
             # threshold of variation for V for an epsilon-optimal policy
             self.thresh = epsilon
-     
+        
         self.iter = 0
     
-    def iterate(self, PR):
+    def iterate(self):
         """"""
-        V = self.initial_value
+        V = self.value
         
         done = False
         
@@ -1437,18 +1396,15 @@ class ValueIterationGS(MDP):
             
             for s in range(self.S):
                 for a in range(self.A):
-                    if iscell(P):
-                        Q[a] =  PR[s,a]  +  discount * P[a][s,:] * V 
-                    else:
-                        Q[a] =  PR[s,a]  +  discount * P[s,:,a] * V
-                V[s] = max(Q)
+                    Q[a] =  self.R[s,a]  +  self.discount * self.P[a][s,:] * self.value
+                self.value[s] = max(Q)
             
             variation = self.getSpan(V - Vprev)
             
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
             
-            if variation < thresh: 
+            if variation < self.thresh: 
                 done = True
                 if self.verbose:
                     print('MDP Toolbox : iterations stopped, epsilon-optimal policy found')
@@ -1458,13 +1414,10 @@ class ValueIterationGS(MDP):
                 if self.verbose: 
                     print('MDP Toolbox : iterations stopped by maximum number of iteration condition')
              
-        for s in range(S):
-            for a in range(A):
-                if iscell(P):
-                    Q[a] =  PR[s,a] + P[a][s,:] * discount * V
-                else:
-                    Q[a] =  PR[s,a] + P[s,:,a] * discount * V
+        for s in range(self.S):
+            for a in range(self.A):
+                Q[a] =  self.R[s,a] + self.P[a][s,:] * self.discount * self.value
             
-            V[s], policy[s,1] = max(Q)
+            self.value[s], self.policy[s,1] = max(Q)
 
         self.time = time() - self.time

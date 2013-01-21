@@ -10,7 +10,7 @@ from numpy import array, eye, matrix, zeros
 from numpy.random import rand
 from scipy.sparse import eye as speye
 from scipy.sparse import csr_matrix as sparse
-from scipy.stats.distributions import poisson
+#from scipy.stats.distributions import poisson
 
 inst = MDP()
 
@@ -144,39 +144,50 @@ def test_ValueIteration_boundIter():
     inst = ValueIteration(P, R, 0.9, 0.01)
     assert (inst.max_iter == 28)
 
-def test_JacksCarRental():
-    S = 21 ** 2
-    A = 11
-    P = zeros((A, S, S))
-    R = zeros((A, S, S))
-    for a in range(A):
-        for s in range(21):
-            for s1 in range(21):
-                c1s = int(s / 21)
-                c2s = s - c1s * 21
-                c1s1 = int(s1 / 21)
-                c2s1 = s - c1s * 21
-                cs = c1s + c2s
-                cs1 = c1s1 + c2s1
-                netmove = 5 - a
-                if (s1 < s):
-                    pass
-                else:
-                    pass
-                P[a, s, s1] = 1
-                R[a, s, s1] = 10 * (cs - cs1) - 2 * abs(a)
-    
+# PolicyIteration
+def test_PolicyIteration():
+    P = array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
+    R = array([[5, 10], [-1, 2]])
     inst = PolicyIteration(P, R, 0.9)
     inst.iterate()
-    #assert (inst.policy == )
+    assert (abs(inst.value[0] - 42.4419) < 0.001)
+    assert (abs(inst.value[1] - 36.0465) < 0.001)
+    assert (inst.policy == (1, 0))
+    assert (inst.iter == 2)
 
-def test_JacksCarRental2():
-    pass
-
-def test_GamblersProblem():
-    inst = ValueIteration()
-    inst.iterate()
-    #assert (inst.policy == )
+#def test_JacksCarRental():
+#    S = 21 ** 2
+#    A = 11
+#    P = zeros((A, S, S))
+#    R = zeros((A, S, S))
+#    for a in range(A):
+#        for s in range(21):
+#            for s1 in range(21):
+#                c1s = int(s / 21)
+#                c2s = s - c1s * 21
+#                c1s1 = int(s1 / 21)
+#                c2s1 = s - c1s * 21
+#                cs = c1s + c2s
+#                cs1 = c1s1 + c2s1
+#                netmove = 5 - a
+#                if (s1 < s):
+#                    pass
+#                else:
+#                    pass
+#                P[a, s, s1] = 1
+#                R[a, s, s1] = 10 * (cs - cs1) - 2 * abs(a)
+#    
+#    inst = PolicyIteration(P, R, 0.9)
+#    inst.iterate()
+#    #assert (inst.policy == )
+#
+#def test_JacksCarRental2():
+#    pass
+#
+#def test_GamblersProblem():
+#    inst = ValueIteration()
+#    inst.iterate()
+#    #assert (inst.policy == )
 
 # checkSquareStochastic: not square, stochastic and non-negative
 
