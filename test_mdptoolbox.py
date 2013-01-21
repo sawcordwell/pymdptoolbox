@@ -5,89 +5,90 @@ Created on Sun May 27 23:16:57 2012
 @author: -
 """
 
-from mdp import exampleForest, exampleRand, MDP, PolicyIteration, ValueIteration
-from numpy import array, eye, matrix, zeros
-from numpy.random import rand
-from scipy.sparse import eye as speye
-from scipy.sparse import csr_matrix as sparse
+from mdp import exampleForest, exampleRand, PolicyIteration, ValueIteration
+from numpy import array
+#from numpy import array, eye, matrix, zeros
+#from numpy.random import rand
+#from scipy.sparse import eye as speye
+#from scipy.sparse import csr_matrix as sparse
 #from scipy.stats.distributions import poisson
 
-inst = MDP()
-
+#inst = MDP()
+#
 STATES = 10
 ACTIONS = 3
-
-# check: square, stochastic and non-negative
-
-def test_check_square_stochastic_nonnegative_array():
-    P = zeros((ACTIONS, STATES, STATES))
-    R = zeros((STATES, ACTIONS))
-    for a in range(ACTIONS):
-        P[a, :, :] = eye(STATES)
-        R[:, a] = rand(STATES)
-    inst.check(P, R)
-
-# check: square, stochastic and non-negative object arrays
-
-def test_check_square_stochastic_nonnegative_object_array():
-    P = zeros((ACTIONS, ), dtype=object)
-    R = zeros((STATES, ACTIONS))
-    for a in range(ACTIONS):
-        P[a] = eye(STATES)
-        R[:, a] = rand(STATES)
-    inst.check(P, R)
-
-def test_check_square_stochastic_nonnegative_object_matrix():
-    P = zeros((ACTIONS, ), dtype=object)
-    R = zeros((STATES, ACTIONS))
-    for a in range(ACTIONS):
-        P[a] = matrix(eye(STATES))
-        R[:, a] = rand(STATES)
-    inst.check(P, R)
-
-def test_check_square_stochastic_nonnegative_object_sparse():
-    P = zeros((ACTIONS, ), dtype=object)
-    R = zeros((STATES, ACTIONS))
-    for a in range(ACTIONS):
-        P[a] = speye(STATES, STATES).tocsr()
-        R[:, a] = rand(STATES)
-    inst.check(P, R)
-
-# checkSquareStochastic: square, stochastic and non-negative
-
-def test_checkSquareStochastic_square_stochastic_nonnegative_array():
-    P = rand(STATES, STATES)
-    for s in range(STATES):
-        P[s, :] = P[s, :] / P[s, :].sum()
-    assert inst.checkSquareStochastic(P) == None
-
-def test_checkSquareStochastic_square_stochastic_nonnegative_matrix():
-    P = rand(STATES, STATES)
-    for s in range(STATES):
-        P[s, :] = P[s, :] / P[s, :].sum()
-    P = matrix(P)
-    assert inst.checkSquareStochastic(P) == None
-
-def test_checkSquareStochastic_square_stochastic_nonnegative_sparse():
-    P = rand(STATES, STATES)
-    for s in range(STATES):
-        P[s, :] = P[s, :] / P[s, :].sum()
-    P = sparse(P)
-    assert inst.checkSquareStochastic(P) == None
-
-# checkSquareStochastic: eye
-
-def test_checkSquareStochastic_eye_array():
-    P = eye(STATES)
-    assert inst.checkSquareStochastic(P) == None
-
-def test_checkSquareStochastic_eye_matrix():
-    P = matrix(eye(STATES))
-    assert inst.checkSquareStochastic(P) == None
-
-def test_checkSquareStochastic_eye_sparse():
-    P = speye(STATES, STATES).tocsr()
-    assert inst.checkSquareStochastic(P) == None
+#
+## check: square, stochastic and non-negative
+#
+#def test_check_square_stochastic_nonnegative_array():
+#    P = zeros((ACTIONS, STATES, STATES))
+#    R = zeros((STATES, ACTIONS))
+#    for a in range(ACTIONS):
+#        P[a, :, :] = eye(STATES)
+#        R[:, a] = rand(STATES)
+#    inst.check(P, R)
+#
+## check: square, stochastic and non-negative object arrays
+#
+#def test_check_square_stochastic_nonnegative_object_array():
+#    P = zeros((ACTIONS, ), dtype=object)
+#    R = zeros((STATES, ACTIONS))
+#    for a in range(ACTIONS):
+#        P[a] = eye(STATES)
+#        R[:, a] = rand(STATES)
+#    inst.check(P, R)
+#
+#def test_check_square_stochastic_nonnegative_object_matrix():
+#    P = zeros((ACTIONS, ), dtype=object)
+#    R = zeros((STATES, ACTIONS))
+#    for a in range(ACTIONS):
+#        P[a] = matrix(eye(STATES))
+#        R[:, a] = rand(STATES)
+#    inst.check(P, R)
+#
+#def test_check_square_stochastic_nonnegative_object_sparse():
+#    P = zeros((ACTIONS, ), dtype=object)
+#    R = zeros((STATES, ACTIONS))
+#    for a in range(ACTIONS):
+#        P[a] = speye(STATES, STATES).tocsr()
+#        R[:, a] = rand(STATES)
+#    inst.check(P, R)
+#
+## checkSquareStochastic: square, stochastic and non-negative
+#
+#def test_checkSquareStochastic_square_stochastic_nonnegative_array():
+#    P = rand(STATES, STATES)
+#    for s in range(STATES):
+#        P[s, :] = P[s, :] / P[s, :].sum()
+#    assert inst.checkSquareStochastic(P) == None
+#
+#def test_checkSquareStochastic_square_stochastic_nonnegative_matrix():
+#    P = rand(STATES, STATES)
+#    for s in range(STATES):
+#        P[s, :] = P[s, :] / P[s, :].sum()
+#    P = matrix(P)
+#    assert inst.checkSquareStochastic(P) == None
+#
+#def test_checkSquareStochastic_square_stochastic_nonnegative_sparse():
+#    P = rand(STATES, STATES)
+#    for s in range(STATES):
+#        P[s, :] = P[s, :] / P[s, :].sum()
+#    P = sparse(P)
+#    assert inst.checkSquareStochastic(P) == None
+#
+## checkSquareStochastic: eye
+#
+#def test_checkSquareStochastic_eye_array():
+#    P = eye(STATES)
+#    assert inst.checkSquareStochastic(P) == None
+#
+#def test_checkSquareStochastic_eye_matrix():
+#    P = matrix(eye(STATES))
+#    assert inst.checkSquareStochastic(P) == None
+#
+#def test_checkSquareStochastic_eye_sparse():
+#    P = speye(STATES, STATES).tocsr()
+#    assert inst.checkSquareStochastic(P) == None
 
 # exampleForest
 
@@ -103,9 +104,9 @@ def test_exampleForest_shape():
                         [0, 1],
                         [4, 2]])).all()
 
-def test_exampleForest_check():
-    P, R = exampleForest(10, 5, 3, 0.2)
-    inst.check(P, R)
+#def test_exampleForest_check():
+#    P, R = exampleForest(10, 5, 3, 0.2)
+#    inst.check(P, R)
 
 # exampleRand
 
@@ -114,18 +115,18 @@ def test_exampleRand_dense_shape():
     assert (P.shape == (ACTIONS, STATES, STATES))
     assert (R.shape == (ACTIONS, STATES, STATES))
 
-def test_exampleRand_dense_check():
-    P, R = exampleRand(STATES, ACTIONS)
-    assert inst.check(P, R) == None
+#def test_exampleRand_dense_check():
+#    P, R = exampleRand(STATES, ACTIONS)
+#    assert inst.check(P, R) == None
 
 def test_exampleRand_sparse_shape():
     P, R = exampleRand(STATES, ACTIONS, is_sparse=True)
     assert (P.shape == (ACTIONS, ))
     assert (R.shape == (ACTIONS, ))
 
-def test_exampleRand_sparse_check():
-    P, R = exampleRand(STATES, ACTIONS, is_sparse=True)
-    assert inst.check(P, R) == None
+#def test_exampleRand_sparse_check():
+#    P, R = exampleRand(STATES, ACTIONS, is_sparse=True)
+#    assert inst.check(P, R) == None
 
 # ValueIteration
 

@@ -699,67 +699,53 @@ class PolicyIteration(MDP):
     
     """
     
-    def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=1000, initial_value=0):
+    def __init__(self, transitions, reward, discount, policy0, max_iter=1000, eval_type=0):
         """"""
-        MDP.__init__(self)
         
-        self.check(transitions, reward)
+        if (size(policy0,1) != S or any(mod(policy0, 1)) or any(policy0 < 1) or any(policy0 > S)):
+            raise ValueError('MDP Toolbox ERROR: policy0 must a (1xS) vector with integer from 1 to S')
         
-        self.S = transitions.shape[1]
+        MDP.__init__(self, transitions, reward, discount, max_iter)
         
-        self.A = transitions.shape[0]
+        self.value = matrix(zeros((self.S, 1)))
         
-        self.P = transitions
-        
-        self.R = reward
-        
-        #self.computePR(transitions, reward)
-        
-        if (initial_value == 0):
-            self.value = zeros((self.S))
-            #self.value = matrix(zeros((self.S, 1)))
-        else:
-            if (len(initial_value) != self.S):
-                raise ValueError("The initial value must be length S")
-            
-            self.value = matrix(initial_value)
-        
-        self.policy = randi(0, self.A, self.S)
-
-        self.discount = discount
-        self.max_iter = max_iter
-        
-        self.iter = 0
+        # initialise the policy to the one which maximises the expected
+        # immediate reward
+        self.bellmanOperator()
+    
+    def evalPolicyMatrix(self):
+        """"""
+        pass
     
     def iterate(self):
         """"""
         done = False
-        stop_criterion = 0.01
+        if self.verbose:
+            print('  Iteration  Number_of_different_actions')
+        
+        self.time = time()
         
         while not done:
-            stop = False
-            while not stop:
-                change = 0
-                for s in range(self.S):
-                    v = self.value[s]
-                    a = self.policy[s]
-                    self.value[s] = (self.P[a, s, :] * (self.R[a, s, :] +
-                        (self.discount * self.value))).sum()
-                    change = max(change, abs(v - self.value[s]))
-                
-                if change < stop_criterion:
-                    stop = True
+            self.iter = self.iter + 1
             
-            policy_stable = True
-            for s in range(self.S):
-                b = self.policy[s]
-                self.policy[s] = (self.P[:, s, :] * (self.R[:, s, :] +
-                        (self.discount * self.value))).sum(1).argmax()
-                if b !=  self.policy[s]:
-                    policy_stable = False
+            if eval_type == 0:
+                self.value = self.evalPolicyMatrix()
+            else:
+                self.value = self.evalPolicyIterative()
             
-            if policy_stable:
+            policy_prev = self.policy
+            
+            self.bellmanOperator()
+            
+            n_different = (policy != policy_prev).sum()
+            
+            if self.verbose:
+                print('       %s                 %s') % (self.iter, n_different)
+            
+            if (policy == policy_prev).all() or (self.iter == self.max_iter):
                 done = True
+        
+        self.time = time() - self.time
         
         # store value and policy as tuples
         self.value = tuple(array(self.value).reshape(self.S).tolist())
