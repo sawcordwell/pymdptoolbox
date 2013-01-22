@@ -32,9 +32,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from numpy import absolute, array, diag, matrix, mean, ndarray, ones, zeros
+from numpy import absolute, array, diag, matrix, mean, mod, multiply, ndarray
+from numpy import ones, zeros
 from numpy.random import rand
-from numpy.random import randint as randi
 from math import ceil, log, sqrt
 from random import randint, random
 from scipy.sparse import csr_matrix as sparse
@@ -90,6 +90,190 @@ mdperr = {
 "maxi_min" :
     "PyMDPtoolbox: The maximum number of iterations must be greater than 0"
 }
+
+def check(P, R):
+    """Checks if the matrices P and R define a Markov Decision Process.
+    
+    Let S = number of states, A = number of actions.
+    The transition matrix P must be on the shape (A, S, S) and P[a,:,:]
+    must be stochastic.
+    The reward matrix R must be on the shape (A, S, S) or (S, A).
+    Raises an error if P and R do not define a MDP.
+    
+    Parameters
+    ---------
+    P : transition matrix (A, S, S)
+        P could be an array with 3 dimensions or a object array (A, ),
+        each cell containing a matrix (S, S) possibly sparse
+    R : reward matrix (A, S, S) or (S, A)
+        R could be an array with 3 dimensions (SxSxA) or a object array
+        (A, ), each cell containing a sparse matrix (S, S) or a 2D
+        array(S, A) possibly sparse  
+    """
+    
+    # Check of P
+    # tranitions must be a numpy array either an AxSxS ndarray (with any 
+    # dtype other than "object"); or, a 1xA ndarray with a "object" dtype, 
+    # and each element containing an SxS array. An AxSxS array will be
+    # be converted to an object array. A numpy object array is similar to a
+    # MATLAB cell array.
+    if (not type(P) is ndarray):
+        raise TypeError(mdperr["P_type"])
+    
+    if (not type(R) is ndarray):
+        raise TypeError(mdperr["R_type"])
+    
+    # NumPy has an array type of 'object', which is roughly equivalent to
+    # the MATLAB cell array. These are most useful for storing sparse
+    # matrices as these can only have two dimensions whereas we want to be
+    # able to store a transition matrix for each action. If the dytpe of
+    # the transition probability array is object then we store this as
+    # P_is_object = True.
+    # If it is an object array, then it should only have one dimension
+    # otherwise fail with a message expalining why.
+    # If it is a normal array then the number of dimensions must be exactly
+    # three, otherwise fail with a message explaining why.
+    if (P.dtype == object):
+        if (P.ndim > 1):
+            raise ValueError(mdperr["obj_shape"])
+        else:
+            P_is_object = True
+    else:
+        if (P.ndim != 3):
+            raise ValueError(mdperr["P_shape"])
+        else:
+            P_is_object = False
+    
+    # As above but for the reward array. A difference is that the reward
+    # array can have either two or 3 dimensions.
+    if (R.dtype == object):
+        if (R.ndim > 1):
+            raise ValueError(mdperr["obj_shape"])
+        else:
+            R_is_object = True
+    else:
+        if (not R.ndim in (2, 3)):
+            raise ValueError(mdperr["R_shape"])
+        else:
+            R_is_object = False
+    
+    # We want to make sure that the transition probability array and the 
+    # reward array are in agreement. This means that both should show that
+    # there are the same number of actions and the same number of states.
+    # Furthermore the probability of transition matrices must be SxS in
+    # shape, so we check for that also.
+    if P_is_object:
+        # If the user has put their transition matrices into a numpy array
+        # with dtype of 'object', then it is possible that they have made a
+        # mistake and not all of the matrices are of the same shape. So,
+        # here we record the number of actions and states that the first
+        # matrix in element zero of the object array says it has. After
+        # that we check that every other matrix also reports the same
+        # number of actions and states, otherwise fail with an error.
+        # aP: the number of actions in the transition array. This
+        # corresponds to the number of elements in the object array.
+        aP = P.shape[0]
+        # sP0: the number of states as reported by the number of rows of
+        # the transition matrix
+        # sP1: the number of states as reported by the number of columns of
+        # the transition matrix
+        sP0, sP1 = P[0].shape
+        # Now we check to see that every element of the object array holds
+        # a matrix of the same shape, otherwise fail.
+        for aa in range(1, aP):
+            # sp0aa and sp1aa represents the number of states in each
+            # subsequent element of the object array. If it doesn't match
+            # what was found in the first element, then we need to fail
+            # telling the user what needs to be fixed.
+            sP0aa, sP1aa = P[aa].shape
+            if ((sP0aa != sP0) or (sP1aa != sP1)):
+                raise ValueError(mdperr["obj_square"])
+    else:
+        # if we are using a normal array for this, then the first
+        # dimension should be the number of actions, and the second and 
+        # third should be the number of states
+        aP, sP0, sP1 = P.shape
+    
+    # the first dimension of the transition matrix must report the same
+    # number of states as the second dimension. If not then we are not
+    # dealing with a square matrix and it is not a valid transition
+    # probability. Also, if the number of actions is less than one, or the
+    # number of states is less than one, then it also is not a valid
+    # transition probability.
+    if ((sP0 < 1) or (aP < 1) or (sP0 != sP1)):
+        raise ValueError(mdperr["P_shape"])
+    
+    # now we check that each transition matrix is square-stochastic. For
+    # object arrays this is the matrix held in each element, but for
+    # normal arrays this is a matrix formed by taking a slice of the array
+    for aa in range(aP):
+        if P_is_object:
+            checkSquareStochastic(P[aa])
+        else:
+            checkSquareStochastic(P[aa, :, :])
+        # aa = aa + 1 # why was this here?
+    
+    if R_is_object:
+        # if the rewarad array has an object dtype, then we check that
+        # each element contains a matrix of the same shape as we did 
+        # above with the transition array.
+        aR = R.shape[0]
+        sR0, sR1 = R[0].shape
+        for aa in range(1, aR):
+            sR0aa, sR1aa = R[aa].shape
+            if ((sR0aa != sR0) or (sR1aa != sR1)):
+                raise ValueError(mdperr["obj_square"])
+    elif (R.ndim == 3):
+        # This indicates that the reward matrices are constructed per 
+        # transition, so that the first dimension is the actions and
+        # the second two dimensions are the states.
+        aR, sR0, sR1 = R.shape
+    else:
+        # then the reward matrix is per state, so the first dimension is 
+        # the states and the second dimension is the actions.
+        sR0, aR = R.shape
+        # this is added just so that the next check doesn't error out
+        # saying that sR1 doesn't exist
+        sR1 = sR0
+    
+    # the number of actions must be more than zero, the number of states
+    # must also be more than 0, and the states must agree
+    if ((sR0 < 1) or (aR < 1) or (sR0 != sR1)):
+        raise ValueError(mdperr["R_shape"])
+    
+    # now we check to see that what the transition array is reporting and
+    # what the reward arrar is reporting agree as to the number of actions
+    # and states. If not then fail explaining the situation
+    if (sP0 != sR0) or (aP != aR):
+        raise ValueError(mdperr["PR_incompat"])
+        
+    # We are at the end of the checks, so if no exceptions have been raised
+    # then that means there are (hopefullly) no errors and we return None
+    return None
+
+def checkSquareStochastic(Z):
+    """Check if Z is a square stochastic matrix
+    
+    Parameters
+    ----------
+    Z : a SxS matrix. It could be a numpy ndarray SxS, or a scipy.sparse 
+        csr_matrix
+    
+    Evaluation
+    ----------
+    Returns None if no error has been detected
+    """
+    s1, s2 = Z.shape
+    if (s1 != s2):
+        raise ValueError(mdperr["mat_square"])
+    elif (absolute(Z.sum(axis=1) - ones(s2))).max() > 10**(-12):
+        raise ValueError(mdperr["mat_stoch"])
+    elif ((type(Z) is ndarray) or (type(Z) is matrix)) and (Z < 0).any():
+        raise ValueError(mdperr["mat_nonneg"])
+    elif (type(Z) is sparse) and (Z.data < 0).any():
+        raise ValueError(mdperr["mat_nonneg"]) 
+    else:
+        return(None)
 
 def exampleForest(S=3, r1=4, r2=2, p=0.1):
     """
@@ -219,7 +403,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                     PP[s, randint(0, S - 1)] = 1
                 PP[s, :] = PP[s, :] / PP[s, :].sum()
             P[a] = sparse(PP)
-            R[a] = sparse(mask * (2 * rand(S, S) - ones((S, S))))
+            R[a] = sparse(mask[a] * (2 * rand(S, S) - ones((S, S))))
     else:
         # definition of transition matrix : square stochastic matrix
         P = zeros((A, S, S))
@@ -247,7 +431,8 @@ class MDP(object):
             else:
                 self.discount = discount
         elif not discount is None:
-            raise ValueError("PyMDPtoolbox: the discount must be a positive real number less than or equal to one.")
+            raise ValueError("PyMDPtoolbox: the discount must be a positive " \
+                "real number less than or equal to one.")
         
         if (type(max_iter) is int) or (type(max_iter) is float):
             if (max_iter <= 0):
@@ -255,10 +440,14 @@ class MDP(object):
             else:
                 self.max_iter = max_iter
         elif not max_iter is None:
-            raise ValueError("PyMDPtoolbox: max_iter must be a positive real number greater than zero.")
+            raise ValueError("PyMDPtoolbox: max_iter must be a positive real "\
+                "number greater than zero.")
         
-        self.check(transitions, reward)
+        # we run a check on P and R to make sure they are describing an MDP. If
+        # an exception isn't raised then they are assumed to be correct.
+        check(transitions, reward)
         
+        # computePR will assign the variables self.S, self.A, self.P and self.R
         self.computePR(transitions, reward)
         
         # the verbosity is by default turned off
@@ -289,198 +478,51 @@ class MDP(object):
         # call this function must be changed
         # 1. Return, (policy, value)
         # return (Q.argmax(axis=1), Q.max(axis=1))
-        # 2. change self.policy and self.value directly
+        # 2. update self.policy and self.value directly
         self.value = Q.max(axis=1)
         self.policy = Q.argmax(axis=1)
     
-    def check(self, P, R):
-        """Checks if the matrices P and R define a Markov Decision Process.
-        
-        Let S = number of states, A = number of actions.
-        The transition matrix P must be on the shape (A, S, S) and P[a,:,:]
-        must be stochastic.
-        The reward matrix R must be on the shape (A, S, S) or (S, A).
-        Raises an error if P and R do not define a MDP.
-        
-        Parameters
+    def computePpolicyPRpolicy(self):
+        """Computes the transition matrix and the reward matrix for a policy
+
+        Arguments
         ---------
-        P : transition matrix (A, S, S)
-            P could be an array with 3 dimensions or a object array (A, ),
-            each cell containing a matrix (S, S) possibly sparse
-        R : reward matrix (A, S, S) or (S, A)
-            R could be an array with 3 dimensions (SxSxA) or a object array
-            (A, ), each cell containing a sparse matrix (S, S) or a 2D
-            array(S, A) possibly sparse  
-        """
-        
-        # Check of P
-        # tranitions must be a numpy array either an AxSxS ndarray (with any 
-        # dtype other than "object"); or, a 1xA ndarray with a "object" dtype, 
-        # and each element containing an SxS array. An AxSxS array will be
-        # be converted to an object array. A numpy object array is similar to a
-        # MATLAB cell array.
-        if (not type(P) is ndarray):
-            raise TypeError(mdperr["P_type"])
-        
-        if (not type(R) is ndarray):
-            raise TypeError(mdperr["R_type"])
-        
-        # NumPy has an array type of 'object', which is roughly equivalent to
-        # the MATLAB cell array. These are most useful for storing sparse
-        # matrices as these can only have two dimensions whereas we want to be
-        # able to store a transition matrix for each action. If the dytpe of
-        # the transition probability array is object then we store this as
-        # P_is_object = True.
-        # If it is an object array, then it should only have one dimension
-        # otherwise fail with a message expalining why.
-        # If it is a normal array then the number of dimensions must be exactly
-        # three, otherwise fail with a message explaining why.
-        if (P.dtype == object):
-            if (P.ndim > 1):
-                raise ValueError(mdperr["obj_shape"])
-            else:
-                P_is_object = True
-        else:
-            if (P.ndim != 3):
-                raise ValueError(mdperr["P_shape"])
-            else:
-                P_is_object = False
-        
-        # As above but for the reward array. A difference is that the reward
-        # array can have either two or 3 dimensions.
-        if (R.dtype == object):
-            if (R.ndim > 1):
-                raise ValueError(mdperr["obj_shape"])
-            else:
-                R_is_object = True
-        else:
-            if (not R.ndim in (2, 3)):
-                raise ValueError(mdperr["R_shape"])
-            else:
-                R_is_object = False
-        
-        # We want to make sure that the transition probability array and the 
-        # reward array are in agreement. This means that both should show that
-        # there are the same number of actions and the same number of states.
-        # Furthermore the probability of transition matrices must be SxS in
-        # shape, so we check for that also.
-        if P_is_object:
-            # If the user has put their transition matrices into a numpy array
-            # with dtype of 'object', then it is possible that they have made a
-            # mistake and not all of the matrices are of the same shape. So,
-            # here we record the number of actions and states that the first
-            # matrix in element zero of the object array says it has. After
-            # that we check that every other matrix also reports the same
-            # number of actions and states, otherwise fail with an error.
-            # aP: the number of actions in the transition array. This
-            # corresponds to the number of elements in the object array.
-            aP = P.shape[0]
-            # sP0: the number of states as reported by the number of rows of
-            # the transition matrix
-            # sP1: the number of states as reported by the number of columns of
-            # the transition matrix
-            sP0, sP1 = P[0].shape
-            # Now we check to see that every element of the object array holds
-            # a matrix of the same shape, otherwise fail.
-            for aa in range(1, aP):
-                # sp0aa and sp1aa represents the number of states in each
-                # subsequent element of the object array. If it doesn't match
-                # what was found in the first element, then we need to fail
-                # telling the user what needs to be fixed.
-                sP0aa, sP1aa = P[aa].shape
-                if ((sP0aa != sP0) or (sP1aa != sP1)):
-                    raise ValueError(mdperr["obj_square"])
-        else:
-            # if we are using a normal array for this, then the first
-            # dimension should be the number of actions, and the second and 
-            # third should be the number of states
-            aP, sP0, sP1 = P.shape
-        
-        # the first dimension of the transition matrix must report the same
-        # number of states as the second dimension. If not then we are not
-        # dealing with a square matrix and it is not a valid transition
-        # probability. Also, if the number of actions is less than one, or the
-        # number of states is less than one, then it also is not a valid
-        # transition probability.
-        if ((sP0 < 1) or (aP < 1) or (sP0 != sP1)):
-            raise ValueError(mdperr["P_shape"])
-        
-        # now we check that each transition matrix is square-stochastic. For
-        # object arrays this is the matrix held in each element, but for
-        # normal arrays this is a matrix formed by taking a slice of the array
-        for aa in range(aP):
-            if P_is_object:
-                self.checkSquareStochastic(P[aa])
-            else:
-                self.checkSquareStochastic(P[aa, :, :])
-            # aa = aa + 1 # why was this here?
-        
-        if R_is_object:
-            # if the rewarad array has an object dtype, then we check that
-            # each element contains a matrix of the same shape as we did 
-            # above with the transition array.
-            aR = R.shape[0]
-            sR0, sR1 = R[0].shape
-            for aa in range(1, aR):
-                sR0aa, sR1aa = R[aa].shape
-                if ((sR0aa != sR0) or (sR1aa != sR1)):
-                    raise ValueError(mdperr["obj_square"])
-        elif (R.ndim == 3):
-            # This indicates that the reward matrices are constructed per 
-            # transition, so that the first dimension is the actions and
-            # the second two dimensions are the states.
-            aR, sR0, sR1 = R.shape
-        else:
-            # then the reward matrix is per state, so the first dimension is 
-            # the states and the second dimension is the actions.
-            sR0, aR = R.shape
-            # this is added just so that the next check doesn't error out
-            # saying that sR1 doesn't exist
-            sR1 = sR0
-        
-        # the number of actions must be more than zero, the number of states
-        # must also be more than 0, and the states must agree
-        if ((sR0 < 1) or (aR < 1) or (sR0 != sR1)):
-            raise ValueError(mdperr["R_shape"])
-        
-        # now we check to see that what the transition array is reporting and
-        # what the reward arrar is reporting agree as to the number of actions
-        # and states. If not then fail explaining the situation
-        if (sP0 != sR0) or (aP != aR):
-            raise ValueError(mdperr["PR_incompat"])
-            
-        # We are at the end of the checks, so if no exceptions have been raised
-        # then that means there are (hopefullly) no errors and we return None
-        return None
-    
-    def checkSquareStochastic(self, Z):
-        """Check if Z is a square stochastic matrix
-        
-        Parameters
-        ----------
-        Z : a SxS matrix. It could be a numpy ndarray SxS, or a scipy.sparse 
-            csr_matrix
+        Let S = number of states, A = number of actions
+        P(SxSxA)  = transition matrix 
+             P could be an array with 3 dimensions or 
+             a cell array (1xA), each cell containing a matrix (SxS) possibly sparse
+        R(SxSxA) or (SxA) = reward matrix
+             R could be an array with 3 dimensions (SxSxA) or 
+             a cell array (1xA), each cell containing a sparse matrix (SxS) or
+             a 2D array(SxA) possibly sparse  
+        policy(S) = a policy
         
         Evaluation
         ----------
-        Returns None if no error has been detected
+        Ppolicy(SxS)  = transition matrix for policy
+        PRpolicy(S)   = reward matrix for policy
         """
-        s1, s2 = Z.shape
-        if (s1 != s2):
-           raise ValueError(mdperr["mat_square"])
-        elif (absolute(Z.sum(axis=1) - ones(s2))).max() > 10**(-12):
-            raise ValueError(mdperr["mat_stoch"])
-        elif ((type(Z) is ndarray) or (type(Z) is matrix)) and (Z < 0).any():
-            raise ValueError(mdperr["mat_nonneg"])
-        elif (type(Z) is sparse) and (Z.data < 0).any():
-            raise ValueError(mdperr["mat_nonneg"]) 
-        else:
-            return(None)
-    
-    def computePpolicyPRpolicy(self):
-        """Computes the transition matrix and the reward matrix for a policy.
-        """
-        raise NotImplementedError("This method has not been implemented yet.")  
+        Ppolicy = zeros(())
+        PRpolicy = zeros(())
+        for a in range(self.A): # avoid looping over S
+        
+            ind = find(self.policy == a) # the rows that use action a
+            if not isempty(ind):
+                if iscell(P):
+                    Ppolicy[ind,:] = self.P[a][ind,:]
+                else:
+                    Ppolicy[ind,:] = self.P[ind,:,a]
+                
+                PR = self.computePR()
+                PRpolicy[ind, 1] = PR[ind, a]
+        
+        # self.R cannot be sparse with the code in its current condition
+        if type(self.R) is sparse:
+            PRpolicy = sparse(PRpolicy)
+        
+        #self.Ppolicy = Ppolicy
+        #self.Rpolicy = PRpolicy
+        return (Ppolicy, PRpolicy)
     
     def computePR(self, P, R):
         """Computes the reward for the system in one state chosing an action
@@ -499,6 +541,9 @@ class MDP(object):
         ----------
             PR(SxA)   = reward matrix
         """
+        # we assume that P and R define a MDP i,e. assumption is that
+        # check(P, R) has already been run and doesn't fail.
+        
         # make P be an object array with (S, S) shaped array elements
         if (P.dtype == object):
             self.P = P
@@ -521,10 +566,10 @@ class MDP(object):
             self.R = zeros((self.S, self.A))
             if (R.dtype is object):
                 for aa in range(self.A):
-                    self.R[:, aa] = sum(P[aa] * R[aa], 2)
+                    self.R[:, aa] = multiply(P[aa], R[aa]).sum(1)
             else:
                 for aa in range(self.A):
-                    self.R[:, aa] = sum(P[aa] * R[aa, :, :], 2)
+                    self.R[:, aa] = multiply(P[aa], R[aa, :, :]).sum(1)
         
         # convert the arrays to numpy matrices
         for aa in range(self.A):
@@ -595,7 +640,7 @@ class FiniteHorizon(MDP):
     def __init__(self, transitions, reward, discount, N, h=None):
         """"""
         if N < 1:
-            raise ValueError('MDP Toolbox ERROR: N must be upper than 0')
+            raise ValueError('PyMDPtoolbox: N must be greater than 0')
         else:
             self.N = N
         
@@ -656,7 +701,8 @@ class LP(MDP):
             from cvxopt import matrix, solvers
             self.linprog = solvers.lp
         except ImportError:
-            raise ImportError("The python module cvxopt is required to use linear programming functionality.")
+            raise ImportError("The python module cvxopt is required to use " \
+                "linear programming functionality.")
         
         from scipy.sparse import eye as speye
 
@@ -690,6 +736,36 @@ class LP(MDP):
 class PolicyIteration(MDP):
     """Resolution of discounted MDP with policy iteration algorithm.
     
+    Arguments
+    ---------
+    Let S = number of states, A = number of actions
+    P(SxSxA) = transition matrix 
+             P could be an array with 3 dimensions or 
+             a cell array (1xA), each cell containing a matrix (SxS) possibly sparse
+    R(SxSxA) or (SxA) = reward matrix
+             R could be an array with 3 dimensions (SxSxA) or 
+             a cell array (1xA), each cell containing a sparse matrix (SxS) or
+             a 2D array(SxA) possibly sparse  
+    discount = discount rate, in ]0, 1[
+    policy0(S) = starting policy, optional 
+    max_iter = maximum number of iteration to be done, upper than 0, 
+             optional (default 1000)
+    eval_type = type of function used to evaluate policy: 
+             0 for mdp_eval_policy_matrix, else mdp_eval_policy_iterative
+             optional (default 0)
+             
+    Evaluation
+    ----------
+    V(S)   = value function 
+    policy(S) = optimal policy
+    iter     = number of done iterations
+    cpu_time = used CPU time
+    
+    Notes
+    -----
+    In verbose mode, at each iteration, displays the number 
+    of differents actions between policy n-1 and n
+    
     Examples
     --------
     >>> import mdp
@@ -699,23 +775,126 @@ class PolicyIteration(MDP):
     
     """
     
-    def __init__(self, transitions, reward, discount, policy0, max_iter=1000, eval_type=0):
+    def __init__(self, transitions, reward, discount, policy0=None, max_iter=1000, eval_type=0):
         """"""
-        
-        if (size(policy0,1) != S or any(mod(policy0, 1)) or any(policy0 < 1) or any(policy0 > S)):
-            raise ValueError('MDP Toolbox ERROR: policy0 must a (1xS) vector with integer from 1 to S')
         
         MDP.__init__(self, transitions, reward, discount, max_iter)
         
+        if policy0 == None:
+            # initialise the policy to the one which maximises the expected
+            # immediate reward
+            self.value = matrix(zeros((self.S, 1)))
+            self.bellmanOperator()
+        else:
+            policy0 = array(policy0)
+            
+            if not policy0.shape in ((self.S, ), (self.S, 1), (1, self.S)):
+                raise ValueError('PyMDPtolbox: policy0 must a vector with length S')
+            
+            policy0 = matrix(policy0.reshape(self.S, 1))
+            
+            if mod(policy0, 1).any() or (policy0 < 0).any() or (policy0 >= self.S).any():
+                raise ValueError('PyMDPtoolbox: policy0 must a (1xS) vector with integer from 1 to S')
+            else:
+                self.policy = policy0
+        
+        # set or reset the initial values to zero
         self.value = matrix(zeros((self.S, 1)))
         
-        # initialise the policy to the one which maximises the expected
-        # immediate reward
-        self.bellmanOperator()
+        if eval_type in (0, "matrix"):
+            self.eval_type = "matrix"
+        elif eval_type in (1, "iterative"):
+            self.eval_type = "iterative"
+        else:
+            raise ValueError("PyMDPtoolbox: eval_type should be 0 for matrix "\
+                "evaluation or 1 for iterative evaluation. strings 'matrix' " \
+                "and 'iterative' can also be used.")
+    
+    def evalPolicyIterative(self, V0=0, epsilon=0.0001, max_iter=10000):
+        """Policy evaluation using iteration
+        
+        Arguments
+        ---------
+        Let S = number of states, A = number of actions
+        P(SxSxA)  = transition matrix 
+            P could be an array with 3 dimensions or 
+            a cell array (1xS), each cell containing a matrix possibly sparse
+        R(SxSxA) or (SxA) = reward matrix
+            R could be an array with 3 dimensions (SxSxA) or 
+            a cell array (1xA), each cell containing a sparse matrix (SxS) or
+            a 2D array(SxA) possibly sparse  
+        discount  = discount rate in ]0; 1[
+        policy(S) = a policy
+        V0(S)     = starting value function, optional (default : zeros(S,1))
+        epsilon   = epsilon-optimal policy search, upper than 0,
+            optional (default : 0.0001)
+        max_iter  = maximum number of iteration to be done, upper than 0, 
+            optional (default : 10000)
+            
+        Evaluation
+        ----------
+        Vpolicy(S) = value function, associated to a specific policy
+        
+        Notes
+        -----
+        In verbose mode, at each iteration, displays the condition which stopped iterations:
+        epsilon-optimum value function found or maximum number of iterations reached.
+        """
+        if V0 == 0:
+            V0 = zeros(self.S,1)
+        else:
+            raise NotImplementedError("evalPolicyIterative: case V0 != 0 not implemented. Use V0=0 instead.")
+        
+        Ppolicy, PRpolicy = self.computePpolicyPRpolicy(P, R, policy)
+        
+        if self.verbose:
+            print('  Iteration    V_variation')
+        itr = 0
+        Vpolicy = V0
+        done = False
+        while not done:
+            itr = itr + 1
+            Vprev = Vpolicy
+            Vpolicy = PRpolicy + self.discount * Ppolicy * Vprev
+            variation = max(abs(Vpolicy - Vprev))
+            if self.verbose:
+                print('      %s         %s') % (itr, variation)
+            if variation < ((1 - self.discount) / self.discount) * epsilon: # to ensure |Vn - Vpolicy| < epsilon
+                done = True
+                if self.verbose:
+                    print('MDP Toolbox: iterations stopped, epsilon-optimal value function')
+            elif itr == max_iter:
+                done = True
+                if self.verbose:
+                    print('MDP Toolbox: iterations stopped by maximum number of iteration condition')
+        
+        self.value = Vpolicy
     
     def evalPolicyMatrix(self):
-        """"""
-        pass
+        """Evaluation of the value function of a policy
+        
+        Arguments 
+        ---------
+        Let S = number of states, A = number of actions
+        P(SxSxA) = transition matrix 
+             P could be an array with 3 dimensions or 
+             a cell array (1xA), each cell containing a matrix (SxS) possibly sparse
+        R(SxSxA) or (SxA) = reward matrix
+             R could be an array with 3 dimensions (SxSxA) or 
+             a cell array (1xA), each cell containing a sparse matrix (SxS) or
+             a 2D array(SxA) possibly sparse  
+        discount = discount rate in ]0; 1[
+        policy(S) = a policy
+        
+        Evaluation
+        ----------
+        Vpolicy(S) = value function of the policy
+        """
+        from numpy.linalg import solve as lin_eq
+        
+        Ppolicy, PRpolicy = self.computePpolicyPRpolicy(P, R, policy)
+        # V = PR + gPV  => (I-gP)V = PR  => V = inv(I-gP)* PR
+        self.value = lin_eq((speye(S, S) - discount * Ppolicy) , PRpolicy)
     
     def iterate(self):
         """"""
@@ -728,10 +907,10 @@ class PolicyIteration(MDP):
         while not done:
             self.iter = self.iter + 1
             
-            if eval_type == 0:
-                self.value = self.evalPolicyMatrix()
-            else:
-                self.value = self.evalPolicyIterative()
+            if self.eval_type == "matrix":
+                self.evalPolicyMatrix()
+            elif self.eval_type == "iterative":
+                self.evalPolicyIterative()
             
             policy_prev = self.policy
             
@@ -808,10 +987,6 @@ class PolicyIterationModified(MDP):
         else:
             # min(min()) is not right
             self.value = 1 / (1 - discount) * min(min(self.R)) * ones((self.S, 1))
-    
-    def evalPolicyIterative(self):
-        """"""
-        pass
     
     def iterate(self):
         """"""
