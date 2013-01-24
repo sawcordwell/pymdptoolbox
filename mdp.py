@@ -1539,37 +1539,10 @@ class ValueIterationGS(ValueIteration):
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10, initial_value=0):
         """"""
         
-        MDP.__init__(self, transitions, reward, discount, max_iter)
-        
-        # initialization of optional arguments
-        if (initial_value == 0):
-            self.V = matrix(zeros((self.S, 1)))
-        else:
-            if (initial_value.size != self.S):
-                raise ValueError("The initial value must be length S")
-            self.V = matrix(initial_value)
-        if epsilon <= 0:
-            raise ValueError("epsilon must be greater than 0")
-        
-        if discount == 1:
-            print('PyMDPtoolbox WARNING: check conditions of convergence.'
-                  'With no discount, convergence is not always assumed.')
-        
-        if (discount < 1):
-            # compute a bound for the number of iterations
-            self.boundIter(epsilon)
-            print('MDP Toolbox WARNING: max_iter is bounded by %s') % self.max_iter
-            # computation of threshold of variation for V for an epsilon-optimal policy
-            self.thresh = epsilon * (1 - self.discount) / self.discount
-        else: # discount == 1
-            # threshold of variation for V for an epsilon-optimal policy
-            self.thresh = epsilon
-        
-        self.iter = 0
+        ValueIteration.__init__(self, transitions, reward, discount, epsilon, max_iter, initial_value)
     
     def iterate(self):
         """"""
-        V = self.V
         
         done = False
         
@@ -1578,17 +1551,21 @@ class ValueIterationGS(ValueIteration):
         
         self.time = time()
         
+        #Q = array(())
+        
         while not done:
             self.iter = self.iter + 1
             
             Vprev = self.V
+            
+            Q = array(())
             
             for s in range(self.S):
                 for a in range(self.A):
                     Q[a] =  self.R[s,a]  +  self.discount * self.P[a][s,:] * self.V
                 self.V[s] = max(Q)
             
-            variation = getSpan(V - Vprev)
+            variation = getSpan(self.V - Vprev)
             
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
