@@ -784,7 +784,8 @@ class PolicyIteration(MDP):
             # initialise the policy to the one which maximises the expected
             # immediate reward
             self.value = matrix(zeros((self.S, 1)))
-            self.bellmanOperator()
+            self.policy, null = self.bellmanOperator()
+            del null
         else:
             policy0 = array(policy0)
             
@@ -802,6 +803,8 @@ class PolicyIteration(MDP):
         self.value = matrix(zeros((self.S, 1)))
         
         if eval_type in (0, "matrix"):
+            from numpy.linalg import solve
+            self.lin_eq = solve
             self.eval_type = "matrix"
         elif eval_type in (1, "iterative"):
             self.eval_type = "iterative"
@@ -890,11 +893,10 @@ class PolicyIteration(MDP):
         ----------
         Vpolicy(S) = value function of the policy
         """
-        from numpy.linalg import solve as lin_eq
         
         Ppolicy, PRpolicy = self.computePpolicyPRpolicy(self.P, self.R, self.policy)
         # V = PR + gPV  => (I-gP)V = PR  => V = inv(I-gP)* PR
-        self.value = lin_eq((speye(self.S, self.S) - self.discount * Ppolicy) , PRpolicy)
+        self.value = self.lin_eq((speye(self.S, self.S) - self.discount * Ppolicy) , PRpolicy)
     
     def iterate(self):
         """"""
