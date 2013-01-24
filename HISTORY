@@ -1,3 +1,9 @@
+v0.9 - the value iteration Gauss-Seidel algorithm is now in working order. The class ValueIterationGS should be stable and usable. Use like this:
+	>>> import mdp
+	>>> P, R = mdp.exampleRand(10, 3) # to create a random transition and reward matrices with 10 states and 3 actions
+	>>> vigs = mdp.ValueIterationGS(P, R, 0.9 # assuming a discount rate of 0.9
+	>>> vigs.iterate() # to run the algorithm, then type vigs.policy after it has finished to see the optimal policy
+
 v0.8 - The policy iteration algorithm port is now usable. The PolicyIteration class should now be stable. To use:
 	>>> import mdp
 	>>> P, R = mdp.exampleForest() # to use the forest example as the transition and reward matrices
