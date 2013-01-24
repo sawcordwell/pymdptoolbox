@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from numpy import absolute, array, diag, matrix, mean, mod, multiply, ndarray
-from numpy import nonzero, ones, zeros
+from numpy import ones, zeros
 from numpy.random import rand
 from math import ceil, log, sqrt
 from random import randint, random
@@ -807,7 +807,7 @@ class PolicyIteration(MDP):
         
             # the rows that use action a. .getA1() is used to make sure that
             # ind is a 1 dimensional vector
-            ind = nonzero(self.policy == aa)[0].getA1()
+            ind = (self.policy == aa).nonzero()[0].getA1()
             if ind.size > 0: # if no rows use action a, then no point continuing
                 Ppolicy[ind, :] = self.P[aa][ind, :]
                 
@@ -860,7 +860,7 @@ class PolicyIteration(MDP):
         if V0 == 0:
             policy_V = zeros((self.S, 1))
         else:
-            raise NotImplementedError("evalPolicyIterative: case V0 != 0 not implemented. Use V0=0 instead.")
+            raise NotImplementedError("evalPolicyIterative: case V0 != 0 not implemented. Use default (V0=0) instead.")
         
         policy_P, policy_R = self.computePpolicyPRpolicy()
         
@@ -1478,7 +1478,7 @@ class ValueIteration(MDP):
         while not done:
             self.iter = self.iter + 1
             
-            Vprev = self.V
+            Vprev = self.V.copy()
             
             # Bellman Operator: compute policy and value functions
             self.policy, self.V = self.bellmanOperator()
@@ -1557,18 +1557,16 @@ class ValueIterationGS(ValueIteration):
         
         self.time = time()
         
-        #Q = array(())
-        
         while not done:
             self.iter = self.iter + 1
             
-            Vprev = self.V
-            
-            Q = array(())
+            Vprev = self.V.copy()
             
             for s in range(self.S):
+                Q = []
                 for a in range(self.A):
-                    Q[a] =  self.R[s,a]  +  self.discount * self.P[a][s,:] * self.V
+                    Q.append(float(self.R[s, a]  +  self.discount * self.P[a][s, :] * self.V))
+                
                 self.V[s] = max(Q)
             
             variation = getSpan(self.V - Vprev)
@@ -1583,13 +1581,19 @@ class ValueIterationGS(ValueIteration):
              
             elif self.iter == self.max_iter:
                 done = True 
-                if self.verbose: 
+                if self.verbose:
                     print('MDP Toolbox : iterations stopped by maximum number of iteration condition')
-             
+        
+        self.policy = []
         for s in range(self.S):
+            Q = zeros(self.A)
             for a in range(self.A):
                 Q[a] =  self.R[s,a] + self.P[a][s,:] * self.discount * self.V
             
-            self.V[s], self.policy[s,1] = max(Q)
+            self.V[s] = Q.max()
+            self.policy.append(int(Q.argmax()))
 
         self.time = time() - self.time
+        
+        self.V = tuple(array(self.V).reshape(self.S).tolist())
+        self.policy = tuple(self.policy)
