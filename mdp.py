@@ -432,6 +432,8 @@ class MDP(object):
     def __init__(self, transitions, reward, discount, max_iter):
         """"""
         
+        # if the discount is None then the algorithm is assumed to not use it
+        # in its computations
         if (type(discount) is int) or (type(discount) is float):
             if (discount <= 0) or (discount > 1):
                 raise ValueError(mdperr["discount_rng"])
@@ -441,6 +443,8 @@ class MDP(object):
             raise ValueError("PyMDPtoolbox: the discount must be a positive " \
                 "real number less than or equal to one.")
         
+        # if the max_iter is None then the algorithm is assumed to not use it
+        # in its computations
         if (type(max_iter) is int) or (type(max_iter) is float):
             if (max_iter <= 0):
                 raise ValueError(mdperr["maxi_min"])
