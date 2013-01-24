@@ -794,7 +794,7 @@ class PolicyIteration(MDP):
             policy0 = matrix(policy0.reshape(self.S, 1))
             
             if mod(policy0, 1).any() or (policy0 < 0).any() or (policy0 >= self.S).any():
-                raise ValueError('PyMDPtoolbox: policy0 must a (1xS) vector with integer from 1 to S')
+                raise ValueError('PyMDPtoolbox: policy0 must be a vector of integers between 1 and S')
             else:
                 self.policy = policy0
         
@@ -898,15 +898,18 @@ class PolicyIteration(MDP):
     
     def iterate(self):
         """"""
-        done = False
+        
         if self.verbose:
             print('  Iteration  Number_of_different_actions')
         
+        done = False
         self.time = time()
         
         while not done:
             self.iter = self.iter + 1
             
+            # these evalPolicy* functions will update the classes value
+            # attribute
             if self.eval_type == "matrix":
                 self.evalPolicyMatrix()
             elif self.eval_type == "iterative":
@@ -914,6 +917,8 @@ class PolicyIteration(MDP):
             
             policy_prev = self.policy
             
+            # This should update the classes policy attribute but leave the
+            # value alone
             self.bellmanOperator()
             
             n_different = (self.policy != policy_prev).sum()
