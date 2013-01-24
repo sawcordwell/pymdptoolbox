@@ -175,7 +175,7 @@ def test_MDP_P_R_1():
     P1[0] = matrix([[0.5, 0.5],[0.8, 0.2]])
     P1[1] = matrix([[0, 1],[0.1, 0.9]])
     R1 = matrix([[5, 10], [-1, 2]])
-    a = MDP(P, R, 0.9)
+    a = MDP(P, R, 0.9, 0.01)
     assert a.P.dtype == P1.dtype
     assert a.R.dtype == R1.dtype
     for kk in range(2):
@@ -188,7 +188,7 @@ def test_MDP_P_R_2():
     P1[0] = matrix([[0.5, 0.5],[0.8, 0.2]])
     P1[1] = matrix([[0, 1],[0.1, 0.9]])
     R1 = matrix([[7.5, 2], [-0.4, 3.9]])
-    a = MDP(P, R, 0.9)
+    a = MDP(P, R, 0.9, 0.01)
     assert a.P.dtype == P1.dtype
     assert a.R.dtype == R1.dtype
     for kk in range(2):

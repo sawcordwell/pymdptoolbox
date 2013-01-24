@@ -841,16 +841,16 @@ class PolicyIteration(MDP):
         epsilon-optimum value function found or maximum number of iterations reached.
         """
         if V0 == 0:
-            V0 = zeros(self.S,1)
+            Vpolicy = zeros(self.S, 1)
         else:
             raise NotImplementedError("evalPolicyIterative: case V0 != 0 not implemented. Use V0=0 instead.")
         
-        Ppolicy, PRpolicy = self.computePpolicyPRpolicy(P, R, policy)
+        Ppolicy, PRpolicy = self.computePpolicyPRpolicy(self.P, self.R, self.policy)
         
         if self.verbose:
             print('  Iteration    V_variation')
+        
         itr = 0
-        Vpolicy = V0
         done = False
         while not done:
             itr = itr + 1
@@ -892,9 +892,9 @@ class PolicyIteration(MDP):
         """
         from numpy.linalg import solve as lin_eq
         
-        Ppolicy, PRpolicy = self.computePpolicyPRpolicy(P, R, policy)
+        Ppolicy, PRpolicy = self.computePpolicyPRpolicy(self.P, self.R, self.policy)
         # V = PR + gPV  => (I-gP)V = PR  => V = inv(I-gP)* PR
-        self.value = lin_eq((speye(S, S) - discount * Ppolicy) , PRpolicy)
+        self.value = lin_eq((speye(self.S, self.S) - self.discount * Ppolicy) , PRpolicy)
     
     def iterate(self):
         """"""
@@ -916,12 +916,12 @@ class PolicyIteration(MDP):
             
             self.bellmanOperator()
             
-            n_different = (policy != policy_prev).sum()
+            n_different = (self.policy != policy_prev).sum()
             
             if self.verbose:
                 print('       %s                 %s') % (self.iter, n_different)
             
-            if (policy == policy_prev).all() or (self.iter == self.max_iter):
+            if (self.policy == policy_prev).all() or (self.iter == self.max_iter):
                 done = True
         
         self.time = time() - self.time
