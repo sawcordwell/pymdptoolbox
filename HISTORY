@@ -1,0 +1,5 @@
+v0.8 - The policy iteration algorithm port is now usable. The PolicyIteration class should now be stable. To use:
+	>>> import mdp
+	>>> P, R = mdp.exampleForest() # to use the forest example as the transition and reward matrices
+	>>> pi = mdp.PolicyIteration(P, R, 0.9)
+	>>> pi.iterate # now typing pi.policy will show the optimal policy
