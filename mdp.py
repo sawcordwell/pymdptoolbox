@@ -419,7 +419,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     
     return (P, R)
 
-def getSpan(self, W):
+def getSpan(W):
     """Returns the span of W
     
     sp(W) = max W(s) - min W(s)
@@ -438,6 +438,9 @@ class MDP(object):
             if (discount <= 0) or (discount > 1):
                 raise ValueError(mdperr["discount_rng"])
             else:
+                if discount == 1:
+                    print("PyMDPtoolbox WARNING: check conditions of convergence."\
+                        "With no discount, convergence is not always assumed.")
                 self.discount = discount
         elif not discount is None:
             raise ValueError("PyMDPtoolbox: the discount must be a positive " \
@@ -492,52 +495,6 @@ class MDP(object):
         # 2. update self.policy and self.V directly
         # self.V = Q.max(axis=1)
         # self.policy = Q.argmax(axis=1)
-    
-    def computePpolicyPRpolicy(self):
-        """Computes the transition matrix and the reward matrix for a policy
-
-        Arguments
-        ---------
-        Let S = number of states, A = number of actions
-        P(SxSxA)  = transition matrix 
-             P could be an array with 3 dimensions or 
-             a cell array (1xA), each cell containing a matrix (SxS) possibly sparse
-        R(SxSxA) or (SxA) = reward matrix
-             R could be an array with 3 dimensions (SxSxA) or 
-             a cell array (1xA), each cell containing a sparse matrix (SxS) or
-             a 2D array(SxA) possibly sparse  
-        policy(S) = a policy
-        
-        Evaluation
-        ----------
-        Ppolicy(SxS)  = transition matrix for policy
-        PRpolicy(S)   = reward matrix for policy
-        """
-        Ppolicy = matrix(zeros((self.S, self.S)))
-        Rpolicy = matrix(zeros((self.S, 1)))
-        for aa in range(self.A): # avoid looping over S
-        
-            # the rows that use action a. .getA1() is used to make sure that
-            # ind is a 1 dimensional vector
-            ind = nonzero(self.policy == aa)[0].getA1()
-            if ind.size > 0: # if no rows use action a, then no point continuing
-                Ppolicy[ind, :] = self.P[aa][ind, :]
-                
-                #PR = self.computePR() # an apparently uneeded line, and
-                # perhaps harmful in this implementation c.f.
-                # mdp_computePpolicyPRpolicy.m
-                Rpolicy[ind] = self.R[ind, aa]
-        
-        # self.R cannot be sparse with the code in its current condition, but
-        # it should be possible in the future. Also, if R is so big that its
-        # a good idea to use a sparse matrix for it, then converting PRpolicy
-        # from a dense to sparse matrix doesn't seem very memory efficient
-        if type(self.R) is sparse:
-            Rpolicy = sparse(Rpolicy)
-        
-        #self.Ppolicy = Ppolicy
-        #self.Rpolicy = Rpolicy
-        return (Ppolicy, Rpolicy)
     
     def computePR(self, P, R):
         """Computes the reward for the system in one state chosing an action
@@ -823,6 +780,52 @@ class PolicyIteration(MDP):
             raise ValueError("PyMDPtoolbox: eval_type should be 0 for matrix "\
                 "evaluation or 1 for iterative evaluation. strings 'matrix' " \
                 "and 'iterative' can also be used.")
+    
+    def computePpolicyPRpolicy(self):
+        """Computes the transition matrix and the reward matrix for a policy
+        
+        Arguments
+        ---------
+        Let S = number of states, A = number of actions
+        P(SxSxA)  = transition matrix 
+             P could be an array with 3 dimensions or 
+             a cell array (1xA), each cell containing a matrix (SxS) possibly sparse
+        R(SxSxA) or (SxA) = reward matrix
+             R could be an array with 3 dimensions (SxSxA) or 
+             a cell array (1xA), each cell containing a sparse matrix (SxS) or
+             a 2D array(SxA) possibly sparse  
+        policy(S) = a policy
+        
+        Evaluation
+        ----------
+        Ppolicy(SxS)  = transition matrix for policy
+        PRpolicy(S)   = reward matrix for policy
+        """
+        Ppolicy = matrix(zeros((self.S, self.S)))
+        Rpolicy = matrix(zeros((self.S, 1)))
+        for aa in range(self.A): # avoid looping over S
+        
+            # the rows that use action a. .getA1() is used to make sure that
+            # ind is a 1 dimensional vector
+            ind = nonzero(self.policy == aa)[0].getA1()
+            if ind.size > 0: # if no rows use action a, then no point continuing
+                Ppolicy[ind, :] = self.P[aa][ind, :]
+                
+                #PR = self.computePR() # an apparently uneeded line, and
+                # perhaps harmful in this implementation c.f.
+                # mdp_computePpolicyPRpolicy.m
+                Rpolicy[ind] = self.R[ind, aa]
+        
+        # self.R cannot be sparse with the code in its current condition, but
+        # it should be possible in the future. Also, if R is so big that its
+        # a good idea to use a sparse matrix for it, then converting PRpolicy
+        # from a dense to sparse matrix doesn't seem very memory efficient
+        if type(self.R) is sparse:
+            Rpolicy = sparse(Rpolicy)
+        
+        #self.Ppolicy = Ppolicy
+        #self.Rpolicy = Rpolicy
+        return (Ppolicy, Rpolicy)
     
     def evalPolicyIterative(self, V0=0, epsilon=0.0001, max_iter=10000):
         """Policy evaluation using iteration
@@ -1405,9 +1408,12 @@ class ValueIteration(MDP):
             self.V = matrix(zeros((self.S, 1)))
         else:
             if (not initial_value.shape in ((self.S, ), (self.S, 1), (1, self.S))):
-                raise ValueError("The initial value must be a vector of length S")
+                raise ValueError("PyMDPtoolbox: The initial value must be a vector of length S")
             else:
                 self.V = matrix(initial_value)
+        
+        if epsilon <= 0:
+            raise ValueError("PyMDPtoolbox: epsilon must be greater than 0")
         
         if (self.discount < 1):
             # compute a bound for the number of iterations and update the

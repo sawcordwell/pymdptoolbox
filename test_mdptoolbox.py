@@ -225,8 +225,7 @@ def test_ValueIteration_iterate():
     assert (inst.iter == 26)
 
 def test_ValueIteration_exampleForest():
-    P, R = exampleForest()
-    a = ValueIteration(P, R, 0.96)
+    a = ValueIteration(Pf, Rf, 0.96)
     a.iterate()
     assert (a.policy == array([0, 0, 0])).all()
     assert a.iter == 4
@@ -296,7 +295,15 @@ def test_PolicyIteration_matrix_exampleForest():
     assert (array(a.policy) == p).all()
     assert a.iter == itr
 
-def test_ValueIterationGS():
+# ValueIterationGS
+
+def test_ValueIterationGS_exampleForest():
+    a = ValueIterationGS(Pf, Rf, 0.9)
+    p = matrix('0 0 0')
+    itr = 33
+    a.iterate()
+    assert (array(a.policy) == p).all()
+    assert a.iter == itr
 
 #def test_JacksCarRental():
 #    S = 21 ** 2
