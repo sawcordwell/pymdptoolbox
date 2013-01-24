@@ -230,7 +230,7 @@ def test_ValueIteration_exampleForest():
 def test_PolicyIteration_init_policy0():
     a = PolicyIteration(P, R, 0.9)
     p = array((1, 1)).reshape(2, 1)
-    assert (a.policy - p < SMALLNUM).all()
+    assert (absolute(a.policy - p) < SMALLNUM).all()
 
 def test_PolicyIteration():
     PolicyIteration(P, R, 0.9)
