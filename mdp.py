@@ -468,7 +468,7 @@ class MDP(object):
         # set the initial iteration count to zero
         self.iter = 0
         
-        self.value = None
+        self.V = None
         self.policy = None
     
     def bellmanOperator(self):
@@ -483,14 +483,14 @@ class MDP(object):
         """
         Q = matrix(zeros((self.S, self.A)))
         for aa in range(self.A):
-            Q[:, aa] = self.R[:, aa] + (self.discount * self.P[aa] * self.value)
+            Q[:, aa] = self.R[:, aa] + (self.discount * self.P[aa] * self.V)
         
         # Which way is better? if choose the first way, then the classes that
         # call this function must be changed
         # 1. Return, (policy, value)
         return (Q.argmax(axis=1), Q.max(axis=1))
-        # 2. update self.policy and self.value directly
-        # self.value = Q.max(axis=1)
+        # 2. update self.policy and self.V directly
+        # self.V = Q.max(axis=1)
         # self.policy = Q.argmax(axis=1)
     
     def computePpolicyPRpolicy(self):
@@ -655,18 +655,18 @@ class FiniteHorizon(MDP):
         
         MDP.__init__(self, transitions, reward, discount, None)
         
-        self.value = zeros(self.S, N + 1)
+        self.V = zeros(self.S, N + 1)
         
         if not h is None:
-            self.value[:, N + 1] = h
+            self.V[:, N + 1] = h
         
     def iterate(self):
         """"""
         self.time = time()
         
         for n in range(self.N - 1):
-            W, X = self.bellmanOperator(self.P, self.R, self.discount, self.value[:, self.N - n + 1])
-            self.value[:, self.N - n] = W
+            W, X = self.bellmanOperator(self.P, self.R, self.discount, self.V[:, self.N - n + 1])
+            self.V[:, self.N - n] = W
             self.policy[:, self.N - n] = X
             if self.verbose:
                 print("stage: %s ... policy transpose : %s") % (self.N - n, self.policy[:, self.N - n].T)
@@ -736,9 +736,9 @@ class LP(MDP):
         """"""
         self.time = time()
         
-        self.value = self.linprog(self.f, self.M, -self.R)
+        self.V = self.linprog(self.f, self.M, -self.R)
         
-        self.value, self.policy =  self.bellmanOperator(self.P, self.R, self.discount, self.value)
+        self.V, self.policy =  self.bellmanOperator(self.P, self.R, self.discount, self.V)
         
         self.time = time() - self.time
 
@@ -792,7 +792,7 @@ class PolicyIteration(MDP):
         if policy0 == None:
             # initialise the policy to the one which maximises the expected
             # immediate reward
-            self.value = matrix(zeros((self.S, 1)))
+            self.V = matrix(zeros((self.S, 1)))
             self.policy, null = self.bellmanOperator()
             del null
         else:
@@ -809,7 +809,7 @@ class PolicyIteration(MDP):
                 self.policy = policy0
         
         # set or reset the initial values to zero
-        self.value = matrix(zeros((self.S, 1)))
+        self.V = matrix(zeros((self.S, 1)))
         
         if eval_type in (0, "matrix"):
             from numpy.linalg import solve
@@ -885,7 +885,7 @@ class PolicyIteration(MDP):
                 if self.verbose:
                     print('PyMDPtoolbox: iterations stopped by maximum number of iteration condition')
         
-        self.value = policy_V
+        self.V = policy_V
     
     def evalPolicyMatrix(self):
         """Evaluation of the value function of a policy
@@ -910,7 +910,7 @@ class PolicyIteration(MDP):
         
         Ppolicy, Rpolicy = self.computePpolicyPRpolicy()
         # V = PR + gPV  => (I-gP)V = PR  => V = inv(I-gP)* PR
-        self.value = self.lin_eq((self.speye(self.S, self.S) - self.discount * Ppolicy) , Rpolicy)
+        self.V = self.lin_eq((self.speye(self.S, self.S) - self.discount * Ppolicy) , Rpolicy)
     
     def iterate(self):
         """Run the policy iteration algorithm."""
@@ -955,7 +955,7 @@ class PolicyIteration(MDP):
         self.time = time() - self.time
         
         # store value and policy as tuples
-        self.value = tuple(array(self.value).reshape(self.S).tolist())
+        self.V = tuple(array(self.V).reshape(self.S).tolist())
         self.policy = tuple(array(self.policy).reshape(self.S).tolist())
 
 class PolicyIterationModified(MDP):
@@ -1011,10 +1011,10 @@ class PolicyIterationModified(MDP):
             self.thresh = epsilon
         
         if discount == 1:
-            self.value = matrix(zeros((self.S, 1)))
+            self.V = matrix(zeros((self.S, 1)))
         else:
             # min(min()) is not right
-            self.value = 1 / (1 - discount) * min(min(self.R)) * ones((self.S, 1))
+            self.V = 1 / (1 - discount) * min(min(self.R)) * ones((self.S, 1))
     
     def iterate(self):
         """"""
@@ -1031,11 +1031,11 @@ class PolicyIterationModified(MDP):
             Vnext, policy = self.bellmanOperator(self.P, self.PR, self.discount, self.V)
             #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
             
-            variation = getSpan(Vnext - self.value);
+            variation = getSpan(Vnext - self.V);
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
             
-            self.value = Vnext
+            self.V = Vnext
             if variation < self.thresh:
                 done = True
             else:
@@ -1044,7 +1044,7 @@ class PolicyIterationModified(MDP):
                     self.setSilent
                     is_verbose = True
                 
-                self.value = self.evalPolicyIterative()
+                self.V = self.evalPolicyIterative()
                 
                 if is_verbose:
                     self.setVerbose
@@ -1074,7 +1074,7 @@ class QLearning(MDP):
     -------
     Q : learned Q matrix (SxA) 
     
-    value : learned value function (S).
+    V : learned value function (S).
     
     policy : learned optimal policy (S).
     
@@ -1092,7 +1092,7 @@ class QLearning(MDP):
     array([[  0.        ,   0.        ],
            [  0.01062959,   0.79870231],
            [ 10.08191776,   0.35309404]])
-    >>> ql.value
+    >>> ql.V
     array([  0.        ,   0.79870231,  10.08191776])
     >>> ql.policy
     array([0, 1, 0])
@@ -1106,7 +1106,7 @@ class QLearning(MDP):
     >>> ql.Q
     array([[ 94.99525115,  99.99999007],
            [ 53.92930199,   5.57331205]])
-    >>> ql.value
+    >>> ql.V
     array([ 99.99999007,  53.92930199])
     >>> ql.policy
     array([1, 0])
@@ -1189,7 +1189,7 @@ class QLearning(MDP):
                 self.discrepancy = []
             
             # compute the value function and the policy
-            self.value = self.Q.max(axis=1)
+            self.V = self.Q.max(axis=1)
             self.policy = self.Q.argmax(axis=1)
             
         self.time = time() - self.time
@@ -1321,7 +1321,7 @@ class ValueIteration(MDP):
     
     Data Attributes
     ---------------
-    value : value function
+    V : value function
         A vector which stores the optimal value function. Prior to calling the
         iterate() method it has a value of None. Shape is (S, ).
     policy : epsilon-optimal policy
@@ -1355,7 +1355,7 @@ class ValueIteration(MDP):
     >>> vi.verbose
     False
     >>> vi.iterate()
-    >>> vi.value
+    >>> vi.V
     array([  5.93215488,   9.38815488,  13.38815488])
     >>> vi.policy
     array([0, 0, 0])
@@ -1370,7 +1370,7 @@ class ValueIteration(MDP):
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> vi = mdp.ValueIteration(P, R, 0.9)
     >>> vi.iterate()
-    >>> vi.value
+    >>> vi.V
     array([ 40.04862539,  33.65371176])
     >>> vi.policy
     array([1, 0])
@@ -1388,7 +1388,7 @@ class ValueIteration(MDP):
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> vi = mdp.ValueIteration(P, R, 0.9)
     >>> vi.iterate()
-    >>> vi.value
+    >>> vi.V
     array([ 40.04862539,  33.65371176])
     >>> vi.policy
     array([1, 0])
@@ -1402,12 +1402,12 @@ class ValueIteration(MDP):
         
         # initialization of optional arguments
         if (initial_value == 0):
-            self.value = matrix(zeros((self.S, 1)))
+            self.V = matrix(zeros((self.S, 1)))
         else:
             if (not initial_value.shape in ((self.S, ), (self.S, 1), (1, self.S))):
                 raise ValueError("The initial value must be a vector of length S")
             else:
-                self.value = matrix(initial_value)
+                self.V = matrix(initial_value)
         
         if (self.discount < 1):
             # compute a bound for the number of iterations and update the
@@ -1452,11 +1452,11 @@ class ValueIteration(MDP):
             h[ss] = PP.min()
         
         k = 1 - h.sum()
-        Vprev = self.value
+        Vprev = self.V
         null, value = self.bellmanOperator()
         # p 201, Proposition 6.6.5
         max_iter = log( (epsilon * (1 - self.discount) / self.discount) / getSpan(value - Vprev) ) / log(self.discount * k)
-        #self.value = Vprev
+        #self.V = Vprev
         
         self.max_iter = ceil(max_iter)
     
@@ -1472,15 +1472,15 @@ class ValueIteration(MDP):
         while not done:
             self.iter = self.iter + 1
             
-            Vprev = self.value
+            Vprev = self.V
             
             # Bellman Operator: compute policy and value functions
-            self.policy, self.value = self.bellmanOperator()
+            self.policy, self.V = self.bellmanOperator()
             
             # The values, based on Q. For the function "max()": the option
             # "axis" means the axis along which to operate. In this case it
             # finds the maximum of the the rows. (Operates along the columns?)
-            variation = getSpan(self.value - Vprev)
+            variation = getSpan(self.V - Vprev)
             
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
@@ -1495,7 +1495,7 @@ class ValueIteration(MDP):
                     print("...iterations stopped by maximum number of iteration condition")
         
         # store value and policy as tuples
-        self.value = tuple(array(self.value).reshape(self.S).tolist())
+        self.V = tuple(array(self.V).reshape(self.S).tolist())
         self.policy = tuple(array(self.policy).reshape(self.S).tolist())
         
         self.time = time() - self.time
@@ -1543,11 +1543,11 @@ class ValueIterationGS(ValueIteration):
         
         # initialization of optional arguments
         if (initial_value == 0):
-            self.value = matrix(zeros((self.S, 1)))
+            self.V = matrix(zeros((self.S, 1)))
         else:
             if (initial_value.size != self.S):
                 raise ValueError("The initial value must be length S")
-            self.value = matrix(initial_value)
+            self.V = matrix(initial_value)
         if epsilon <= 0:
             raise ValueError("epsilon must be greater than 0")
         
@@ -1569,7 +1569,7 @@ class ValueIterationGS(ValueIteration):
     
     def iterate(self):
         """"""
-        V = self.value
+        V = self.V
         
         done = False
         
@@ -1581,12 +1581,12 @@ class ValueIterationGS(ValueIteration):
         while not done:
             self.iter = self.iter + 1
             
-            Vprev = self.value
+            Vprev = self.V
             
             for s in range(self.S):
                 for a in range(self.A):
-                    Q[a] =  self.R[s,a]  +  self.discount * self.P[a][s,:] * self.value
-                self.value[s] = max(Q)
+                    Q[a] =  self.R[s,a]  +  self.discount * self.P[a][s,:] * self.V
+                self.V[s] = max(Q)
             
             variation = getSpan(V - Vprev)
             
@@ -1605,8 +1605,8 @@ class ValueIterationGS(ValueIteration):
              
         for s in range(self.S):
             for a in range(self.A):
-                Q[a] =  self.R[s,a] + self.P[a][s,:] * self.discount * self.value
+                Q[a] =  self.R[s,a] + self.P[a][s,:] * self.discount * self.V
             
-            self.value[s], self.policy[s,1] = max(Q)
+            self.V[s], self.policy[s,1] = max(Q)
 
         self.time = time() - self.time
