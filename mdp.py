@@ -477,10 +477,10 @@ class MDP(object):
         # Which way is better? if choose the first way, then the classes that
         # call this function must be changed
         # 1. Return, (policy, value)
-        # return (Q.argmax(axis=1), Q.max(axis=1))
+        return (Q.argmax(axis=1), Q.max(axis=1))
         # 2. update self.policy and self.value directly
-        self.value = Q.max(axis=1)
-        self.policy = Q.argmax(axis=1)
+        # self.value = Q.max(axis=1)
+        # self.policy = Q.argmax(axis=1)
     
     def computePpolicyPRpolicy(self):
         """Computes the transition matrix and the reward matrix for a policy
@@ -915,18 +915,17 @@ class PolicyIteration(MDP):
             elif self.eval_type == "iterative":
                 self.evalPolicyIterative()
             
-            policy_prev = self.policy
-            
             # This should update the classes policy attribute but leave the
             # value alone
-            self.bellmanOperator()
+            policy_next, null = self.bellmanOperator()
+            del null
             
-            n_different = (self.policy != policy_prev).sum()
+            n_different = (policy_next != self.policy).sum()
             
             if self.verbose:
                 print('       %s                 %s') % (self.iter, n_different)
             
-            if (self.policy == policy_prev).all() or (self.iter == self.max_iter):
+            if (policy_next == self.policy).all() or (self.iter == self.max_iter):
                 done = True
         
         self.time = time() - self.time
@@ -1451,8 +1450,8 @@ class ValueIteration(MDP):
             
             Vprev = self.value
             
-            # Bellman Operator: updates "self.value" and "self.policy"
-            self.bellmanOperator()
+            # Bellman Operator: compute policy and value functions
+            self.policy, self.value = self.bellmanOperator()
             
             # The values, based on Q. For the function "max()": the option
             # "axis" means the axis along which to operate. In this case it
