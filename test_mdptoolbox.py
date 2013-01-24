@@ -15,6 +15,7 @@ from scipy.sparse import csr_matrix as sparse
 
 STATES = 10
 ACTIONS = 3
+SMALLNUM = 10e-12
 
 # check: square, stochastic and non-negative ndarrays
 
@@ -189,18 +190,20 @@ def test_MDP_P_R_2():
     P1[1] = matrix([[0, 1],[0.1, 0.9]])
     R1 = matrix([[7.5, 2], [-0.4, 3.9]])
     a = MDP(P, R, 0.9, 0.01)
+    assert type(a.P) == type(P1)
+    assert type(a.R) == type(R1)
     assert a.P.dtype == P1.dtype
     assert a.R.dtype == R1.dtype
     for kk in range(2):
         assert (a.P[kk] == P1[kk]).all()
-    assert (absolute(a.R - R1) < 10e-12).all()
+    assert (absolute(a.R - R1) < SMALLNUM).all()
 
 def test_MDP_P_R_3():
     P = array([[[0.6116, 0.3884],[0, 1]],[[0.6674, 0.3326],[0, 1]]])
     R = array([[[-0.2433, 0.7073],[0, 0.1871]],[[-0.0069, 0.6433],[0, 0.2898]]])
     PR = matrix([[0.12591304, 0.20935652], [0.1871, 0.2898]])
     a = MDP(P, R, 0.9, 0.01)
-    assert (absolute(a.R - PR) < 10e-12).all()
+    assert (absolute(a.R - PR) < SMALLNUM).all()
 
 # ValueIteration
 
@@ -223,6 +226,11 @@ def test_ValueIteration_exampleForest():
     assert a.iter == 4
 
 # PolicyIteration
+
+def test_PolicyIteration_init_policy0():
+    a = PolicyIteration(P, R, 0.9)
+    p = array((1, 1)).reshape(2, 1)
+    assert (a.policy - p < SMALLNUM).all()
 
 def test_PolicyIteration():
     PolicyIteration(P, R, 0.9)
