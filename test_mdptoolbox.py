@@ -172,10 +172,10 @@ R = array([[5, 10], [-1, 2]])
 # MDP
 
 def test_MDP_P_R_1():
-    P1 = zeros((ACTIONS, ), dtype=object)
-    P1[0] = matrix([[0.5, 0.5],[0.8, 0.2]])
-    P1[1] = matrix([[0, 1],[0.1, 0.9]])
-    R1 = matrix([[5, 10], [-1, 2]])
+    P1 = zeros((2, ), dtype=object)
+    P1[0] = matrix('0.5 0.5; 0.8 0.2')
+    P1[1] = matrix('0 1; 0.1 0.9')
+    R1 = matrix('5 10; -1 2')
     a = MDP(P, R, 0.9, 0.01)
     assert a.P.dtype == P1.dtype
     assert a.R.dtype == R1.dtype
@@ -185,10 +185,10 @@ def test_MDP_P_R_1():
 
 def test_MDP_P_R_2():
     R = array([[[5, 10], [-1, 2]], [[1, 2], [3, 4]]])
-    P1 = zeros((ACTIONS, ), dtype=object)
-    P1[0] = matrix([[0.5, 0.5],[0.8, 0.2]])
-    P1[1] = matrix([[0, 1],[0.1, 0.9]])
-    R1 = matrix([[7.5, 2], [-0.4, 3.9]])
+    P1 = zeros((2, ), dtype=object)
+    P1[0] = matrix('0.5 0.5; 0.8 0.2')
+    P1[1] = matrix('0 1; 0.1 0.9')
+    R1 = matrix('7.5 2; -0.4 3.9')
     a = MDP(P, R, 0.9, 0.01)
     assert type(a.P) == type(P1)
     assert type(a.R) == type(R1)
@@ -201,7 +201,7 @@ def test_MDP_P_R_2():
 def test_MDP_P_R_3():
     P = array([[[0.6116, 0.3884],[0, 1]],[[0.6674, 0.3326],[0, 1]]])
     R = array([[[-0.2433, 0.7073],[0, 0.1871]],[[-0.0069, 0.6433],[0, 0.2898]]])
-    PR = matrix([[0.12591304, 0.20935652], [0.1871, 0.2898]])
+    PR = matrix('0.12591304 0.20935652; 0.1871 0.2898')
     a = MDP(P, R, 0.9, 0.01)
     assert (absolute(a.R - PR) < SMALLNUM).all()
 
@@ -229,16 +229,73 @@ def test_ValueIteration_exampleForest():
 
 def test_PolicyIteration_init_policy0():
     a = PolicyIteration(P, R, 0.9)
-    p = array((1, 1)).reshape(2, 1)
-    assert (absolute(a.policy - p) < SMALLNUM).all()
+    p = matrix('1; 1')
+    assert (a.policy == p).all()
 
-def test_PolicyIteration():
-    PolicyIteration(P, R, 0.9)
-    #inst.iterate()
-    #assert (abs(inst.value[0] - 42.4419) < 0.001)
-    #assert (abs(inst.value[1] - 36.0465) < 0.001)
-    #assert (inst.policy == (1, 0))
-    #assert (inst.iter == 2)
+def test_PolicyIteration_init_policy0_exampleForest():
+    P, R = exampleForest()
+    a = PolicyIteration(P, R, 0.9)
+    p = matrix('0; 1; 0')
+    assert (a.policy == p).all()
+
+def test_PolicyIteration_computePpolicyPRpolicy_exampleForest():
+    P, R = exampleForest()
+    a = PolicyIteration(P, R, 0.9)
+    P1 = matrix('0.1 0.9 0; 1 0 0; 0.1 0 0.9')
+    R1 = matrix('0; 1; 4')
+    Ppolicy, Rpolicy = a.computePpolicyPRpolicy()
+    assert (absolute(Ppolicy - P1) < SMALLNUM).all()
+    assert (absolute(Rpolicy - R1) < SMALLNUM).all()
+
+def test_PolicyIteration_evalPolicyIterative_exampleForest():
+    P, R = exampleForest()
+    v0 = matrix('0; 0; 0')
+    v1 = matrix('4.47504640074458; 5.02753258879703; 23.17234211944304')
+    p = matrix('0; 1; 0')
+    a = PolicyIteration(P, R, 0.9)
+    assert (absolute(a.value - v0) < SMALLNUM).all()
+    a.evalPolicyIterative()
+    assert (absolute(a.value - v1) < SMALLNUM).all()
+    assert (a.policy == p).all()
+
+def test_PolicyIteration_evalPolicyIterative_bellmanOperator_exampleForest():
+    P, R = exampleForest()
+    v = matrix('4.47504640074458; 5.02753258879703; 23.17234211944304')
+    p = matrix('0; 0; 0')
+    a = PolicyIteration(P, R, 0.9)
+    a.evalPolicyIterative()
+    policy, value = a.bellmanOperator()
+    assert (policy == p).all()
+    assert (absolute(a.value - v) < SMALLNUM).all()
+
+def test_PolicyIteration_iterative_exampleForest():
+    P, R = exampleForest()
+    a = PolicyIteration(P, R, 0.9, eval_type=1)
+    V = matrix('26.2439058351861 29.4839058351861 33.4839058351861')
+    p = matrix('0 0 0')
+    itr = 2
+    a.iterate()
+    assert (absolute(array(a.value) - V) < SMALLNUM).all()
+    assert (array(a.policy) == p).all()
+    assert a.iter == itr
+
+def test_PolicyIteration_evalPolicyMatrix_exampleForest():
+    P, R = exampleForest()
+    v_pol = matrix('4.47513812154696; 5.02762430939227; 23.17243384704857')
+    a = PolicyIteration(P, R, 0.9)
+    a.evalPolicyMatrix()
+    assert (absolute(a.value - v_pol) < SMALLNUM).all()
+
+def test_PolicyIteration_matrix_exampleForest():
+    P, R = exampleForest()
+    a = PolicyIteration(P, R, 0.9)
+    V = matrix('26.2440000000000 29.4840000000000 33.4840000000000')
+    p = matrix('0 0 0')
+    itr = 2
+    a.iterate()
+    assert (absolute(array(a.value) - V) < SMALLNUM).all()
+    assert (array(a.policy) == p).all()
+    assert a.iter == itr
 
 #def test_JacksCarRental():
 #    S = 21 ** 2

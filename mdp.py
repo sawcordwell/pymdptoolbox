@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 from numpy import absolute, array, diag, matrix, mean, mod, multiply, ndarray
-from numpy import ones, zeros
+from numpy import nonzero, ones, zeros
 from numpy.random import rand
 from math import ceil, log, sqrt
 from random import randint, random
@@ -419,6 +419,13 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     
     return (P, R)
 
+def getSpan(self, W):
+    """Returns the span of W
+    
+    sp(W) = max W(s) - min W(s)
+    """
+    return (W.max() - W.min())
+
 class MDP(object):
     """The Markov Decision Problem Toolbox."""
     
@@ -502,27 +509,31 @@ class MDP(object):
         Ppolicy(SxS)  = transition matrix for policy
         PRpolicy(S)   = reward matrix for policy
         """
-        Ppolicy = zeros(())
-        PRpolicy = zeros(())
-        for a in range(self.A): # avoid looping over S
+        Ppolicy = matrix(zeros((self.S, self.S)))
+        Rpolicy = matrix(zeros((self.S, 1)))
+        for aa in range(self.A): # avoid looping over S
         
-            ind = find(self.policy == a) # the rows that use action a
-            if not isempty(ind):
-                if iscell(P):
-                    Ppolicy[ind,:] = self.P[a][ind,:]
-                else:
-                    Ppolicy[ind,:] = self.P[ind,:,a]
+            # the rows that use action a. .getA1() is used to make sure that
+            # ind is a 1 dimensional vector
+            ind = nonzero(self.policy == aa)[0].getA1()
+            if ind.size > 0: # if no rows use action a, then no point continuing
+                Ppolicy[ind, :] = self.P[aa][ind, :]
                 
-                PR = self.computePR()
-                PRpolicy[ind, 1] = PR[ind, a]
+                #PR = self.computePR() # an apparently uneeded line, and
+                # perhaps harmful in this implementation c.f.
+                # mdp_computePpolicyPRpolicy.m
+                Rpolicy[ind] = self.R[ind, aa]
         
-        # self.R cannot be sparse with the code in its current condition
+        # self.R cannot be sparse with the code in its current condition, but
+        # it should be possible in the future. Also, if R is so big that its
+        # a good idea to use a sparse matrix for it, then converting PRpolicy
+        # from a dense to sparse matrix doesn't seem very memory efficient
         if type(self.R) is sparse:
-            PRpolicy = sparse(PRpolicy)
+            Rpolicy = sparse(Rpolicy)
         
         #self.Ppolicy = Ppolicy
-        #self.Rpolicy = PRpolicy
-        return (Ppolicy, PRpolicy)
+        #self.Rpolicy = Rpolicy
+        return (Ppolicy, Rpolicy)
     
     def computePR(self, P, R):
         """Computes the reward for the system in one state chosing an action
@@ -583,13 +594,6 @@ class MDP(object):
         iterate() method.
         """
         raise NotImplementedError("You should create an iterate() method.")
-    
-    def getSpan(self, W):
-        """Returns the span of W
-        
-        sp(W) = max W(s) - min W(s)
-        """
-        return (W.max() - W.min())
     
     def setSilent(self):
         """Ask for running resolution functions of the MDP Toolbox in silent
@@ -804,6 +808,8 @@ class PolicyIteration(MDP):
         
         if eval_type in (0, "matrix"):
             from numpy.linalg import solve
+            from scipy.sparse import eye
+            self.speye = eye
             self.lin_eq = solve
             self.eval_type = "matrix"
         elif eval_type in (1, "iterative"):
@@ -844,11 +850,11 @@ class PolicyIteration(MDP):
         epsilon-optimum value function found or maximum number of iterations reached.
         """
         if V0 == 0:
-            Vpolicy = zeros(self.S, 1)
+            policy_V = zeros((self.S, 1))
         else:
             raise NotImplementedError("evalPolicyIterative: case V0 != 0 not implemented. Use V0=0 instead.")
         
-        Ppolicy, PRpolicy = self.computePpolicyPRpolicy(self.P, self.R, self.policy)
+        policy_P, policy_R = self.computePpolicyPRpolicy()
         
         if self.verbose:
             print('  Iteration    V_variation')
@@ -857,21 +863,24 @@ class PolicyIteration(MDP):
         done = False
         while not done:
             itr = itr + 1
-            Vprev = Vpolicy
-            Vpolicy = PRpolicy + self.discount * Ppolicy * Vprev
-            variation = max(abs(Vpolicy - Vprev))
+            
+            Vprev = policy_V
+            policy_V = policy_R + self.discount * policy_P * Vprev
+            
+            variation = absolute(policy_V - Vprev).max()
             if self.verbose:
                 print('      %s         %s') % (itr, variation)
+                
             if variation < ((1 - self.discount) / self.discount) * epsilon: # to ensure |Vn - Vpolicy| < epsilon
                 done = True
                 if self.verbose:
-                    print('MDP Toolbox: iterations stopped, epsilon-optimal value function')
+                    print('PyMDPtoolbox: iterations stopped, epsilon-optimal value function')
             elif itr == max_iter:
                 done = True
                 if self.verbose:
-                    print('MDP Toolbox: iterations stopped by maximum number of iteration condition')
+                    print('PyMDPtoolbox: iterations stopped by maximum number of iteration condition')
         
-        self.value = Vpolicy
+        self.value = policy_V
     
     def evalPolicyMatrix(self):
         """Evaluation of the value function of a policy
@@ -894,12 +903,12 @@ class PolicyIteration(MDP):
         Vpolicy(S) = value function of the policy
         """
         
-        Ppolicy, PRpolicy = self.computePpolicyPRpolicy(self.P, self.R, self.policy)
+        Ppolicy, Rpolicy = self.computePpolicyPRpolicy()
         # V = PR + gPV  => (I-gP)V = PR  => V = inv(I-gP)* PR
-        self.value = self.lin_eq((speye(self.S, self.S) - self.discount * Ppolicy) , PRpolicy)
+        self.value = self.lin_eq((self.speye(self.S, self.S) - self.discount * Ppolicy) , Rpolicy)
     
     def iterate(self):
-        """"""
+        """Run the policy iteration algorithm."""
         
         if self.verbose:
             print('  Iteration  Number_of_different_actions')
@@ -927,8 +936,16 @@ class PolicyIteration(MDP):
             if self.verbose:
                 print('       %s                 %s') % (self.iter, n_different)
             
-            if (policy_next == self.policy).all() or (self.iter == self.max_iter):
+            if n_different == 0:
                 done = True
+                if self.verbose:
+                    print("...iterations stopped, unchanging policy found")
+            elif (self.iter == self.max_iter):
+                done = True 
+                if self.verbose:
+                    print("...iterations stopped by maximum number of iteration condition")
+            else:
+                self.policy = policy_next
         
         self.time = time() - self.time
         
@@ -1009,7 +1026,7 @@ class PolicyIterationModified(MDP):
             Vnext, policy = self.bellmanOperator(self.P, self.PR, self.discount, self.V)
             #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
             
-            variation = self.getSpan(Vnext - self.value);
+            variation = getSpan(Vnext - self.value);
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
             
@@ -1237,7 +1254,7 @@ class RelativeValueIteration(MDP):
             Unext, policy = self.bellmanOperator(self.P, self.R, 1, self.U)
             Unext = Unext - self.gain
             
-            variation = self.getSpan(Unext - self.U)
+            variation = getSpan(Unext - self.U)
             
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
@@ -1382,8 +1399,8 @@ class ValueIteration(MDP):
         if (initial_value == 0):
             self.value = matrix(zeros((self.S, 1)))
         else:
-            if (initial_value.size != self.S):
-                raise ValueError("The initial value must be length S")
+            if (not initial_value.shape in ((self.S, ), (self.S, 1), (1, self.S))):
+                raise ValueError("The initial value must be a vector of length S")
             else:
                 self.value = matrix(initial_value)
         
@@ -1431,10 +1448,10 @@ class ValueIteration(MDP):
         
         k = 1 - h.sum()
         Vprev = self.value
-        self.bellmanOperator()
+        null, value = self.bellmanOperator()
         # p 201, Proposition 6.6.5
-        max_iter = log( (epsilon * (1 - self.discount) / self.discount) / self.getSpan(self.value - Vprev) ) / log(self.discount * k)
-        self.value = Vprev
+        max_iter = log( (epsilon * (1 - self.discount) / self.discount) / getSpan(value - Vprev) ) / log(self.discount * k)
+        #self.value = Vprev
         
         self.max_iter = ceil(max_iter)
     
@@ -1458,7 +1475,7 @@ class ValueIteration(MDP):
             # The values, based on Q. For the function "max()": the option
             # "axis" means the axis along which to operate. In this case it
             # finds the maximum of the the rows. (Operates along the columns?)
-            variation = self.getSpan(self.value - Vprev)
+            variation = getSpan(self.value - Vprev)
             
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
@@ -1566,7 +1583,7 @@ class ValueIterationGS(ValueIteration):
                     Q[a] =  self.R[s,a]  +  self.discount * self.P[a][s,:] * self.value
                 self.value[s] = max(Q)
             
-            variation = self.getSpan(V - Vprev)
+            variation = getSpan(V - Vprev)
             
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
