@@ -1,4 +1,12 @@
 2013-01-25
+v0.12 - PolicyIterationModified has been completed and is feature complete. Unit tests have not yet been written, and the docs need fixing.
+	>>> import mdp
+	>>> P, R = mdp.exampleForest()
+	>>> pim = mdp.PolicyIterationModified(P, R, 0.9)
+	>>> pim.iterate()
+	>>> pim.policy
+	(0, 0, 0)
+
 v0.11 - QLearning is now ready for use in the module, with a couple of unit tests already written. The class is used as follows:
 	>>> import mdp
 	>>> import numpy as np
