@@ -1,4 +1,10 @@
 2013-01-25
+v0.13 - the FiniteHorizon class has been fixed. No unit tests yet.
+	>>> import mdp
+	>>> P, R = mdp.exampleForest()
+	>>> pim = mdp.FiniteHorizon(P, R, 10) # 10 time-step horizon
+	>>> pim.iterate() # get the optimal policy with pim.policy
+
 v0.12 - PolicyIterationModified has been completed and is feature complete. Unit tests have not yet been written, and the docs need fixing.
 	>>> import mdp
 	>>> P, R = mdp.exampleForest()
