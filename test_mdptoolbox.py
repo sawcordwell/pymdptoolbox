@@ -212,25 +212,6 @@ def test_MDP_P_R_3():
     a = MDP(P, R, 0.9, 0.01, 1)
     assert (absolute(a.R - PR) < SMALLNUM).all()
 
-# ValueIteration
-
-def test_ValueIteration_boundIter():
-    inst = ValueIteration(P, R, 0.9, 0.01)
-    assert (inst.max_iter == 28)
-
-def test_ValueIteration_iterate():
-    inst = ValueIteration(P, R, 0.9, 0.01)
-    inst.iterate()
-    assert (inst.V == (40.048625392716822,  33.65371175967546))
-    assert (inst.policy == (1, 0))
-    assert (inst.iter == 26)
-
-def test_ValueIteration_exampleForest():
-    a = ValueIteration(Pf, Rf, 0.96)
-    a.iterate()
-    assert (a.policy == array([0, 0, 0])).all()
-    assert a.iter == 4
-
 # PolicyIteration
 
 def test_PolicyIteration_init_policy0():
@@ -296,6 +277,41 @@ def test_PolicyIteration_matrix_exampleForest():
     assert (array(a.policy) == p).all()
     assert a.iter == itr
 
+# QLearning
+def test_QLearning_exampleForest():
+    pass
+
+# RelativeValueIteration
+
+def test_RelativeValueIteration_exampleForest():
+    a = RelativeValueIteration(Pf, Rf)
+    itr = 4
+    p = matrix('0 0 0')
+    v = matrix('-4.360000000000000 -0.760000000000000 3.240000000000000')
+    a.iterate()
+    assert (array(a.policy) == p).all()
+    assert a.iter == itr
+    assert (absolute(array(a.V) - v) < SMALLNUM).all()
+
+# ValueIteration
+
+def test_ValueIteration_boundIter():
+    inst = ValueIteration(P, R, 0.9, 0.01)
+    assert (inst.max_iter == 28)
+
+def test_ValueIteration_iterate():
+    inst = ValueIteration(P, R, 0.9, 0.01)
+    inst.iterate()
+    assert (inst.V == (40.048625392716822,  33.65371175967546))
+    assert (inst.policy == (1, 0))
+    assert (inst.iter == 26)
+
+def test_ValueIteration_exampleForest():
+    a = ValueIteration(Pf, Rf, 0.96)
+    a.iterate()
+    assert (a.policy == array([0, 0, 0])).all()
+    assert a.iter == 4
+
 # ValueIterationGS
 
 def test_ValueIterationGS_boundIter_exampleForest():
@@ -308,18 +324,6 @@ def test_ValueIterationGS_exampleForest():
     p = matrix('0 0 0')
     v = matrix('25.5833879767579 28.8306546355469 32.8306546355469')
     itr = 33
-    a.iterate()
-    assert (array(a.policy) == p).all()
-    assert a.iter == itr
-    assert (absolute(array(a.V) - v) < SMALLNUM).all()
-
-# RelativeValueIteration
-
-def test_RelativeValueIteration_exampleForest():
-    a = RelativeValueIteration(Pf, Rf)
-    itr = 4
-    p = matrix('0 0 0')
-    v = matrix('-4.360000000000000 -0.760000000000000 3.240000000000000')
     a.iterate()
     assert (array(a.policy) == p).all()
     assert a.iter == itr
