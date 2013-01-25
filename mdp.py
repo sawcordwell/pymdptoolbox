@@ -1149,7 +1149,7 @@ class QLearning(MDP):
         self.discrepancy = []
         
     def iterate(self):
-        """
+        """Run the Q-learning algoritm.
         """
         self.time = time()
         

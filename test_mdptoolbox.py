@@ -6,8 +6,8 @@ Created on Sun May 27 23:16:57 2012
 """
 
 from mdp import check, checkSquareStochastic, exampleForest, exampleRand, MDP
-from mdp import PolicyIteration, RelativeValueIteration, ValueIteration
-from mdp import ValueIterationGS
+from mdp import PolicyIteration, QLearning, RelativeValueIteration
+from mdp import ValueIteration, ValueIterationGS
 
 from numpy import absolute, array, eye, matrix, zeros
 from numpy.random import rand
@@ -279,7 +279,18 @@ def test_PolicyIteration_matrix_exampleForest():
 
 # QLearning
 def test_QLearning_exampleForest():
-    pass
+    a = QLearning(Pf, Rf, 0.9)
+    q = matrix('26.1841860892231 18.6273657021260; ' \
+               '29.5880960371007 18.5901207622881; '\
+               '33.3526406657418 25.2621054631519')
+    v = matrix('26.1841860892231 29.5880960371007 33.3526406657418')
+    p = matrix('0 0 0')
+    itr = 0
+    a.iterate()
+    assert (absolute(a.Q - q) < SMALLNUM).all()
+    assert (absolute(array(a.V) - v) < SMALLNUM).all()
+    assert (array(a.policy) == p).all()
+    assert a.iter == itr
 
 # RelativeValueIteration
 
