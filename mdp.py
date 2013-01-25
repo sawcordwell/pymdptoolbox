@@ -304,7 +304,6 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     array([[[ 0.1,  0.9,  0. ],
             [ 0.1,  0. ,  0.9],
             [ 0.1,  0. ,  0.9]],
-
            [[ 1. ,  0. ,  0. ],
             [ 1. ,  0. ,  0. ],
             [ 1. ,  0. ,  0. ]]])
@@ -429,12 +428,12 @@ def getSpan(W):
 class MDP(object):
     """The Markov Decision Problem Toolbox."""
     
-    def __init__(self, transitions, reward, discount, max_iter):
+    def __init__(self, transitions, reward, discount, epsilon, max_iter):
         """"""
         
         # if the discount is None then the algorithm is assumed to not use it
         # in its computations
-        if (type(discount) is int) or (type(discount) is float):
+        if type(discount) in (int, float):
             if (discount <= 0) or (discount > 1):
                 raise ValueError(mdperr["discount_rng"])
             else:
@@ -448,13 +447,20 @@ class MDP(object):
         
         # if the max_iter is None then the algorithm is assumed to not use it
         # in its computations
-        if (type(max_iter) is int) or (type(max_iter) is float):
-            if (max_iter <= 0):
+        if type(max_iter) in (int, float):
+            if max_iter <= 0:
                 raise ValueError(mdperr["maxi_min"])
             else:
                 self.max_iter = max_iter
         elif not max_iter is None:
             raise ValueError("PyMDPtoolbox: max_iter must be a positive real "\
+                "number greater than zero.")
+        
+        if type(epsilon) in (int, float):
+            if epsilon <= 0:
+                raise ValueError("PyMDPtoolbox: epsilon must be greater than 0")
+        elif not epsilon is None:
+            raise ValueError("PyMDPtoolbox: epsilon must be a positive real "\
                 "number greater than zero.")
         
         # we run a check on P and R to make sure they are describing an MDP. If
@@ -744,7 +750,7 @@ class PolicyIteration(MDP):
     def __init__(self, transitions, reward, discount, policy0=None, max_iter=1000, eval_type=0):
         """"""
         
-        MDP.__init__(self, transitions, reward, discount, max_iter)
+        MDP.__init__(self, transitions, reward, discount, None, max_iter)
         
         if policy0 == None:
             # initialise the policy to the one which maximises the expected
@@ -913,7 +919,7 @@ class PolicyIteration(MDP):
         
         Ppolicy, Rpolicy = self.computePpolicyPRpolicy()
         # V = PR + gPV  => (I-gP)V = PR  => V = inv(I-gP)* PR
-        self.V = self.lin_eq((self.speye(self.S, self.S) - self.discount * Ppolicy) , Rpolicy)
+        self.V = self.lin_eq((self.speye(self.S, self.S) - self.discount * Ppolicy), Rpolicy)
     
     def iterate(self):
         """Run the policy iteration algorithm."""
@@ -961,7 +967,7 @@ class PolicyIteration(MDP):
         self.V = tuple(array(self.V).reshape(self.S).tolist())
         self.policy = tuple(array(self.policy).reshape(self.S).tolist())
 
-class PolicyIterationModified(MDP):
+class PolicyIterationModified(PolicyIteration):
     """Resolution of discounted MDP  with policy iteration algorithm
     
     Arguments
@@ -1002,10 +1008,16 @@ class PolicyIterationModified(MDP):
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10):
         """"""
         
-        MDP.__init__(self, transitions, reward, discount, max_iter)
+        PolicyIteration.__init__(self, transitions, reward, discount, None, max_iter, 1)
         
-        if epsilon <= 0:
-            raise ValueError("epsilon must be greater than 0")
+        # PolicyIteration doesn't pass epsilon to MDP.__init__() so we will
+        # check it here
+        if type(epsilon) in (int, float):
+            if epsilon <= 0:
+                raise ValueError("PyMDPtoolbox: epsilon must be greater than 0")
+        else:
+            raise ValueError("PyMDPtoolbox: epsilon must be a positive real "\
+                "number greater than zero.")
         
         # computation of threshold of variation for V for an epsilon-optimal policy
         if self.discount != 1:
@@ -1128,7 +1140,7 @@ class QLearning(MDP):
             raise ValueError("PyMDPtoolbox: n_iter should be greater than 10000")
         
         # after this n_iter will be known as self.max_iter
-        MDP.__init__(self, transitions, reward, discount, n_iter)
+        MDP.__init__(self, transitions, reward, discount, None, n_iter)
         
         # Initialisations
         self.Q = zeros((self.S, self.A))
@@ -1238,13 +1250,15 @@ class RelativeValueIteration(MDP):
     
     def __init__(self, transitions, reward, epsilon=0.01, max_iter=1000):
         
-        MDP.__init__(self,  transitions, reward, None, max_iter)
+        MDP.__init__(self,  transitions, reward, None, epsilon, max_iter)
         
-        if epsilon <= 0:
-            print('MDP Toolbox ERROR: epsilon must be upper than 0')
-    
-        self.U = zeros(self.S, 1)
-        self.gain = self.U[self.S]
+        self.epsilon = epsilon
+        self.discount = 1
+        
+        self.V = matrix(zeros((self.S, 1)))
+        self.gain = 0 # self.U[self.S]
+        
+        self.average_reward = None
     
     def iterate(self):
         """"""
@@ -1259,29 +1273,33 @@ class RelativeValueIteration(MDP):
             
             self.iter = self.iter + 1;
             
-            Unext, policy = self.bellmanOperator(self.P, self.R, 1, self.U)
-            Unext = Unext - self.gain
+            self.policy, Vnext = self.bellmanOperator()
+            Vnext = Vnext - self.gain
             
-            variation = getSpan(Unext - self.U)
+            variation = getSpan(Vnext - self.V)
             
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
-
+            
             if variation < self.epsilon:
                  done = True
-                 average_reward = self.gain + min(Unext - self.U)
+                 self.average_reward = self.gain + (Vnext - self.V).min()
                  if self.verbose:
                      print('MDP Toolbox : iterations stopped, epsilon-optimal policy found')
             elif self.iter == self.max_iter:
                  done = True 
-                 average_reward = self.gain + min(Unext - self.U);
+                 self.average_reward = self.gain + (Vnext - self.V).min()
                  if self.verbose:
                      print('MDP Toolbox : iterations stopped by maximum number of iteration condition')
             
-            self.U = Unext
-            self.gain = self.U(self.S)
+            self.V = Vnext
+            self.gain = float(self.V[self.S - 1])
         
         self.time = time() - self.time
+        
+        # store value and policy as tuples
+        self.V = tuple(self.V.getA1().tolist())
+        self.policy = tuple(self.policy.getA1().tolist())
 
 class ValueIteration(MDP):
     """
@@ -1401,21 +1419,18 @@ class ValueIteration(MDP):
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=1000, initial_value=0):
         """Resolution of discounted MDP with value iteration algorithm."""
         
-        MDP.__init__(self, transitions, reward, discount, max_iter)
+        MDP.__init__(self, transitions, reward, discount, epsilon, max_iter)
         
         # initialization of optional arguments
-        if (initial_value == 0):
+        if initial_value == 0:
             self.V = matrix(zeros((self.S, 1)))
         else:
-            if (not initial_value.shape in ((self.S, ), (self.S, 1), (1, self.S))):
+            if not initial_value.shape in ((self.S, ), (self.S, 1), (1, self.S)):
                 raise ValueError("PyMDPtoolbox: The initial value must be a vector of length S")
             else:
                 self.V = matrix(initial_value)
         
-        if epsilon <= 0:
-            raise ValueError("PyMDPtoolbox: epsilon must be greater than 0")
-        
-        if (self.discount < 1):
+        if self.discount < 1:
             # compute a bound for the number of iterations and update the
             # stored value of self.max_iter
             self.boundIter(epsilon)
@@ -1464,7 +1479,7 @@ class ValueIteration(MDP):
         max_iter = log( (epsilon * (1 - self.discount) / self.discount) / getSpan(value - Vprev) ) / log(self.discount * k)
         #self.V = Vprev
         
-        self.max_iter = ceil(max_iter)
+        self.max_iter = int(ceil(max_iter))
     
     def iterate(self):
         """

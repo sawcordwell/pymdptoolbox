@@ -6,7 +6,8 @@ Created on Sun May 27 23:16:57 2012
 """
 
 from mdp import check, checkSquareStochastic, exampleForest, exampleRand, MDP
-from mdp import PolicyIteration, ValueIteration, ValueIterationGS
+from mdp import PolicyIteration, RelativeValueIteration, ValueIteration
+from mdp import ValueIterationGS
 
 from numpy import absolute, array, eye, matrix, zeros
 from numpy.random import rand
@@ -17,6 +18,13 @@ from scipy.sparse import csr_matrix as sparse
 STATES = 10
 ACTIONS = 3
 SMALLNUM = 10e-12
+
+# Arrays
+P = array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
+R = array([[5, 10], [-1, 2]])
+Pf, Rf = exampleForest()
+Pr, Rr = exampleRand(STATES, ACTIONS)
+Prs, Rrs = exampleRand(STATES, ACTIONS, is_sparse=True)
 
 # check: square, stochastic and non-negative ndarrays
 
@@ -130,7 +138,6 @@ def test_checkSquareStochastic_eye_sparse():
     assert checkSquareStochastic(P) == None
 
 # exampleForest
-Pf, Rf = exampleForest()
 
 def test_exampleForest_P_shape():
     assert (Pf == array([[[0.1, 0.9, 0.0],
@@ -151,8 +158,6 @@ def test_exampleForest_check():
 
 # exampleRand
 
-Pr, Rr = exampleRand(STATES, ACTIONS)
-
 def test_exampleRand_dense_P_shape():
     assert (Pr.shape == (ACTIONS, STATES, STATES))
 
@@ -162,8 +167,6 @@ def test_exampleRand_dense_R_shape():
 def test_exampleRand_dense_check():
     assert check(Pr, Rr) == None
 
-Prs, Rrs = exampleRand(STATES, ACTIONS, is_sparse=True)
-
 def test_exampleRand_sparse_P_shape():
     assert (Prs.shape == (ACTIONS, ))
 
@@ -172,9 +175,6 @@ def test_exampleRand_sparse_R_shape():
 
 def test_exampleRand_sparse_check():
     assert check(Prs, Rrs) == None
-
-P = array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
-R = array([[5, 10], [-1, 2]])
 
 # MDP
 
@@ -298,11 +298,28 @@ def test_PolicyIteration_matrix_exampleForest():
 
 # ValueIterationGS
 
+def test_ValueIterationGS_boundIter_exampleForest():
+    a = ValueIterationGS(Pf, Rf, 0.9)
+    itr = 39
+    assert (a.max_iter == itr)
+
 def test_ValueIterationGS_exampleForest():
     a = ValueIterationGS(Pf, Rf, 0.9)
     p = matrix('0 0 0')
     v = matrix('25.5833879767579 28.8306546355469 32.8306546355469')
     itr = 33
+    a.iterate()
+    assert (array(a.policy) == p).all()
+    assert a.iter == itr
+    assert (absolute(array(a.V) - v) < SMALLNUM).all()
+
+# RelativeValueIteration
+
+def test_RelativeValueIteration_exampleForest():
+    a = RelativeValueIteration(Pf, Rf)
+    itr = 4
+    p = matrix('0 0 0')
+    v = matrix('-4.360000000000000 -0.760000000000000 3.240000000000000')
     a.iterate()
     assert (array(a.policy) == p).all()
     assert a.iter == itr
