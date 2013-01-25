@@ -183,7 +183,7 @@ def test_MDP_P_R_1():
     P1[0] = matrix('0.5 0.5; 0.8 0.2')
     P1[1] = matrix('0 1; 0.1 0.9')
     R1 = matrix('5 10; -1 2')
-    a = MDP(P, R, 0.9, 0.01)
+    a = MDP(P, R, 0.9, 0.01, 1)
     assert a.P.dtype == P1.dtype
     assert a.R.dtype == R1.dtype
     for kk in range(2):
@@ -196,7 +196,7 @@ def test_MDP_P_R_2():
     P1[0] = matrix('0.5 0.5; 0.8 0.2')
     P1[1] = matrix('0 1; 0.1 0.9')
     R1 = matrix('7.5 2; -0.4 3.9')
-    a = MDP(P, R, 0.9, 0.01)
+    a = MDP(P, R, 0.9, 0.01, 1)
     assert type(a.P) == type(P1)
     assert type(a.R) == type(R1)
     assert a.P.dtype == P1.dtype
@@ -209,7 +209,7 @@ def test_MDP_P_R_3():
     P = array([[[0.6116, 0.3884],[0, 1]],[[0.6674, 0.3326],[0, 1]]])
     R = array([[[-0.2433, 0.7073],[0, 0.1871]],[[-0.0069, 0.6433],[0, 0.2898]]])
     PR = matrix('0.12591304 0.20935652; 0.1871 0.2898')
-    a = MDP(P, R, 0.9, 0.01)
+    a = MDP(P, R, 0.9, 0.01, 1)
     assert (absolute(a.R - PR) < SMALLNUM).all()
 
 # ValueIteration
