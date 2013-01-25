@@ -1097,36 +1097,38 @@ class QLearning(MDP):
         Then the length of this vector for the default value of N is 100 
         (N/100).
 
-    ExamplesPP[:, aa] = self.P[aa][:, ss]
+    Examples
     ---------
+    >>> import random # this example is reproducible only if random seed is set
     >>> import mdp
+    >>> random.seed(0)
     >>> P, R = mdp.exampleForest()
     >>> ql = mdp.QLearning(P, R, 0.96)
     >>> ql.iterate()
     >>> ql.Q
-    array([[  0.        ,   0.        ],
-           [  0.01062959,   0.79870231],
-           [ 10.08191776,   0.35309404]])
+    array([[ 68.80977389,  46.62560314],
+           [ 72.58265749,  43.1170545 ],
+           [ 77.1332834 ,  65.01737419]])
     >>> ql.V
-    array([  0.        ,   0.79870231,  10.08191776])
+    (68.80977388561172, 72.5826574913828, 77.13328339600116)
     >>> ql.policy
-    array([0, 1, 0])
+    (0, 0, 0)
     
+    >>> import random # this example is reproducible only if random seed is set
     >>> import mdp
     >>> import numpy as np
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
+    >>> random.seed(0)
     >>> ql = mdp.QLearning(P, R, 0.9)
     >>> ql.iterate()
     >>> ql.Q
-    array([[ 94.99525115,  99.99999007],
-           [ 53.92930199,   5.57331205]])
+    array([[ 36.63245946,  42.24434307],
+           [ 35.96582807,  32.70456417]])
     >>> ql.V
-    array([ 99.99999007,  53.92930199])
+    (42.24434307022128, 35.96582807367007)
     >>> ql.policy
-    array([1, 0])
-    >>> ql.time
-    0.6501460075378418
+    (1, 0)
     
     """
     
@@ -1139,24 +1141,43 @@ class QLearning(MDP):
         if (n_iter < 10000):
             raise ValueError("PyMDPtoolbox: n_iter should be greater than 10000")
         
-        # after this n_iter will be known as self.max_iter
-        MDP.__init__(self, transitions, reward, discount, None, n_iter)
+        # We don't want to send this to MDP because computePR should not be
+        # run on it
+        # MDP.__init__(self, transitions, reward, discount, None, n_iter)
+        check(transitions, reward)
+        
+        if (transitions.dtype is object):
+            self.P = transitions
+            self.A = self.P.shape[0]
+            self.S = self.P[0].shape[0]
+        else: # convert to an object array
+            self.A = transitions.shape[0]
+            self.S = transitions.shape[1]
+            self.P = zeros(self.A, dtype=object)
+            for aa in range(self.A):
+                self.P[aa] = transitions[aa, :, :]
+        
+        self.R = reward
+        
+        self.discount = discount
+        
+        self.max_iter = n_iter
         
         # Initialisations
         self.Q = zeros((self.S, self.A))
-        #self.dQ = zeros(self.S, self.A)
         self.mean_discrepancy = []
-        self.discrepancy = []
         
     def iterate(self):
         """Run the Q-learning algoritm.
         """
+        discrepancy = []
+        
         self.time = time()
         
         # initial state choice
-        # s = randint(0, self.S - 1)
+        s = randint(0, self.S - 1)
         
-        for n in range(self.max_iter):
+        for n in range(1, self.max_iter + 1):
             
             # Reinitialisation of trajectories every 100 transitions
             if ((n % 100) == 0):
@@ -1175,7 +1196,7 @@ class QLearning(MDP):
             p_s_new = random()
             p = 0
             s_new = -1
-            while ((p < p_s_new) and (s_new < s)):
+            while ((p < p_s_new) and (s_new < (self.S - 1))):
                 s_new = s_new + 1
                 p = p + self.P[a][s, s_new]
             
@@ -1186,7 +1207,7 @@ class QLearning(MDP):
             else:
                 r = self.R[s, a]
             
-            # Updating the value of Q   
+            # Updating the value of Q
             # Decaying update coefficient (1/sqrt(n+2)) can be changed
             delta = r + self.discount * self.Q[s_new, :].max() - self.Q[s, a]
             dQ = (1 / sqrt(n + 2)) * delta
@@ -1196,12 +1217,12 @@ class QLearning(MDP):
             s = s_new
             
             # Computing and saving maximal values of the Q variation
-            self.discrepancy.append(absolute(dQ))
+            discrepancy.append(absolute(dQ))
             
             # Computing means all over maximal Q variations values
-            if ((n % 100) == 99):
-                self.mean_discrepancy.append(mean(self.discrepancy))
-                self.discrepancy = []
+            if len(discrepancy) == 100:
+                self.mean_discrepancy.append(mean(discrepancy))
+                discrepancy = []
             
             # compute the value function and the policy
             self.V = self.Q.max(axis=1)
@@ -1210,12 +1231,8 @@ class QLearning(MDP):
         self.time = time() - self.time
         
         # convert V and policy to tuples
-        self.V = tuple(self.V.getA1().tolist())
-        self.policy = tuple(self.policy.getA1().tolist())
-        
-        # rather than report that we have not done any iterations, assign the
-        # value of n_iter to self.iter
-        self.iter = self.max_iter
+        self.V = tuple(self.V.tolist())
+        self.policy = tuple(self.policy.tolist())
 
 class RelativeValueIteration(MDP):
     """Resolution of MDP with average reward with relative value iteration 
