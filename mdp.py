@@ -964,8 +964,8 @@ class PolicyIteration(MDP):
         self.time = time() - self.time
         
         # store value and policy as tuples
-        self.V = tuple(array(self.V).reshape(self.S).tolist())
-        self.policy = tuple(array(self.policy).reshape(self.S).tolist())
+        self.V = tuple(self.V.getA1().tolist())
+        self.policy = tuple(self.policy.getA1().tolist())
 
 class PolicyIterationModified(PolicyIteration):
     """Resolution of discounted MDP  with policy iteration algorithm
@@ -1208,6 +1208,10 @@ class QLearning(MDP):
             self.policy = self.Q.argmax(axis=1)
             
         self.time = time() - self.time
+        
+        # convert V and policy to tuples
+        self.V = tuple(self.V.getA1().tolist())
+        self.policy = tuple(self.policy.getA1().tolist())
         
         # rather than report that we have not done any iterations, assign the
         # value of n_iter to self.iter
@@ -1516,8 +1520,8 @@ class ValueIteration(MDP):
                     print("...iterations stopped by maximum number of iteration condition")
         
         # store value and policy as tuples
-        self.V = tuple(array(self.V).reshape(self.S).tolist())
-        self.policy = tuple(array(self.policy).reshape(self.S).tolist())
+        self.V = tuple(self.V.getA1().tolist())
+        self.policy = tuple(self.policy.getA1().tolist())
         
         self.time = time() - self.time
 
@@ -1610,5 +1614,5 @@ class ValueIterationGS(ValueIteration):
 
         self.time = time() - self.time
         
-        self.V = tuple(array(self.V).reshape(self.S).tolist())
+        self.V = tuple(self.V.getA1().tolist())
         self.policy = tuple(self.policy)
