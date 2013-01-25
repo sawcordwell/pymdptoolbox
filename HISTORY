@@ -1,3 +1,13 @@
+2013-01-25
+v0.10 - the RelativeValueIteration class has been completed and fulfils the requirements to bump up the version number.
+	>>> import mdp
+	>>> P, R = mdp.exampleForest()
+	>>> rvi = mdp.RelativeValueIteration(P, R) # this algorithm does not use discounting
+	>>> rvi.iterate() # runs the algorithm
+	>>> rvi.policy # to get the optimal policy
+	(0, 0, 0)
+
+Pre 2013-01-25
 v0.9 - the value iteration Gauss-Seidel algorithm is now in working order. The class ValueIterationGS should be stable and usable. Use like this:
 	>>> import mdp
 	>>> P, R = mdp.exampleRand(10, 3) # to create a random transition and reward matrices with 10 states and 3 actions
