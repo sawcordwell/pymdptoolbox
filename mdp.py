@@ -863,10 +863,13 @@ class PolicyIteration(MDP):
         In verbose mode, at each iteration, displays the condition which stopped iterations:
         epsilon-optimum value function found or maximum number of iterations reached.
         """
-        if V0 == 0:
+        if (type(V0) in (int, float)) and (V0 == 0):
             policy_V = zeros((self.S, 1))
         else:
-            raise NotImplementedError("evalPolicyIterative: case V0 != 0 not implemented. Use default (V0=0) instead.")
+            if (type(V0) in (ndarray, matrix)) and (V0.shape == (self.S, 1)):
+                policy_V = V0
+            else:
+                raise ValueError('PyMDPtoolbox: V0 vector/array type not supported. Use ndarray of matrix column vector length S.')
         
         policy_P, policy_R = self.computePpolicyPRpolicy()
         
@@ -1008,6 +1011,11 @@ class PolicyIterationModified(PolicyIteration):
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10):
         """"""
         
+        # Maybe its better not to subclass from PolicyIteration, because the
+        # initialisation of the two are quite different. eg there is policy0
+        # being calculated here which doesn't need to be. The only thing that
+        # is needed from the PolicyIteration class is the evalPolicyIterative
+        # function. Perhaps there is a better way to do it?
         PolicyIteration.__init__(self, transitions, reward, discount, None, max_iter, 1)
         
         # PolicyIteration doesn't pass epsilon to MDP.__init__() so we will
@@ -1025,11 +1033,13 @@ class PolicyIterationModified(PolicyIteration):
         else:
             self.thresh = epsilon
         
+        self.epsilon = epsilon
+        
         if discount == 1:
             self.V = matrix(zeros((self.S, 1)))
         else:
             # min(min()) is not right
-            self.V = 1 / (1 - discount) * min(min(self.R)) * ones((self.S, 1))
+            self.V = 1 / (1 - discount) * self.R.min() * ones((self.S, 1))
     
     def iterate(self):
         """"""
@@ -1043,10 +1053,10 @@ class PolicyIterationModified(PolicyIteration):
         while not done:
             self.iter = self.iter + 1
             
-            Vnext, policy = self.bellmanOperator(self.P, self.PR, self.discount, self.V)
+            self.policy, Vnext = self.bellmanOperator()
             #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
             
-            variation = getSpan(Vnext - self.V);
+            variation = getSpan(Vnext - self.V)
             if self.verbose:
                 print("      %s         %s" % (self.iter, variation))
             
@@ -1056,15 +1066,19 @@ class PolicyIterationModified(PolicyIteration):
             else:
                 is_verbose = False
                 if self.verbose:
-                    self.setSilent
+                    self.setSilent()
                     is_verbose = True
                 
-                self.V = self.evalPolicyIterative()
+                self.evalPolicyIterative(self.V, self.epsilon, self.max_iter)
                 
                 if is_verbose:
-                    self.setVerbose
+                    self.setVerbose()
         
         self.time = time() - self.time
+        
+        # store value and policy as tuples
+        self.V = tuple(self.V.getA1().tolist())
+        self.policy = tuple(self.policy.getA1().tolist())
 
 class QLearning(MDP):
     """Evaluates the matrix Q, using the Q learning algorithm.
