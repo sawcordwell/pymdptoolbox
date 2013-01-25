@@ -480,7 +480,7 @@ class MDP(object):
         self.V = None
         self.policy = None
     
-    def bellmanOperator(self):
+    def bellmanOperator(self, V=None):
         """
         Applies the Bellman operator on the value function.
         
@@ -490,9 +490,16 @@ class MDP(object):
         -------
         (policy, value) : tuple of new policy and its value
         """
+        # this V should be a reference to the data rather than a copy
+        if V == None:
+            V = self.V
+        else:
+            if not ((type(V) in (ndarray, matrix)) and (V.shape == (self.S, 1))):
+                raise ValueError("V in bellmanOperator needs to be correct.")
+        
         Q = matrix(zeros((self.S, self.A)))
         for aa in range(self.A):
-            Q[:, aa] = self.R[:, aa] + (self.discount * self.P[aa] * self.V)
+            Q[:, aa] = self.R[:, aa] + (self.discount * self.P[aa] * V)
         
         # Which way is better? if choose the first way, then the classes that
         # call this function must be changed
@@ -616,23 +623,28 @@ class FiniteHorizon(MDP):
         else:
             self.N = N
         
-        MDP.__init__(self, transitions, reward, discount, None)
+        MDP.__init__(self, transitions, reward, discount, None, None)
         
-        self.V = zeros(self.S, N + 1)
+        # remove the iteration counter
+        del self.iter
+        
+        self.V = zeros((self.S, N + 1))
+        
+        self.policy = zeros((self.S, N), dtype=int)
         
         if not h is None:
-            self.V[:, N + 1] = h
+            self.V[:, N] = h
         
     def iterate(self):
         """"""
         self.time = time()
         
-        for n in range(self.N - 1):
-            W, X = self.bellmanOperator(self.P, self.R, self.discount, self.V[:, self.N - n + 1])
-            self.V[:, self.N - n] = W
-            self.policy[:, self.N - n] = X
+        for n in range(self.N):
+            W, X = self.bellmanOperator(matrix(self.V[:, self.N - n]).reshape(self.S, 1))
+            self.V[:, self.N - n - 1] = X.A1
+            self.policy[:, self.N - n - 1] = W.A1
             if self.verbose:
-                print("stage: %s ... policy transpose : %s") % (self.N - n, self.policy[:, self.N - n].T)
+                print("stage: %s ... policy transpose : %s") % (self.N - n, self.policy[:, self.N - n -1].tolist())
         
         self.time = time() - self.time
 
