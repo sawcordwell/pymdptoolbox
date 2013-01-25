@@ -1,4 +1,14 @@
 2013-01-25
+v0.11 - QLearning is now ready for use in the module, with a couple of unit tests already written. The class is used as follows:
+	>>> import mdp
+	>>> import numpy as np
+	>>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
+	>>> R = R = np.array([[5, 10], [-1, 2]])
+	>>> ql = mdp.QLearning(P, R, 0.9)
+	>>> ql.iterate()
+	>>> ql.policy
+	(1, 0)
+
 v0.10 - the RelativeValueIteration class has been completed and fulfils the requirements to bump up the version number.
 	>>> import mdp
 	>>> P, R = mdp.exampleForest()
