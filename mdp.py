@@ -683,8 +683,8 @@ class LP(MDP):
         
         try:
             from cvxopt import matrix, solvers
-            self.linprog = solvers.lp
-            self.cvxmat = matrix
+            self._linprog = solvers.lp
+            self._cvxmat = matrix
         except ImportError:
             raise ImportError("The python module cvxopt is required to use "
                               "linear programming functionality.")
@@ -706,7 +706,7 @@ class LP(MDP):
         # To avoid loop on states, the matrix M is structured following actions
         # M(A*S,S)
     
-        self.f = self.cvxmat(ones((self.S, 1)))
+        self.f = self._cvxmat(ones((self.S, 1)))
         
         self.M = zeros((self.A * self.S, self.S))
         for aa in range(self.A):
@@ -714,19 +714,19 @@ class LP(MDP):
             self.M[(pos - self.S):pos, :] = (
                 discount * self.P[aa] - speye(self.S, self.S))
         
-        self.M = self.cvxmat(self.M)
+        self.M = self._cvxmat(self.M)
     
     def iterate(self):
         """Run the linear programming algorithm."""
         self.time = time()
         
-        h = self.cvxmat(self.R.reshape(self.S * self.A, 1, order="F"), tc='d')
+        h = self._cvxmat(self.R.reshape(self.S * self.A, 1, order="F"), tc='d')
         
         # Using the glpk option will make this behave more like Octave
         # (Octave uses glpk) and perhaps Matlab. If solver=None (ie using the 
         # default cvxopt solver) then V agrees with the Octave equivalent
         # only to 10e-8 places.
-        self.V = matrix(self.linprog(self.f, self.M, -h, solver='glpk')['x'])
+        self.V = matrix(self._linprog(self.f, self.M, -h, solver='glpk')['x'])
         
         self.policy, self.V =  self._bellmanOperator()
         
