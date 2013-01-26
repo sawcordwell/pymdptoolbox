@@ -1584,7 +1584,7 @@ class ValueIteration(MDP):
         Vprev = self.V
         null, value = self.bellmanOperator()
         # p 201, Proposition 6.6.5
-        max_iter = (log( (epsilon * (1 - self.discount) / self.discount) / \ 
+        max_iter = (log( (epsilon * (1 - self.discount) / self.discount) /
                     getSpan(value - Vprev) ) / log(self.discount * k))
         #self.V = Vprev
         
@@ -1696,7 +1696,7 @@ class ValueIterationGS(ValueIteration):
             for s in range(self.S):
                 Q = []
                 for a in range(self.A):
-                    Q.append(float(self.R[s, a]  +  \
+                    Q.append(float(self.R[s, a]  +
                                    self.discount * self.P[a][s, :] * self.V))
                 
                 self.V[s] = max(Q)
