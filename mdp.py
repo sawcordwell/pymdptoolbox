@@ -31,6 +31,7 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 """
 
 from numpy import absolute, array, diag, matrix, mean, mod, multiply, ndarray
@@ -110,6 +111,7 @@ def check(P, R):
         R could be an array with 3 dimensions (SxSxA) or a object array
         (A, ), each cell containing a sparse matrix (S, S) or a 2D
         array(S, A) possibly sparse  
+    
     """
 
     # Check of P
@@ -263,6 +265,7 @@ def checkSquareStochastic(Z):
     Evaluation
     ----------
     Returns None if no error has been detected
+    
     """
     s1, s2 = Z.shape
     if (s1 != s2):
@@ -310,6 +313,7 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     array([[ 0.,  0.],
            [ 0.,  1.],
            [ 4.,  2.]])
+    
     """
     if (S <= 1):
         raise ValueError(mdperr["S_gt_1"])
@@ -370,6 +374,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     --------
     >>> import mdp
     >>> P, R = mdp.exampleRand(5, 3)
+    
     """
     if (S < 1 or A < 1):
         raise ValueError(mdperr["SA_gt_1"])
@@ -419,6 +424,7 @@ def getSpan(W):
     """Return the span of W
     
     sp(W) = max W(s) - min W(s)
+    
     """
     return (W.max() - W.min())
 
@@ -486,6 +492,7 @@ class MDP(object):
         Returns
         -------
         (policy, value) : tuple of new policy and its value
+        
         """
         # this V should be a reference to the data rather than a copy
         if V == None:
@@ -522,6 +529,7 @@ class MDP(object):
         Evaluation
         ----------
             PR(SxA)   = reward matrix
+        
         """
         # we assume that P and R define a MDP i,e. assumption is that
         # check(P, R) has already been run and doesn't fail.
@@ -605,6 +613,7 @@ class FiniteHorizon(MDP):
     Notes
     -----
     In verbose mode, displays the current stage and policy transpose.
+    
     """
 
     def __init__(self, transitions, reward, discount, N, h=None):
@@ -668,6 +677,7 @@ class LP(MDP):
     
     Examples
     --------
+    
     """
 
     def __init__(self, transitions, reward, discount):
@@ -764,6 +774,7 @@ class PolicyIteration(MDP):
     >>> P, R = mdp.exampleRand(5, 3)
     >>> pi = mdp.PolicyIteration(P, R, 0.9)
     >>> pi.iterate()
+    
     """
     
     def __init__(self, transitions, reward, discount, policy0=None, max_iter=1000, eval_type=0):
@@ -825,6 +836,7 @@ class PolicyIteration(MDP):
         ----------
         Ppolicy(SxS)  = transition matrix for policy
         PRpolicy(S)   = reward matrix for policy
+        
         """
         Ppolicy = matrix(zeros((self.S, self.S)))
         Rpolicy = matrix(zeros((self.S, 1)))
@@ -881,6 +893,7 @@ class PolicyIteration(MDP):
         -----
         In verbose mode, at each iteration, displays the condition which stopped iterations:
         epsilon-optimum value function found or maximum number of iterations reached.
+        
         """
         if (type(V0) in (int, float)) and (V0 == 0):
             policy_V = zeros((self.S, 1))
@@ -937,6 +950,7 @@ class PolicyIteration(MDP):
         Evaluation
         ----------
         Vpolicy(S) = value function of the policy
+        
         """
         
         Ppolicy, Rpolicy = self.computePpolicyPRpolicy()
@@ -1026,6 +1040,7 @@ class PolicyIterationModified(PolicyIteration):
     Examples
     --------
     >>> import mdp
+    
     """
     
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10):
@@ -1164,6 +1179,7 @@ class QLearning(MDP):
     (42.24434307022128, 35.96582807367007)
     >>> ql.policy
     (1, 0)
+    
     """
     
     def __init__(self, transitions, reward, discount, n_iter=10000):
@@ -1299,6 +1315,7 @@ class RelativeValueIteration(MDP):
     
     Examples
     --------
+    
     """
     
     def __init__(self, transitions, reward, epsilon=0.01, max_iter=1000):
@@ -1467,6 +1484,7 @@ class ValueIteration(MDP):
     array([ 40.04862539,  33.65371176])
     >>> vi.policy
     array([1, 0])
+    
     """
     
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=1000, initial_value=0):
@@ -1510,6 +1528,7 @@ class ValueIteration(MDP):
             iteration algorithm to find an epsilon-optimal policy with use of
             span for the stopping criterion
             cpu_time  = used CPU time
+        
         """
         # See Markov Decision Processes, M. L. Puterman, 
         # Wiley-Interscience Publication, 1994 
@@ -1611,6 +1630,7 @@ class ValueIterationGS(ValueIteration):
     
     Examples
     --------
+    
     """
     
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10, initial_value=0):
