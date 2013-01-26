@@ -216,13 +216,13 @@ def test_MDP_P_R_3():
 
 # LP
 
-def test_LP():
-    a = LP(P, R, 0.9)
-    v = matrix('42.4418604651163 36.0465116279070')
-    p = matrix('1 0')
-    a.iterate()
-    assert (array(a.policy) == p).all()
-    assert (absolute(array(a.V) - v) < SMALLNUM).all()
+#def test_LP():
+#    a = LP(P, R, 0.9)
+#    v = matrix('42.4418604651163 36.0465116279070')
+#    p = matrix('1 0')
+#    a.iterate()
+#    assert (array(a.policy) == p).all()
+#    assert (absolute(array(a.V) - v) < SMALLNUM).all()
 
 # PolicyIteration
 
@@ -240,7 +240,7 @@ def test_PolicyIteration_computePpolicyPRpolicy_exampleForest():
     a = PolicyIteration(Pf, Rf, 0.9)
     P1 = matrix('0.1 0.9 0; 1 0 0; 0.1 0 0.9')
     R1 = matrix('0; 1; 4')
-    Ppolicy, Rpolicy = a.computePpolicyPRpolicy()
+    Ppolicy, Rpolicy = a._computePpolicyPRpolicy()
     assert (absolute(Ppolicy - P1) < SMALLNUM).all()
     assert (absolute(Rpolicy - R1) < SMALLNUM).all()
 
@@ -250,7 +250,7 @@ def test_PolicyIteration_evalPolicyIterative_exampleForest():
     p = matrix('0; 1; 0')
     a = PolicyIteration(Pf, Rf, 0.9)
     assert (absolute(a.V - v0) < SMALLNUM).all()
-    a.evalPolicyIterative()
+    a._evalPolicyIterative()
     assert (absolute(a.V - v1) < SMALLNUM).all()
     assert (a.policy == p).all()
 
@@ -258,7 +258,7 @@ def test_PolicyIteration_evalPolicyIterative_bellmanOperator_exampleForest():
     v = matrix('4.47504640074458; 5.02753258879703; 23.17234211944304')
     p = matrix('0; 0; 0')
     a = PolicyIteration(Pf, Rf, 0.9)
-    a.evalPolicyIterative()
+    a._evalPolicyIterative()
     policy, value = a._bellmanOperator()
     assert (policy == p).all()
     assert (absolute(a.V - v) < SMALLNUM).all()
@@ -276,7 +276,7 @@ def test_PolicyIteration_iterative_exampleForest():
 def test_PolicyIteration_evalPolicyMatrix_exampleForest():
     v_pol = matrix('4.47513812154696; 5.02762430939227; 23.17243384704857')
     a = PolicyIteration(Pf, Rf, 0.9)
-    a.evalPolicyMatrix()
+    a._evalPolicyMatrix()
     assert (absolute(a.V - v_pol) < SMALLNUM).all()
 
 def test_PolicyIteration_matrix_exampleForest():
