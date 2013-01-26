@@ -113,8 +113,7 @@ def check(P, R):
         array(S, A) possibly sparse  
     
     """
-
-    # Check of P
+    # Check P
     # tranitions must be a numpy array either an AxSxS ndarray (with any 
     # dtype other than "object"); or, a 1xA ndarray with a "object" dtype, 
     # and each element containing an SxS array. An AxSxS array will be
@@ -122,10 +121,9 @@ def check(P, R):
     # MATLAB cell array.
     if (not type(P) is ndarray):
         raise TypeError(mdperr["P_type"])
-    
+    # also check R
     if (not type(R) is ndarray):
         raise TypeError(mdperr["R_type"])
-    
     # NumPy has an array type of 'object', which is roughly equivalent to
     # the MATLAB cell array. These are most useful for storing sparse
     # matrices as these can only have two dimensions whereas we want to be
@@ -146,7 +144,6 @@ def check(P, R):
             raise ValueError(mdperr["P_shape"])
         else:
             P_is_object = False
-    
     # As above but for the reward array. A difference is that the reward
     # array can have either two or 3 dimensions.
     if (R.dtype == object):
@@ -159,7 +156,6 @@ def check(P, R):
             raise ValueError(mdperr["R_shape"])
         else:
             R_is_object = False
-    
     # We want to make sure that the transition probability array and the 
     # reward array are in agreement. This means that both should show that
     # there are the same number of actions and the same number of states.
@@ -196,7 +192,6 @@ def check(P, R):
         # dimension should be the number of actions, and the second and 
         # third should be the number of states
         aP, sP0, sP1 = P.shape
-    
     # the first dimension of the transition matrix must report the same
     # number of states as the second dimension. If not then we are not
     # dealing with a square matrix and it is not a valid transition
@@ -205,7 +200,6 @@ def check(P, R):
     # transition probability.
     if ((sP0 < 1) or (aP < 1) or (sP0 != sP1)):
         raise ValueError(mdperr["P_shape"])
-    
     # now we check that each transition matrix is square-stochastic. For
     # object arrays this is the matrix held in each element, but for
     # normal arrays this is a matrix formed by taking a slice of the array
@@ -215,7 +209,6 @@ def check(P, R):
         else:
             checkSquareStochastic(P[aa, :, :])
         # aa = aa + 1 # why was this here?
-    
     if R_is_object:
         # if the rewarad array has an object dtype, then we check that
         # each element contains a matrix of the same shape as we did 
@@ -238,18 +231,15 @@ def check(P, R):
         # this is added just so that the next check doesn't error out
         # saying that sR1 doesn't exist
         sR1 = sR0
-    
     # the number of actions must be more than zero, the number of states
     # must also be more than 0, and the states must agree
     if ((sR0 < 1) or (aR < 1) or (sR0 != sR1)):
         raise ValueError(mdperr["R_shape"])
-    
     # now we check to see that what the transition array is reporting and
     # what the reward arrar is reporting agree as to the number of actions
     # and states. If not then fail explaining the situation
     if (sP0 != sR0) or (aP != aR):
         raise ValueError(mdperr["PR_incompat"])
-        
     # We are at the end of the checks, so if no exceptions have been raised
     # then that means there are (hopefullly) no errors and we return None
     return None
@@ -321,7 +311,6 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
         raise ValueError(mdperr["R_gt_0"])
     if (p < 0 or p > 1):
         raise ValueError(mdperr["prob_in01"])
-    
     # Definition of Transition matrix P(:,:,1) associated to action Wait
     # (action 1) and P(:,:,2) associated to action Cut (action 2)
     #             | p 1-p 0.......0  |                  | 1 0..........0 |
@@ -336,7 +325,6 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     P[0, S - 1, S - 1] = (1 - p)
     P[1, :, :] = zeros((S, S))
     P[1, :, 0] = 1
-    
     # Definition of Reward matrix R1 associated to action Wait and 
     # R2 associated to action Cut
     #           | 0  |                   | 0  |
@@ -350,7 +338,7 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     R[:, 1] = ones(S)
     R[0, 1] = 0
     R[S - 1, 1] = r2
-    
+    # we want to return the generated transition and reward matrices
     return (P, R)
 
 def exampleRand(S, A, is_sparse=False, mask=None):
@@ -376,22 +364,23 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     >>> P, R = mdp.exampleRand(5, 3)
     
     """
+    # making sure the states and actions are more than one
     if (S < 1 or A < 1):
         raise ValueError(mdperr["SA_gt_1"])
-    
+    # the mask needs to be SxS
     try:
-        if (mask != None) and ((mask.shape[0] != S) or (mask.shape[1] != S)):
+        if (mask != None) and (mask.shape != (S, S)):
             raise ValueError(mdperr["mask_SbyS"])
     except AttributeError:
         raise TypeError(mdperr["mask_numpy"])
-    
+    # if the user hasn't specified a mask, then we will make a random one now
     if mask == None:
         mask = rand(A, S, S)
         for a in range(A):
             r = random()
             mask[a][mask[a] < r] = 0
             mask[a][mask[a] >= r] = 1
-    
+    # generate the transition and reward matrices based on S, A and mask
     if is_sparse:
         # definition of transition matrix : square stochastic matrix
         P = zeros((A, ), dtype=object)
@@ -417,7 +406,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                     P[a, s, randint(0, S - 1)] = 1
                 P[a, s, :] = P[a, s, :] / P[a, s, :].sum()
             R[a, :, :] = mask[a] * (2 * rand(S, S) - ones((S, S), dtype=int))
-    
+    # we want to return the generated transition and reward matrices
     return (P, R)
 
 def getSpan(W):
