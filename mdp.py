@@ -428,6 +428,7 @@ def getSpan(W):
     """
     return (W.max() - W.min())
 
+
 class MDP(object):
     
     """A Markov Decision Problem."""
