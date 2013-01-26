@@ -43,6 +43,8 @@ from numpy import ones, zeros
 from numpy.random import rand
 from scipy.sparse import csr_matrix as sparse
 
+# __all__ = ["check",  "checkSquareStochastic"]
+
 mdperr = {
 "mat_nonneg" :
     "PyMDPtoolbox: Probabilities must be non-negative.",
@@ -822,7 +824,7 @@ class PolicyIteration(MDP):
                              "The strings 'matrix' and 'iterative' can also "
                              "be used.")
     
-    def computePpolicyPRpolicy(self):
+    def _computePpolicyPRpolicy(self):
         """Compute the transition matrix and the reward matrix for a policy.
         
         Arguments
@@ -870,7 +872,7 @@ class PolicyIteration(MDP):
         #self.Rpolicy = Rpolicy
         return (Ppolicy, Rpolicy)
     
-    def evalPolicyIterative(self, V0=0, epsilon=0.0001, max_iter=10000):
+    def _evalPolicyIterative(self, V0=0, epsilon=0.0001, max_iter=10000):
         """Evaluate a policy using iteration.
         
         Arguments
@@ -912,7 +914,7 @@ class PolicyIteration(MDP):
                                  "supported. Use ndarray of matrix column "
                                  "vector length S.")
         
-        policy_P, policy_R = self.computePpolicyPRpolicy()
+        policy_P, policy_R = self._computePpolicyPRpolicy()
         
         if self.verbose:
             print('  Iteration    V_variation')
@@ -943,7 +945,7 @@ class PolicyIteration(MDP):
         
         self.V = policy_V
     
-    def evalPolicyMatrix(self):
+    def _evalPolicyMatrix(self):
         """Evaluate the value function of the policy using linear equations.
         
         Arguments 
@@ -965,7 +967,7 @@ class PolicyIteration(MDP):
         
         """
         
-        Ppolicy, Rpolicy = self.computePpolicyPRpolicy()
+        Ppolicy, Rpolicy = self._computePpolicyPRpolicy()
         # V = PR + gPV  => (I-gP)V = PR  => V = inv(I-gP)* PR
         self.V = self.lin_eq(
             (self.speye(self.S, self.S) - self.discount * Ppolicy), Rpolicy)
@@ -982,12 +984,12 @@ class PolicyIteration(MDP):
         while not done:
             self.iter = self.iter + 1
             
-            # these evalPolicy* functions will update the classes value
+            # these _evalPolicy* functions will update the classes value
             # attribute
             if self.eval_type == "matrix":
-                self.evalPolicyMatrix()
+                self._evalPolicyMatrix()
             elif self.eval_type == "iterative":
-                self.evalPolicyIterative()
+                self._evalPolicyIterative()
             
             # This should update the classes policy attribute but leave the
             # value alone
@@ -1066,7 +1068,7 @@ class PolicyIterationModified(PolicyIteration):
         # Maybe its better not to subclass from PolicyIteration, because the
         # initialisation of the two are quite different. eg there is policy0
         # being calculated here which doesn't need to be. The only thing that
-        # is needed from the PolicyIteration class is the evalPolicyIterative
+        # is needed from the PolicyIteration class is the _evalPolicyIterative
         # function. Perhaps there is a better way to do it?
         PolicyIteration.__init__(self, transitions, reward, discount, None,
                                  max_iter, 1)
@@ -1124,7 +1126,7 @@ class PolicyIterationModified(PolicyIteration):
                     self.setSilent()
                     is_verbose = True
                 
-                self.evalPolicyIterative(self.V, self.epsilon, self.max_iter)
+                self._evalPolicyIterative(self.V, self.epsilon, self.max_iter)
                 
                 if is_verbose:
                     self.setVerbose()

@@ -259,7 +259,7 @@ def test_PolicyIteration_evalPolicyIterative_bellmanOperator_exampleForest():
     p = matrix('0; 0; 0')
     a = PolicyIteration(Pf, Rf, 0.9)
     a.evalPolicyIterative()
-    policy, value = a.bellmanOperator()
+    policy, value = a._bellmanOperator()
     assert (policy == p).all()
     assert (absolute(a.V - v) < SMALLNUM).all()
 
