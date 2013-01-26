@@ -693,6 +693,10 @@ class LP(MDP):
         
         MDP.__init__(self, transitions, reward, discount, None, None)
         
+        # this doesn't do what I want it to do
+        if not self.verbose:
+            solvers.options['show_progress'] = False
+        
         # The objective is to resolve : min V / V >= PR + discount*P*V
         # The function linprog of the optimisation Toolbox of Mathworks resolves :
         # min f'* x / M * x <= b

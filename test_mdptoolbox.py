@@ -9,6 +9,7 @@ from mdp import check, checkSquareStochastic, exampleForest, exampleRand, LP
 from mdp import MDP, PolicyIteration, QLearning, RelativeValueIteration
 from mdp import ValueIteration, ValueIterationGS
 
+from random import seed as randseed
 from numpy import absolute, array, eye, matrix, zeros
 from numpy.random import rand
 from scipy.sparse import eye as speye
@@ -290,11 +291,11 @@ def test_PolicyIteration_matrix_exampleForest():
 # QLearning
 
 def test_QLearning():
-    # rand('seed', 0)
+    randseed(0)
     a = QLearning(P, R, 0.9)
-    q = matrix('39.8617259890454 42.4106450981318; ' \
-               '36.1624367068471 34.6832177136245')
-    v = matrix('42.4106450981318 36.1624367068471')
+    q = matrix('36.63245946346517 42.24434307022128; ' \
+               '35.96582807367007 32.70456417451635')
+    v = matrix('42.24434307022128 35.96582807367007')
     p = matrix('1 0')
     a.iterate()
     assert (absolute(a.Q - q) < SMALLNUM).all()
