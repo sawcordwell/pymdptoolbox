@@ -690,13 +690,17 @@ class LP(MDP):
                               "linear programming functionality.")
         
         from scipy.sparse import eye as speye
+        self._speye = speye
         
         MDP.__init__(self, transitions, reward, discount, None, None)
         
         # this doesn't do what I want it to do c.f. issue #3
         if not self.verbose:
             solvers.options['show_progress'] = False
-        
+    
+    def iterate(self):
+        """Run the linear programming algorithm."""
+        self.time = time()
         # The objective is to resolve : min V / V >= PR + discount*P*V
         # The function linprog of the optimisation Toolbox of Mathworks
         # resolves :
@@ -705,28 +709,19 @@ class LP(MDP):
         # min V / (discount*P-I) * V <= - PR
         # To avoid loop on states, the matrix M is structured following actions
         # M(A*S,S)
-    
-        self.f = self._cvxmat(ones((self.S, 1)))
-        
-        self.M = zeros((self.A * self.S, self.S))
+        f = self._cvxmat(ones((self.S, 1)))
+        h = self._cvxmat(self.R.reshape(self.S * self.A, 1, order="F"), tc='d')
+        M = zeros((self.A * self.S, self.S))
         for aa in range(self.A):
             pos = (aa + 1) * self.S
-            self.M[(pos - self.S):pos, :] = (
-                discount * self.P[aa] - speye(self.S, self.S))
-        
-        self.M = self._cvxmat(self.M)
-    
-    def iterate(self):
-        """Run the linear programming algorithm."""
-        self.time = time()
-        
-        h = self._cvxmat(self.R.reshape(self.S * self.A, 1, order="F"), tc='d')
-        
+            M[(pos - self.S):pos, :] = (
+                self.discount * self.P[aa] - self._speye(self.S, self.S))
+        M = self._cvxmat(M)
         # Using the glpk option will make this behave more like Octave
         # (Octave uses glpk) and perhaps Matlab. If solver=None (ie using the 
         # default cvxopt solver) then V agrees with the Octave equivalent
         # only to 10e-8 places.
-        self.V = matrix(self._linprog(self.f, self.M, -h, solver='glpk')['x'])
+        self.V = matrix(self._linprog(f, M, -h, solver='glpk')['x'])
         
         self.policy, self.V =  self._bellmanOperator()
         
