@@ -111,7 +111,7 @@ def check(P, R):
         (A, ), each cell containing a sparse matrix (S, S) or a 2D
         array(S, A) possibly sparse  
     """
-    
+
     # Check of P
     # tranitions must be a numpy array either an AxSxS ndarray (with any 
     # dtype other than "object"); or, a 1xA ndarray with a "object" dtype, 
@@ -310,7 +310,6 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     array([[ 0.,  0.],
            [ 0.,  1.],
            [ 4.,  2.]])
-    
     """
     if (S <= 1):
         raise ValueError(mdperr["S_gt_1"])
@@ -371,7 +370,6 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     --------
     >>> import mdp
     >>> P, R = mdp.exampleRand(5, 3)
-
     """
     if (S < 1 or A < 1):
         raise ValueError(mdperr["SA_gt_1"])
@@ -425,6 +423,7 @@ def getSpan(W):
     return (W.max() - W.min())
 
 class MDP(object):
+    
     """A Markov Decision Problem."""
     
     def __init__(self, transitions, reward, discount, epsilon, max_iter):
@@ -575,6 +574,7 @@ class MDP(object):
         self.verbose = True
 
 class FiniteHorizon(MDP):
+    
     """A MDP solved using the finite-horizon algorithm with backwards induction.
     
     Arguments
@@ -605,7 +605,6 @@ class FiniteHorizon(MDP):
     Notes
     -----
     In verbose mode, displays the current stage and policy transpose.
-
     """
 
     def __init__(self, transitions, reward, discount, N, h=None):
@@ -641,6 +640,7 @@ class FiniteHorizon(MDP):
         self.time = time() - self.time
 
 class LP(MDP):
+    
     """A discounted MDP soloved using linear programming.
 
     Arguments
@@ -725,6 +725,7 @@ class LP(MDP):
         self.policy = tuple(self.policy.getA1().tolist())
 
 class PolicyIteration(MDP):
+    
     """A discounted MDP solved using the policy iteration algorithm.
     
     Arguments
@@ -763,7 +764,6 @@ class PolicyIteration(MDP):
     >>> P, R = mdp.exampleRand(5, 3)
     >>> pi = mdp.PolicyIteration(P, R, 0.9)
     >>> pi.iterate()
-    
     """
     
     def __init__(self, transitions, reward, discount, policy0=None, max_iter=1000, eval_type=0):
@@ -990,6 +990,7 @@ class PolicyIteration(MDP):
         self.policy = tuple(self.policy.getA1().tolist())
 
 class PolicyIterationModified(PolicyIteration):
+    
     """A discounted MDP  solved using a modifified policy iteration algorithm.
     
     Arguments
@@ -1100,6 +1101,7 @@ class PolicyIterationModified(PolicyIteration):
         self.policy = tuple(self.policy.getA1().tolist())
 
 class QLearning(MDP):
+    
     """A discounted MDP solved using the Q learning algorithm.
     
     Let S = number of states, A = number of actions
@@ -1162,7 +1164,6 @@ class QLearning(MDP):
     (42.24434307022128, 35.96582807367007)
     >>> ql.policy
     (1, 0)
-    
     """
     
     def __init__(self, transitions, reward, discount, n_iter=10000):
@@ -1266,6 +1267,7 @@ class QLearning(MDP):
         self.policy = tuple(self.policy.tolist())
 
 class RelativeValueIteration(MDP):
+    
     """A MDP solved using the relative value iteration algorithm.
     
     Arguments
@@ -1354,6 +1356,7 @@ class RelativeValueIteration(MDP):
         self.policy = tuple(self.policy.getA1().tolist())
 
 class ValueIteration(MDP):
+    
     """A discounted MDP solved using the value iteration algorithm.
     
     Description
@@ -1464,7 +1467,6 @@ class ValueIteration(MDP):
     array([ 40.04862539,  33.65371176])
     >>> vi.policy
     array([1, 0])
-    
     """
     
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=1000, initial_value=0):
@@ -1574,6 +1576,7 @@ class ValueIteration(MDP):
         self.time = time() - self.time
 
 class ValueIterationGS(ValueIteration):
+    
     """A discounted MDP solved using the value iteration Gauss-Seidel algorithm.
     
     Arguments
@@ -1609,6 +1612,7 @@ class ValueIterationGS(ValueIteration):
     Examples
     --------
     """
+    
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10, initial_value=0):
         """Initialise a value iteration Gauss-Seidel MDP."""
         
