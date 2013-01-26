@@ -1,3 +1,11 @@
+2013-01-26
+v0.14 - the linear programming code has been finalised, however there is currently no way to turn of the progress status of the
+	lp solver from the cvxopt module. One unit test has been written. To use linear programming method:
+	>>> import mdp
+	>>> P, R = mdp.exampleForest()
+	>>> lp = mdp.LP(P, R, 0.9)
+	>>> lp.iterate() # and after some output from cvxopt.solvers.lp the optimal policy can be shown with lp.policy
+
 2013-01-25
 v0.13 - the FiniteHorizon class has been fixed. No unit tests yet.
 	>>> import mdp
