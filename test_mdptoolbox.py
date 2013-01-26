@@ -5,8 +5,8 @@ Created on Sun May 27 23:16:57 2012
 @author: -
 """
 
-from mdp import check, checkSquareStochastic, exampleForest, exampleRand, MDP
-from mdp import PolicyIteration, QLearning, RelativeValueIteration
+from mdp import check, checkSquareStochastic, exampleForest, exampleRand, LP
+from mdp import MDP, PolicyIteration, QLearning, RelativeValueIteration
 from mdp import ValueIteration, ValueIterationGS
 
 from numpy import absolute, array, eye, matrix, zeros
@@ -211,6 +211,16 @@ def test_MDP_P_R_3():
     PR = matrix('0.12591304 0.20935652; 0.1871 0.2898')
     a = MDP(P, R, 0.9, 0.01, 1)
     assert (absolute(a.R - PR) < SMALLNUM).all()
+
+# LP
+
+def test_LP():
+    a = LP(P, R, 0.9)
+    v = matrix('42.4418604651163 36.0465116279070')
+    p = matrix('1 0')
+    a.iterate()
+    assert (array(a.policy) == p).all()
+    assert (absolute(array(a.V) - v) < SMALLNUM).all()
 
 # PolicyIteration
 

@@ -684,13 +684,14 @@ class LP(MDP):
         try:
             from cvxopt import matrix, solvers
             self.linprog = solvers.lp
+            self.cvxmat = matrix
         except ImportError:
             raise ImportError("The python module cvxopt is required to use " \
                 "linear programming functionality.")
         
         from scipy.sparse import eye as speye
-
-        MDP.__init__(self, transitions, reward, discount, None)
+        
+        MDP.__init__(self, transitions, reward, discount, None, None)
         
         # The objective is to resolve : min V / V >= PR + discount*P*V
         # The function linprog of the optimisation Toolbox of Mathworks resolves :
@@ -698,24 +699,34 @@ class LP(MDP):
         # So the objective could be expressed as : min V / (discount*P-I) * V <= - PR
         # To avoid loop on states, the matrix M is structured following actions M(A*S,S)
     
-        self.f = ones(self.S, 1)
-    
+        self.f = self.cvxmat(ones((self.S, 1)))
+        
         self.M = zeros((self.A * self.S, self.S))
         for aa in range(self.A):
             pos = (aa + 1) * self.S
             self.M[(pos - self.S):pos, :] = discount * self.P[aa] - speye(self.S, self.S)
         
-        self.M = matrix(self.M)
+        self.M = self.cvxmat(self.M)
     
     def iterate(self):
         """"""
         self.time = time()
         
-        self.V = self.linprog(self.f, self.M, -self.R)
+        h = self.cvxmat(self.R.reshape(self.S * self.A, 1, order="F"), tc='d')
         
-        self.V, self.policy =  self.bellmanOperator(self.P, self.R, self.discount, self.V)
+        # Using the glpk option will make this behave more like Octave
+        # (Octave uses glpk) and perhaps Matlab. If solver=None (ie using the 
+        # default cvxopt solver) then V agrees with the Octave equivalent
+        # only to 10e-8 places.
+        self.V = matrix(self.linprog(self.f, self.M, -h, solver='glpk')['x'])
+        
+        self.policy, self.V =  self.bellmanOperator()
         
         self.time = time() - self.time
+        
+        # store value and policy as tuples
+        self.V = tuple(self.V.getA1().tolist())
+        self.policy = tuple(self.policy.getA1().tolist())
 
 class PolicyIteration(MDP):
     """Resolution of discounted MDP with policy iteration algorithm.
