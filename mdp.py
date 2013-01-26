@@ -465,7 +465,7 @@ class MDP(object):
         check(transitions, reward)
         
         # computePR will assign the variables self.S, self.A, self.P and self.R
-        self.computePR(transitions, reward)
+        self._computePR(transitions, reward)
         
         # the verbosity is by default turned off
         self.verbose = False
@@ -477,7 +477,7 @@ class MDP(object):
         self.V = None
         self.policy = None
     
-    def bellmanOperator(self, V=None):
+    def _bellmanOperator(self, V=None):
         """Apply the Bellman operator on the value function.
         
         Updates the value function and the Vprev-improving policy.
@@ -507,7 +507,7 @@ class MDP(object):
         # self.V = Q.max(axis=1)
         # self.policy = Q.argmax(axis=1)
     
-    def computePR(self, P, R):
+    def _computePR(self, P, R):
         """Compute the reward for the system in one state chosing an action.
         
         Arguments
@@ -634,7 +634,7 @@ class FiniteHorizon(MDP):
         self.time = time()
         
         for n in range(self.N):
-            W, X = self.bellmanOperator(
+            W, X = self._bellmanOperator(
                 matrix(self.V[:, self.N - n]).reshape(self.S, 1))
             self.V[:, self.N - n - 1] = X.A1
             self.policy[:, self.N - n - 1] = W.A1
@@ -726,7 +726,7 @@ class LP(MDP):
         # only to 10e-8 places.
         self.V = matrix(self.linprog(self.f, self.M, -h, solver='glpk')['x'])
         
-        self.policy, self.V =  self.bellmanOperator()
+        self.policy, self.V =  self._bellmanOperator()
         
         self.time = time() - self.time
         
@@ -787,7 +787,7 @@ class PolicyIteration(MDP):
             # initialise the policy to the one which maximises the expected
             # immediate reward
             self.V = matrix(zeros((self.S, 1)))
-            self.policy, null = self.bellmanOperator()
+            self.policy, null = self._bellmanOperator()
             del null
         else:
             policy0 = array(policy0)
@@ -854,7 +854,7 @@ class PolicyIteration(MDP):
             if ind.size > 0:
                 Ppolicy[ind, :] = self.P[aa][ind, :]
                 
-                #PR = self.computePR() # an apparently uneeded line, and
+                #PR = self._computePR() # an apparently uneeded line, and
                 # perhaps harmful in this implementation c.f.
                 # mdp_computePpolicyPRpolicy.m
                 Rpolicy[ind] = self.R[ind, aa]
@@ -991,7 +991,7 @@ class PolicyIteration(MDP):
             
             # This should update the classes policy attribute but leave the
             # value alone
-            policy_next, null = self.bellmanOperator()
+            policy_next, null = self._bellmanOperator()
             del null
             
             n_different = (policy_next != self.policy).sum()
@@ -1081,7 +1081,8 @@ class PolicyIterationModified(PolicyIteration):
             raise ValueError("PyMDPtoolbox: epsilon must be a positive real "
                              "number greater than zero.")
         
-        # computation of threshold of variation for V for an epsilon-optimal policy
+        # computation of threshold of variation for V for an epsilon-optimal
+        # policy
         if self.discount != 1:
             self.thresh = epsilon * (1 - self.discount) / self.discount
         else:
@@ -1107,7 +1108,7 @@ class PolicyIterationModified(PolicyIteration):
         while not done:
             self.iter = self.iter + 1
             
-            self.policy, Vnext = self.bellmanOperator()
+            self.policy, Vnext = self._bellmanOperator()
             #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
             
             variation = getSpan(Vnext - self.V)
@@ -1152,7 +1153,8 @@ class QLearning(MDP):
     discount : discount rate
         in ]0; 1[    
     n_iter : number of iterations to execute (optional).
-        Default value = 10000; it is an integer greater than the default value.
+        Default value = 10000; it is an integer greater than the default
+        value.
     
     Results
     -------
@@ -1210,7 +1212,7 @@ class QLearning(MDP):
             raise ValueError("PyMDPtoolbox: n_iter should be greater than "
                              "10000.")
         
-        # We don't want to send this to MDP because computePR should not be
+        # We don't want to send this to MDP because _computePR should not be
         # run on it
         # MDP.__init__(self, transitions, reward, discount, None, n_iter)
         check(transitions, reward)
@@ -1364,7 +1366,7 @@ class RelativeValueIteration(MDP):
             
             self.iter = self.iter + 1;
             
-            self.policy, Vnext = self.bellmanOperator()
+            self.policy, Vnext = self._bellmanOperator()
             Vnext = Vnext - self.gain
             
             variation = getSpan(Vnext - self.V)
@@ -1573,9 +1575,9 @@ class ValueIteration(MDP):
         
         k = 1 - h.sum()
         Vprev = self.V
-        null, value = self.bellmanOperator()
+        null, value = self._bellmanOperator()
         # p 201, Proposition 6.6.5
-        max_iter = (log( (epsilon * (1 - self.discount) / self.discount) /
+        max_iter = (log((epsilon * (1 - self.discount) / self.discount) /
                     getSpan(value - Vprev) ) / log(self.discount * k))
         #self.V = Vprev
         
@@ -1595,7 +1597,7 @@ class ValueIteration(MDP):
             Vprev = self.V.copy()
             
             # Bellman Operator: compute policy and value functions
-            self.policy, self.V = self.bellmanOperator()
+            self.policy, self.V = self._bellmanOperator()
             
             # The values, based on Q. For the function "max()": the option
             # "axis" means the axis along which to operate. In this case it
