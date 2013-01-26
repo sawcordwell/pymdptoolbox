@@ -5,16 +5,17 @@ Created on Sun May 27 23:16:57 2012
 @author: -
 """
 
-from mdp import check, checkSquareStochastic, exampleForest, exampleRand, LP
-from mdp import MDP, PolicyIteration, QLearning, RelativeValueIteration
-from mdp import ValueIteration, ValueIterationGS
-
 from random import seed as randseed
+
 from numpy import absolute, array, eye, matrix, zeros
 from numpy.random import rand
 from scipy.sparse import eye as speye
 from scipy.sparse import csr_matrix as sparse
 #from scipy.stats.distributions import poisson
+
+from mdp import check, checkSquareStochastic, exampleForest, exampleRand, LP
+from mdp import MDP, PolicyIteration, QLearning, RelativeValueIteration
+from mdp import ValueIteration, ValueIterationGS
 
 STATES = 10
 ACTIONS = 3

@@ -34,13 +34,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 
+from math import ceil, log, sqrt
+from random import randint, random
+from time import time
+
 from numpy import absolute, array, diag, matrix, mean, mod, multiply, ndarray
 from numpy import ones, zeros
 from numpy.random import rand
-from math import ceil, log, sqrt
-from random import randint, random
 from scipy.sparse import csr_matrix as sparse
-from time import time
 
 mdperr = {
 "mat_nonneg" :
