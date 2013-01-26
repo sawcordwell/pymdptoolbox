@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
+"""Markov Decision Process (MDP) Toolbox v4.0 for Python
+
 Copyright (c) 2011, 2012, 2013 Steven Cordwell
 Copyright (c) 2009, Iadine Chadès
 Copyright (c) 2009, Marie-Josée Cros
@@ -92,7 +93,7 @@ mdperr = {
 }
 
 def check(P, R):
-    """Checks if the matrices P and R define a Markov Decision Process.
+    """Check if the matrices P and R define a Markov Decision Process.
     
     Let S = number of states, A = number of actions.
     The transition matrix P must be on the shape (A, S, S) and P[a,:,:]
@@ -252,7 +253,7 @@ def check(P, R):
     return None
 
 def checkSquareStochastic(Z):
-    """Check if Z is a square stochastic matrix
+    """Check if Z is a square stochastic matrix.
     
     Parameters
     ----------
@@ -276,9 +277,7 @@ def checkSquareStochastic(Z):
         return(None)
 
 def exampleForest(S=3, r1=4, r2=2, p=0.1):
-    """
-    Generates a Markov Decision Process example based on a simple forest
-    management.
+    """Generate a MDP example based on a simple forest management scenario.
     
     See the related documentation for more detail.
     
@@ -352,7 +351,7 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     return (P, R)
 
 def exampleRand(S, A, is_sparse=False, mask=None):
-    """Generates a random Markov Decision Process.
+    """Generate a random Markov Decision Process.
     
     Parameters
     ----------
@@ -419,17 +418,17 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     return (P, R)
 
 def getSpan(W):
-    """Returns the span of W
+    """Return the span of W
     
     sp(W) = max W(s) - min W(s)
     """
     return (W.max() - W.min())
 
 class MDP(object):
-    """The Markov Decision Problem Toolbox."""
+    """A Markov Decision Problem."""
     
     def __init__(self, transitions, reward, discount, epsilon, max_iter):
-        """"""
+        """Initialise a MDP based on the input parameters."""
         
         # if the discount is None then the algorithm is assumed to not use it
         # in its computations
@@ -481,8 +480,7 @@ class MDP(object):
         self.policy = None
     
     def bellmanOperator(self, V=None):
-        """
-        Applies the Bellman operator on the value function.
+        """Apply the Bellman operator on the value function.
         
         Updates the value function and the Vprev-improving policy.
         
@@ -510,7 +508,7 @@ class MDP(object):
         # self.policy = Q.argmax(axis=1)
     
     def computePR(self, P, R):
-        """Computes the reward for the system in one state chosing an action
+        """Compute the reward for the system in one state chosing an action.
         
         Arguments
         ---------
@@ -565,25 +563,19 @@ class MDP(object):
             self.R = matrix(self.R)
 
     def iterate(self):
-        """This is a placeholder method. Child classes should define their own
-        iterate() method.
-        """
+        """Raise error because child classes should implement this function."""
         raise NotImplementedError("You should create an iterate() method.")
     
     def setSilent(self):
-        """Ask for running resolution functions of the MDP Toolbox in silent
-        mode.
-        """
+        """Set the MDP algorithm to silent mode."""
         self.verbose = False
     
     def setVerbose(self):
-        """Ask for running resolution functions of the MDP Toolbox in verbose
-        mode.
-        """
+        """Set the MDP algorithm to verbose mode."""
         self.verbose = True
 
 class FiniteHorizon(MDP):
-    """Reolution of finite-horizon MDP with backwards induction
+    """A MDP solved using the finite-horizon algorithm with backwards induction.
     
     Arguments
     ---------
@@ -617,7 +609,7 @@ class FiniteHorizon(MDP):
     """
 
     def __init__(self, transitions, reward, discount, N, h=None):
-        """"""
+        """Initialise a finite horizon MDP."""
         if N < 1:
             raise ValueError('PyMDPtoolbox: N must be greater than 0')
         else:
@@ -636,7 +628,7 @@ class FiniteHorizon(MDP):
             self.V[:, N] = h
         
     def iterate(self):
-        """"""
+        """Run the finite horizon algorithm."""
         self.time = time()
         
         for n in range(self.N):
@@ -649,7 +641,7 @@ class FiniteHorizon(MDP):
         self.time = time() - self.time
 
 class LP(MDP):
-    """Resolution of discounted MDP with linear programming
+    """A discounted MDP soloved using linear programming.
 
     Arguments
     ---------
@@ -679,7 +671,7 @@ class LP(MDP):
     """
 
     def __init__(self, transitions, reward, discount):
-        """"""
+        """Initialise a linear programming MDP."""
         
         try:
             from cvxopt import matrix, solvers
@@ -693,7 +685,7 @@ class LP(MDP):
         
         MDP.__init__(self, transitions, reward, discount, None, None)
         
-        # this doesn't do what I want it to do
+        # this doesn't do what I want it to do c.f. issue #3
         if not self.verbose:
             solvers.options['show_progress'] = False
         
@@ -713,7 +705,7 @@ class LP(MDP):
         self.M = self.cvxmat(self.M)
     
     def iterate(self):
-        """"""
+        """Run the linear programming algorithm."""
         self.time = time()
         
         h = self.cvxmat(self.R.reshape(self.S * self.A, 1, order="F"), tc='d')
@@ -733,7 +725,7 @@ class LP(MDP):
         self.policy = tuple(self.policy.getA1().tolist())
 
 class PolicyIteration(MDP):
-    """Resolution of discounted MDP with policy iteration algorithm.
+    """A discounted MDP solved using the policy iteration algorithm.
     
     Arguments
     ---------
@@ -775,7 +767,7 @@ class PolicyIteration(MDP):
     """
     
     def __init__(self, transitions, reward, discount, policy0=None, max_iter=1000, eval_type=0):
-        """"""
+        """Initialise a policy iteration MDP."""
         
         MDP.__init__(self, transitions, reward, discount, None, max_iter)
         
@@ -815,7 +807,7 @@ class PolicyIteration(MDP):
                 "and 'iterative' can also be used.")
     
     def computePpolicyPRpolicy(self):
-        """Computes the transition matrix and the reward matrix for a policy
+        """Compute the transition matrix and the reward matrix for a policy.
         
         Arguments
         ---------
@@ -861,7 +853,7 @@ class PolicyIteration(MDP):
         return (Ppolicy, Rpolicy)
     
     def evalPolicyIterative(self, V0=0, epsilon=0.0001, max_iter=10000):
-        """Policy evaluation using iteration
+        """Evaluate a policy using iteration.
         
         Arguments
         ---------
@@ -927,7 +919,7 @@ class PolicyIteration(MDP):
         self.V = policy_V
     
     def evalPolicyMatrix(self):
-        """Evaluation of the value function of a policy
+        """Evaluate the value function of the policy using linear equations.
         
         Arguments 
         ---------
@@ -998,7 +990,7 @@ class PolicyIteration(MDP):
         self.policy = tuple(self.policy.getA1().tolist())
 
 class PolicyIterationModified(PolicyIteration):
-    """Resolution of discounted MDP  with policy iteration algorithm
+    """A discounted MDP  solved using a modifified policy iteration algorithm.
     
     Arguments
     ---------
@@ -1036,7 +1028,7 @@ class PolicyIterationModified(PolicyIteration):
     """
     
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10):
-        """"""
+        """Initialise a (modified) policy iteration MDP."""
         
         # Maybe its better not to subclass from PolicyIteration, because the
         # initialisation of the two are quite different. eg there is policy0
@@ -1069,7 +1061,7 @@ class PolicyIterationModified(PolicyIteration):
             self.V = 1 / (1 - discount) * self.R.min() * ones((self.S, 1))
     
     def iterate(self):
-        """"""
+        """Run the modified policy iteration algorithm."""
         
         if self.verbose:
             print('  Iteration  V_variation')
@@ -1108,7 +1100,7 @@ class PolicyIterationModified(PolicyIteration):
         self.policy = tuple(self.policy.getA1().tolist())
 
 class QLearning(MDP):
-    """Evaluates the matrix Q, using the Q learning algorithm.
+    """A discounted MDP solved using the Q learning algorithm.
     
     Let S = number of states, A = number of actions
     
@@ -1174,8 +1166,7 @@ class QLearning(MDP):
     """
     
     def __init__(self, transitions, reward, discount, n_iter=10000):
-        """Evaluation of the matrix Q, using the Q learning algorithm
-        """
+        """Initialise a Q-learning MDP."""
         
         # The following check won't be done in MDP()'s initialisation, so let's
         # do it here
@@ -1209,8 +1200,7 @@ class QLearning(MDP):
         self.mean_discrepancy = []
         
     def iterate(self):
-        """Run the Q-learning algoritm.
-        """
+        """Run the Q-learning algoritm."""
         discrepancy = []
         
         self.time = time()
@@ -1276,8 +1266,7 @@ class QLearning(MDP):
         self.policy = tuple(self.policy.tolist())
 
 class RelativeValueIteration(MDP):
-    """Resolution of MDP with average reward with relative value iteration 
-    algorithm 
+    """A MDP solved using the relative value iteration algorithm.
     
     Arguments
     ---------
@@ -1311,6 +1300,7 @@ class RelativeValueIteration(MDP):
     """
     
     def __init__(self, transitions, reward, epsilon=0.01, max_iter=1000):
+        """Initialise a relative value iteration MDP."""
         
         MDP.__init__(self,  transitions, reward, None, epsilon, max_iter)
         
@@ -1323,7 +1313,7 @@ class RelativeValueIteration(MDP):
         self.average_reward = None
     
     def iterate(self):
-        """"""
+        """Run the relative value iteration algorithm."""
         
         done = False
         if self.verbose:
@@ -1364,8 +1354,7 @@ class RelativeValueIteration(MDP):
         self.policy = tuple(self.policy.getA1().tolist())
 
 class ValueIteration(MDP):
-    """
-    Solves discounted MDP with the value iteration algorithm.
+    """A discounted MDP solved using the value iteration algorithm.
     
     Description
     -----------
@@ -1479,7 +1468,7 @@ class ValueIteration(MDP):
     """
     
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=1000, initial_value=0):
-        """Resolution of discounted MDP with value iteration algorithm."""
+        """Initialise a value iteration MDP."""
         
         MDP.__init__(self, transitions, reward, discount, epsilon, max_iter)
         
@@ -1504,7 +1493,9 @@ class ValueIteration(MDP):
             self.thresh = epsilon
     
     def boundIter(self, epsilon):
-        """Computes a bound for the number of iterations for the value iteration
+        """Compute a bound for the number of iterations.
+        
+        for the value iteration
         algorithm to find an epsilon-optimal policy with use of span for the 
         stopping criterion
         
@@ -1544,8 +1535,7 @@ class ValueIteration(MDP):
         self.max_iter = int(ceil(max_iter))
     
     def iterate(self):
-        """
-        """
+        """Run the value iteration algorithm."""
         
         if self.verbose:
             print('  Iteration  V_variation')
@@ -1584,7 +1574,7 @@ class ValueIteration(MDP):
         self.time = time() - self.time
 
 class ValueIterationGS(ValueIteration):
-    """Resolution of discounted MDP with value iteration Gauss-Seidel algorithm
+    """A discounted MDP solved using the value iteration Gauss-Seidel algorithm.
     
     Arguments
     ---------
@@ -1620,12 +1610,12 @@ class ValueIterationGS(ValueIteration):
     --------
     """
     def __init__(self, transitions, reward, discount, epsilon=0.01, max_iter=10, initial_value=0):
-        """"""
+        """Initialise a value iteration Gauss-Seidel MDP."""
         
         ValueIteration.__init__(self, transitions, reward, discount, epsilon, max_iter, initial_value)
     
     def iterate(self):
-        """"""
+        """Run the value iteration Gauss-Seidel algorithm."""
         
         done = False
         
