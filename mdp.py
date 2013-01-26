@@ -813,8 +813,8 @@ class PolicyIteration(MDP):
         if eval_type in (0, "matrix"):
             from numpy.linalg import solve
             from scipy.sparse import eye
-            self.speye = eye
-            self.lin_eq = solve
+            self._speye = eye
+            self._lin_eq = solve
             self.eval_type = "matrix"
         elif eval_type in (1, "iterative"):
             self.eval_type = "iterative"
@@ -969,8 +969,8 @@ class PolicyIteration(MDP):
         
         Ppolicy, Rpolicy = self._computePpolicyPRpolicy()
         # V = PR + gPV  => (I-gP)V = PR  => V = inv(I-gP)* PR
-        self.V = self.lin_eq(
-            (self.speye(self.S, self.S) - self.discount * Ppolicy), Rpolicy)
+        self.V = self._lin_eq(
+            (self._speye(self.S, self.S) - self.discount * Ppolicy), Rpolicy)
     
     def iterate(self):
         """Run the policy iteration algorithm."""
