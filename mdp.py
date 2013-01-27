@@ -370,19 +370,20 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     # making sure the states and actions are more than one
     if (S < 1) or (A < 1):
         raise ValueError(mdperr["SA_gt_1"])
-    # the mask needs to be SxS
-    try:
-        if (mask is not None) and (mask.shape != (S, S)):
-            raise ValueError(mdperr["mask_SbyS"])
-    except AttributeError:
-        raise TypeError(mdperr["mask_numpy"])
     # if the user hasn't specified a mask, then we will make a random one now
     if mask is None:
         mask = rand(A, S, S)
         for a in range(A):
             r = random()
-            mask[a][mask[a] < r] = 0
-            mask[a][mask[a] >= r] = 1
+            mask[a][mask[a, :, :] < r] = 0
+            mask[a][mask[a, :, :] >= r] = 1
+    else:
+        # the mask needs to be SxS or AxSxS
+        try:
+            if mask.shape not in ((S, S), (A, S, S)):
+                raise ValueError(mdperr["mask_SbyS"])
+        except AttributeError:
+            raise TypeError(mdperr["mask_numpy"])
     # generate the transition and reward matrices based on S, A and mask
     if is_sparse:
         # definition of transition matrix : square stochastic matrix
@@ -390,25 +391,44 @@ def exampleRand(S, A, is_sparse=False, mask=None):
         # definition of reward matrix (values between -1 and +1)
         R = zeros((A, ), dtype=object)
         for a in range(A):
-            PP = mask[a] * rand(S, S)
-            for s in range(S):
-                if mask[a, s, :].sum() == 0:
-                    PP[s, randint(0, S - 1)] = 1
-                PP[s, :] = PP[s, :] / PP[s, :].sum()
-            P[a] = sparse(PP)
-            R[a] = sparse(mask[a] * (2 * rand(S, S) - ones((S, S))))
+            if mask.ndim == 3:
+                PP = mask[a, :, :] * rand(S, S)
+                for s in range(S):
+                    if mask[a, s, :].sum() == 0:
+                       PP[s, randint(0, S - 1)] = 1
+                    PP[s, :] = PP[s, :] / PP[s, :].sum()
+                P[a] = sparse(PP)
+                R[a] = sparse(mask[a, :, :] * (2*rand(S, S) - ones((S, S))))
+            else:
+                PP = mask * rand(S, S)
+                for s in range(S):
+                    if mask[s, :].sum() == 0:
+                        PP[s, randint(0, S - 1)] = 1
+                    PP[s, :] = PP[s, :] / PP[s, :].sum()
+                P[a] = sparse(PP)
+                R[a] = sparse(mask * (2*rand(S, S) - ones((S, S))))
+                
     else:
         # definition of transition matrix : square stochastic matrix
         P = zeros((A, S, S))
         # definition of reward matrix (values between -1 and +1)
         R = zeros((A, S, S))
         for a in range(A):
-            P[a, :, :] = mask[a] * rand(S, S)
-            for s in range(S):
-                if mask[a, s, :].sum() == 0:
-                    P[a, s, randint(0, S - 1)] = 1
-                P[a, s, :] = P[a, s, :] / P[a, s, :].sum()
-            R[a, :, :] = mask[a] * (2 * rand(S, S) - ones((S, S), dtype=int))
+            if mask.ndim == 3:
+                P[a, :, :] = mask[a] * rand(S, S)
+                for s in range(S):
+                    if mask[a, s, :].sum() == 0:
+                        P[a, s, randint(0, S - 1)] = 1
+                    P[a, s, :] = P[a, s, :] / P[a, s, :].sum()
+                R[a, :, :] = (mask[a, :, :] * (2*rand(S, S) -
+                              ones((S, S), dtype=int)))
+            else:
+                P[a, :, :] = mask * rand(S, S)
+                for s in range(S):
+                    if mask[a, s, :].sum() == 0:
+                        P[a, s, randint(0, S - 1)] = 1
+                    P[a, s, :] = P[a, s, :] / P[a, s, :].sum()
+                R[a, :, :] = mask * (2*rand(S, S) - ones((S, S), dtype=int))
     # we want to return the generated transition and reward matrices
     return (P, R)
 
@@ -495,8 +515,7 @@ class MDP(object):
         else:
             try:
                 if V.shape != (self.S, 1):
-                    raise ValueError("V in bellmanOperator needs to be "
-                                     "correct.")
+                    raise ValueError("bellman: V is not the right shape.")
             except AttributeError:
                 raise TypeError("bellman: V must be a numpy array or matrix.")
         
