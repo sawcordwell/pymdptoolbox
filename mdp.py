@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Markov Decision Process (MDP) Toolbox
+"""Markov Decision Process (MDP) Toolbox
 =====================================
 
 The MDP toolbox provides classes and functions for the resolution of
@@ -11,7 +10,7 @@ Available classes
 MDP
     Base Markov decision process class
 FiniteHorizon
-    Finite horizon MDP
+    Backwards induction finite horizon MDP
 LP
     Linear programming MDP
 PolicyIteration
@@ -362,11 +361,41 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     forest for wildlife and second to make money selling cut wood.
     Each year there is a probability ``p`` that a fire burns the forest.
     
-    Here is the problem is modelled.
+    Here is how the problem is modelled.
     Let {1, 2 . . . ``S`` } be the states of the forest, with ``S`` being the 
     oldest. Let 'Wait' be action 1 and 'Cut' action 2.
     After a fire, the forest is in the youngest state, that is state 1.
-    The transition matrix P of the problem can then be defined as follows.
+    The transition matrix P of the problem can then be defined as follows::
+        
+                   | p 1-p 0.......0  |
+                   | .  0 1-p 0....0  |
+        P[1,:,:] = | .  .  0  .       |
+                   | .  .        .    |
+                   | .  .         1-p |
+                   | p  0  0....0 1-p |
+        
+                   | 1 0..........0 |
+                   | . .          . |
+        P[2,:,:] = | . .          . |
+                   | . .          . |
+                   | . .          . |
+                   | 1 0..........0 |
+    
+    The reward matrix R is defined as follows::
+        
+                 |  0  |
+                 |  .  |
+        R[:,1] = |  .  |
+                 |  .  |
+                 |  0  |
+                 |  r1 |
+        
+                 |  0  |
+                 |  1  |
+        R[:,2] = |  .  |
+                 |  .  |
+                 |  1  |
+                 |  r2 |
     
     Parameters
     ---------
@@ -392,11 +421,13 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     
     Examples
     --------
+    >>> import mdp
     >>> P, R = mdp.exampleForest()
     >>> P
     array([[[ 0.1,  0.9,  0. ],
             [ 0.1,  0. ,  0.9],
             [ 0.1,  0. ,  0.9]],
+    <BLANKLINE>
            [[ 1. ,  0. ,  0. ],
             [ 1. ,  0. ,  0. ],
             [ 1. ,  0. ,  0. ]]])
@@ -447,17 +478,23 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     
     Parameters
     ----------
-    S : number of states (> 0)
-    A : number of actions (> 0)
-    is_sparse : false to have matrices in plain format, true to have sparse
-        matrices optional (default false).
-    mask : matrix with 0 and 1 (0 indicates a place for a zero
-           probability), optional (SxS) (default, random)
+    S : int
+        number of states (> 0)
+    A : int
+        number of actions (> 0)
+    is_sparse : logical, optional
+        false to have matrices in plain format, true to have sparse
+        matrices (default false).
+    mask : array or None, optional
+        matrix with 0 and 1 (0 indicates a place for a zero
+        probability), (SxS) (default, random)
     
     Returns
-    ----------
-    P : transition probability matrix (SxSxA)
-    R : reward matrix (SxSxA)
+    -------
+    out : tuple
+        ``out[1]`` contains the transition probability matrix P with a shape of
+        (A, S, S). ``out[2]`` contains the reward matrix R with a shape of
+        (S, A).
 
     Examples
     --------
@@ -541,7 +578,50 @@ def getSpan(W):
 
 class MDP(object):
     
-    """A Markov Decision Problem."""
+    """A Markov Decision Problem.
+    
+    Parameters
+    ----------
+    transitions : array
+            transition probability matrices
+    reward : array
+            reward matrices
+    discount : float or None
+            discount factor
+    epsilon : float or None
+            stopping criteria
+    max_iter : int or None
+            maximum number of iterations
+    
+    Attributes
+    ----------
+    P : array
+        Transition probability matrices
+    R : array
+        Reward matrices
+    V : list
+        Value function
+    discount : float
+        b
+    max_iter : int
+        a
+    policy : list
+        a
+    time : float
+        a
+    verbose : logical
+        a
+    
+    Methods
+    -------
+    iterate
+        To be implemented in child classes, raises exception
+    setSilent
+        Turn the verbosity off
+    setVerbose
+        Turn the verbosity on
+    
+    """
     
     def __init__(self, transitions, reward, discount, epsilon, max_iter):
         """Initialise a MDP based on the input parameters."""
@@ -693,11 +773,12 @@ class MDP(object):
 
 class FiniteHorizon(MDP):
     
-    """A MDP solved using the finite-horizon algorithm with backwards induction.
+    """A MDP solved using the finite-horizon backwards induction algorithm.
     
-    Arguments
-    ---------
     Let S = number of states, A = number of actions
+    
+    Parameters
+    ----------
     P(SxSxA) = transition matrix 
              P could be an array with 3 dimensions ora cell array (1xA),
              each cell containing a matrix (SxS) possibly sparse
@@ -708,8 +789,12 @@ class FiniteHorizon(MDP):
     discount = discount factor, in ]0, 1]
     N        = number of periods, upper than 0
     h(S)     = terminal reward, optional (default [0; 0; ... 0] )
-    Evaluation
+    
+    Attributes
     ----------
+    
+    Methods
+    -------
     V(S,N+1)     = optimal value function
                  V(:,n) = optimal value function at stage n
                         with stage in 1, ..., N
@@ -724,6 +809,19 @@ class FiniteHorizon(MDP):
     -----
     In verbose mode, displays the current stage and policy transpose.
     
+    Examples
+    --------
+    >>> import mdp
+    >>> P, R = mdp.exampleForest()
+    >>> fh = mdp.FiniteHorizon(P, R, 0.9, 3)
+    >>> fh.V
+    array([[ 2.6973,  0.81  ,  0.    ,  0.    ],
+           [ 5.9373,  3.24  ,  1.    ,  0.    ],
+           [ 9.9373,  7.24  ,  4.    ,  0.    ]])
+    >>> fh.policy
+    array([[0, 0, 0],
+           [0, 0, 1],
+           [0, 0, 0]])
     """
 
     def __init__(self, transitions, reward, discount, N, h=None):
@@ -1448,6 +1546,22 @@ class RelativeValueIteration(MDP):
     
     Examples
     --------
+    >>> import mdp
+    >>> P, R = exampleForest()
+    >>> rvi = mdp.RelativeValueIteration(P, R, 0.96)
+    >>> rvi.iterate()
+    >>> rvi.average_reward
+    2.4300000000000002
+    >>> rvi.policy
+    (0, 0, 0)
+    
+    >>> import mdp
+    >>> import numpy as np
+    >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
+    >>> R = np.array([[5, 10], [-1, 2]])
+    >>> vi = mdp.RelativeValueIteration(P, R, 0.9)
+    >>> rvi.iterate()
+    >>> rvi.V
     
     """
     
@@ -1527,23 +1641,29 @@ class ValueIteration(MDP):
     
     Parameters
     ----------
-    P : transition matrix 
+    P : array
+        transition matrix 
         P could be a numpy ndarray with 3 dimensions (AxSxS) or a 
         numpy ndarray of dytpe=object with 1 dimenion (1xA), each 
         element containing a numpy ndarray (SxS) or scipy sparse matrix. 
-    R : reward matrix
+    R : array
+        reward matrix
         R could be a numpy ndarray with 3 dimensions (AxSxS) or numpy
         ndarray of dtype=object with 1 dimension (1xA), each element
         containing a sparse matrix (SxS). R also could be a numpy 
         ndarray with 2 dimensions (SxA) possibly sparse.
-    discount : discount rate
+    discount : float
+        discount rate
         Greater than 0, less than or equal to 1. Beware to check conditions of
         convergence for discount = 1.
-    epsilon : epsilon-optimal policy search
+    epsilon : float, optional
+        epsilon-optimal policy search
         Greater than 0, optional (default: 0.01).
-    max_iter : maximum number of iterations to be done
+    max_iter : int, optional
+        maximum number of iterations to be done
         Greater than 0, optional (default: computed)
-    initial_value : starting value function
+    initial_value : array, optional
+        starting value function
         optional (default: zeros(S,1)).
     
     Data Attributes
@@ -1583,13 +1703,13 @@ class ValueIteration(MDP):
     False
     >>> vi.iterate()
     >>> vi.V
-    array([  5.93215488,   9.38815488,  13.38815488])
+    (5.93215488, 9.38815488, 13.38815488)
     >>> vi.policy
-    array([0, 0, 0])
+    (0, 0, 0)
     >>> vi.iter
     4
     >>> vi.time
-    0.002871990203857422
+    0.0009911060333251953
     
     >>> import mdp
     >>> import numpy as np
@@ -1598,13 +1718,13 @@ class ValueIteration(MDP):
     >>> vi = mdp.ValueIteration(P, R, 0.9)
     >>> vi.iterate()
     >>> vi.V
-    array([ 40.04862539,  33.65371176])
+    (40.04862539271682, 33.65371175967546)
     >>> vi.policy
-    array([1, 0])
+    (1, 0)
     >>> vi.iter
     26
     >>> vi.time
-    0.010202884674072266
+    0.0066509246826171875
     
     >>> import mdp
     >>> import numpy as np
@@ -1616,9 +1736,9 @@ class ValueIteration(MDP):
     >>> vi = mdp.ValueIteration(P, R, 0.9)
     >>> vi.iterate()
     >>> vi.V
-    array([ 40.04862539,  33.65371176])
+    (40.04862539271682, 33.65371175967546)
     >>> vi.policy
-    array([1, 0])
+    (1, 0)
     
     """
     
@@ -1835,3 +1955,7 @@ class ValueIterationGS(ValueIteration):
         
         self.V = tuple(self.V.getA1().tolist())
         self.policy = tuple(self.policy)
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
