@@ -100,6 +100,7 @@ from scipy.sparse import csr_matrix as sparse
 
 # __all__ = ["check",  "checkSquareStochastic"]
 
+# These need to be fixed so that we use classes derived from Error.
 mdperr = {
 "mat_nonneg" :
     "PyMDPtoolbox: Probabilities must be non-negative.",
@@ -152,24 +153,28 @@ mdperr = {
 }
 
 def check(P, R):
-    """Check if the matrices P and R define a Markov Decision Process.
+    """Check if P and R define a Markov Decision Process.
     
     Let S = number of states, A = number of actions.
-    The transition matrix P must be on the shape (A, S, S) and P[a,:,:]
-    must be stochastic.
-    The reward matrix R must be on the shape (A, S, S) or (S, A).
-    Raises an error if P and R do not define a MDP.
     
     Parameters
     ---------
-    P : transition matrix (A, S, S)
-        P could be an array with 3 dimensions or a object array (A, ),
-        each cell containing a matrix (S, S) possibly sparse
-    R : reward matrix (A, S, S) or (S, A)
-        R could be an array with 3 dimensions (SxSxA) or a object array
-        (A, ), each cell containing a sparse matrix (S, S) or a 2D
-        array(S, A) possibly sparse  
+    P : array_like 
+        The transition matrices. It can be a three dimensional array_like with
+        a shape of (A, S, S). It can also be a one dimensional array_like with
+        a shape of (A, ), where each element contains a matrix of shape (S, S)
+        which can possibly be sparse.
+    R : array_like
+        The reward matrix. It can be a three dimensional array_like with a
+	shape of (S, A, A). It can also be a one dimensional array_like with a
+        shape of (A, ), where each element contains matrix with a shape of
+        (S, S) which can possibly be sparse. It can also be an array_like with
+        a shape of (S, A) which can possibly be sparse.  
     
+    Notes
+    -----
+    Raises an error if P and R do not define a MDP.
+
     """
     # Check P
     # tranitions must be a numpy array either an AxSxS ndarray (with any 
