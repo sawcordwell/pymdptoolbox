@@ -310,14 +310,17 @@ def check(P, R):
 def checkSquareStochastic(Z):
     """Check if Z is a square stochastic matrix.
     
+    Let S = number of states.
+    
     Parameters
     ----------
-    Z : a SxS matrix. It could be a numpy ndarray SxS, or a scipy.sparse 
-        csr_matrix
+    Z : array_like
+        This should be a two dimensional array_like with a shape of (S, S). It
+        can possibly be sparse.
     
-    Evaluation
+    Notes 
     ----------
-    Returns None if no error has been detected
+    Returns None if no error has been detected, else it raises an error.
     
     """
     # try to get the shape of the matrix
