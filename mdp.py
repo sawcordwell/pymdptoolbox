@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Markov Decision Process (MDP) Toolbox v4.0 for Python
+"""
+Markov Decision Process (MDP) Toolbox
+=====================================
 
 The MDP toolbox provides classes and functions for the resolution of
 descrete-time Markov Decision Processes.
@@ -159,16 +161,16 @@ def check(P, R):
     
     Parameters
     ---------
-    P : array_like 
-        The transition matrices. It can be a three dimensional array_like with
-        a shape of (A, S, S). It can also be a one dimensional array_like with
+    P : array
+        The transition matrices. It can be a three dimensional array with
+        a shape of (A, S, S). It can also be a one dimensional arraye with
         a shape of (A, ), where each element contains a matrix of shape (S, S)
         which can possibly be sparse.
-    R : array_like
-        The reward matrix. It can be a three dimensional array_like with a
-	shape of (S, A, A). It can also be a one dimensional array_like with a
+    R : array
+        The reward matrix. It can be a three dimensional array with a
+        shape of (S, A, A). It can also be a one dimensional array with a
         shape of (A, ), where each element contains matrix with a shape of
-        (S, S) which can possibly be sparse. It can also be an array_like with
+        (S, S) which can possibly be sparse. It can also be an array with
         a shape of (S, A) which can possibly be sparse.  
     
     Notes
@@ -314,9 +316,9 @@ def checkSquareStochastic(Z):
     
     Parameters
     ----------
-    Z : array_like
-        This should be a two dimensional array_like with a shape of (S, S). It
-        can possibly be sparse.
+    Z : array
+        This should be a two dimensional array with a shape of (S, S). It can
+        possibly be sparse.
     
     Notes 
     ----------
@@ -353,25 +355,43 @@ def checkSquareStochastic(Z):
 def exampleForest(S=3, r1=4, r2=2, p=0.1):
     """Generate a MDP example based on a simple forest management scenario.
     
-    See the related documentation for more detail.
+    This function is used to generate a transition probability (A×S×S) array P
+    and a reward (S×A) matrix R that model the following problem.
+    A forest is managed by two actions: 'Wait' and 'Cut'.
+    An action is decided each year with first the objective to maintain an old
+    forest for wildlife and second to make money selling cut wood.
+    Each year there is a probability ``p`` that a fire burns the forest.
+    
+    Here is the problem is modelled.
+    Let {1, 2 . . . ``S`` } be the states of the forest, with ``S`` being the 
+    oldest. Let 'Wait' be action 1 and 'Cut' action 2.
+    After a fire, the forest is in the youngest state, that is state 1.
+    The transition matrix P of the problem can then be defined as follows.
     
     Parameters
     ---------
-    S : number of states (> 0), optional (default 3)
-    r1 : reward when forest is in the oldest state and action Wait is
-        performed, optional (default 4)
-    r2 : reward when forest is in the oldest state and action Cut is performed, 
-        optional (default 2)
-    p : probability of wild fire occurence, in ]0, 1[, optional (default 0.1)
+    S : int, optional
+        The number of states, which should be an integer greater than 0. By
+        default it is 3.
+    r1 : float, optional
+        The reward when the forest is in its oldest state and action 'Wait' is
+        performed. By default it is 4.
+    r2 : float, optional
+        The reward when the forest is in its oldest state and action 'Cut' is
+        performed. By default it is 2.
+    p : float, optional
+        The probability of wild fire occurence, in the range ]0, 1[. By default
+        it is 0.1.
     
-    Evaluation
-    ----------
-    P : transition probability matrix (A, S, S)
-    R : reward matrix (S, A)
+    Returns
+    -------
+    out : tuple
+        ``out[1]`` contains the transition probability matrix P with a shape of
+        (A, S, S). ``out[2]`` contains the reward matrix R with a shape of
+        (S, A).
     
     Examples
     --------
-    >>> import mdp
     >>> P, R = mdp.exampleForest()
     >>> P
     array([[[ 0.1,  0.9,  0. ],
