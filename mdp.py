@@ -56,13 +56,15 @@ The documentation can be displayed with
 the ValueIteration class use ``mdp.ValueIteration?<ENTER>``, and to view its
 source code use ``mdp.ValueIteration??<ENTER>``.
 
+Acknowledgments
+---------------
+This module is modified from the MDPtoolbox (c) 2009 INRA available at 
+`http://www.inra.fr/mia/T/MDPtoolbox/`_.
+
 """
 
-# Copyright (c) 2011, 2012, 2013 Steven Cordwell
-# Copyright (c) 2009, Iadine Chadès
-# Copyright (c) 2009, Marie-Josée Cros
-# Copyright (c) 2009, Frédérick Garcia
-# Copyright (c) 2009, Régis Sabbadin
+# Copyright (c) 2011-2013 Steven A. W. Cordwell
+# Copyright (c) 2009 INRA
 # 
 # All rights reserved.
 # 
@@ -1548,20 +1550,29 @@ class RelativeValueIteration(MDP):
     --------
     >>> import mdp
     >>> P, R = exampleForest()
-    >>> rvi = mdp.RelativeValueIteration(P, R, 0.96)
+    >>> rvi = mdp.RelativeValueIteration(P, R)
     >>> rvi.iterate()
     >>> rvi.average_reward
     2.4300000000000002
     >>> rvi.policy
     (0, 0, 0)
+    >>> rvi.iter
+    4
     
     >>> import mdp
     >>> import numpy as np
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
-    >>> vi = mdp.RelativeValueIteration(P, R, 0.9)
+    >>> vi = mdp.RelativeValueIteration(P, R)
     >>> rvi.iterate()
     >>> rvi.V
+    (10.0, 3.885235246411831)
+    >>> rvi.average_reward
+    3.8852352464118312
+    >>> rvi.policy
+    (1, 0)
+    >>> rvi.iter
+    29
     
     """
     
@@ -1729,7 +1740,7 @@ class ValueIteration(MDP):
     >>> import mdp
     >>> import numpy as np
     >>> from scipy.sparse import csr_matrix as sparse
-    >>> P = np.zeros((2, ), dtype=object)
+    >>> P = np.empty(2, dtype=object)
     >>> P[0] = sparse([[0.5, 0.5],[0.8, 0.2]])
     >>> P[1] = sparse([[0, 1],[0.1, 0.9]])
     >>> R = np.array([[5, 10], [-1, 2]])
@@ -1799,7 +1810,13 @@ class ValueIteration(MDP):
         for ss in range(self.S):
             PP = matrix(zeros((self.S, self.A)))
             for aa in range(self.A):
-                PP[:, aa] = self.P[aa][:, ss]
+                try:
+                    PP[:, aa] = self.P[aa][:, ss]
+                except ValueError:
+                    try:
+                        PP[:, aa] = self.P[aa][:, ss].todense()
+                    except:
+                        raise
             # the function "min()" without any arguments finds the
             # minimum of the entire array.
             h[ss] = PP.min()

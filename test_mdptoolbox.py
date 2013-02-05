@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun May 27 23:16:57 2012
+"""The Python Markov Decision Process (MDP) Toolbox Test Suite
+===========================================================
 
-@author: -
+These unit tests are written for the nosetests framwork. You will need to have
+nosetests installed, and then run from the command line.
+
+    $ cd /path/to/pymdptoolbox
+    $ nostests
+
 """
 
 from random import seed as randseed
 
-from numpy import absolute, array, eye, matrix, zeros
+from numpy import absolute, array, empty, eye, matrix, zeros
 from numpy.random import rand
 from scipy.sparse import eye as speye
 from scipy.sparse import csr_matrix as sparse
 #from scipy.stats.distributions import poisson
 
-from mdp import check, checkSquareStochastic, exampleForest, exampleRand, LP
+from mdp import check, checkSquareStochastic, exampleForest, exampleRand
 from mdp import MDP, PolicyIteration, QLearning, RelativeValueIteration
 from mdp import ValueIteration, ValueIterationGS
 
@@ -24,6 +29,9 @@ SMALLNUM = 10e-12
 # Arrays
 P = array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
 R = array([[5, 10], [-1, 2]])
+Ps = empty(2, dtype=object)
+Ps[0] = sparse([[0.5, 0.5],[0.8, 0.2]])
+Ps[1] = sparse([[0, 1],[0.1, 0.9]])
 Pf, Rf = exampleForest()
 Pr, Rr = exampleRand(STATES, ACTIONS)
 Prs, Rrs = exampleRand(STATES, ACTIONS, is_sparse=True)
@@ -48,21 +56,21 @@ def test_check_square_stochastic_nonnegative_array_2():
 # check: P - square, stochastic and non-negative object arrays
 
 def test_check_P_square_stochastic_nonnegative_object_array():
-    P = zeros((ACTIONS, ), dtype=object)
+    P = empty(ACTIONS, dtype=object)
     R = rand(STATES, ACTIONS)
     for a in range(ACTIONS):
         P[a] = eye(STATES)
     assert (check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_object_matrix():
-    P = zeros((ACTIONS, ), dtype=object)
+    P = empty(ACTIONS, dtype=object)
     R = rand(STATES, ACTIONS)
     for a in range(ACTIONS):
         P[a] = matrix(eye(STATES))
     assert (check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_object_sparse():
-    P = zeros((ACTIONS, ), dtype=object)
+    P = empty(ACTIONS, dtype=object)
     R = rand(STATES, ACTIONS)
     for a in range(ACTIONS):
         P[a] = speye(STATES, STATES).tocsr()
@@ -81,7 +89,7 @@ def test_check_R_square_stochastic_nonnegative_sparse():
 
 def test_check_R_square_stochastic_nonnegative_object_array():
     P = zeros((ACTIONS, STATES, STATES))
-    R = zeros((ACTIONS, ), dtype=object)
+    R = empty(ACTIONS, dtype=object)
     for a in range(ACTIONS):
         P[a, :, :] = eye(STATES)
         R[a] = rand(STATES, STATES)
@@ -89,7 +97,7 @@ def test_check_R_square_stochastic_nonnegative_object_array():
 
 def test_check_R_square_stochastic_nonnegative_object_matrix():
     P = zeros((ACTIONS, STATES, STATES))
-    R = zeros((ACTIONS, ), dtype=object)
+    R = empty(ACTIONS, dtype=object)
     for a in range(ACTIONS):
         P[a, :, :] = eye(STATES)
         R[a] = matrix(rand(STATES, STATES))
@@ -97,7 +105,7 @@ def test_check_R_square_stochastic_nonnegative_object_matrix():
 
 def test_check_R_square_stochastic_nonnegative_object_sparse():
     P = zeros((ACTIONS, STATES, STATES))
-    R = zeros((ACTIONS, ), dtype=object)
+    R = empty(ACTIONS, dtype=object)
     for a in range(ACTIONS):
         P[a, :, :] = eye(STATES)
         R[a] = sparse(rand(STATES, STATES))
@@ -194,7 +202,7 @@ def test_MDP_P_R_1():
 
 def test_MDP_P_R_2():
     R = array([[[5, 10], [-1, 2]], [[1, 2], [3, 4]]])
-    P1 = zeros((2, ), dtype=object)
+    P1 = empty(2, dtype=object)
     P1[0] = matrix('0.5 0.5; 0.8 0.2')
     P1[1] = matrix('0 1; 0.1 0.9')
     R1 = matrix('7.5 2; -0.4 3.9')
@@ -317,15 +325,37 @@ def test_QLearning_exampleForest():
 
 # RelativeValueIteration
 
+def test_RelativeValueIteration_dense():
+    a = RelativeValueIteration(P, R)
+    p= matrix('1 0')
+    ar = 3.88523524641183
+    itr = 29
+    a.iterate()
+    assert (array(a.policy) == p).all()
+    assert a.iter == itr
+    assert absolute(a.average_reward - ar) < SMALLNUM
+
+def test_RelativeValueIteration_sparse():
+    a = RelativeValueIteration(Ps, R)
+    p= matrix('1 0')
+    ar = 3.88523524641183
+    itr = 29
+    a.iterate()
+    assert (array(a.policy) == p).all()
+    assert a.iter == itr
+    assert absolute(a.average_reward - ar) < SMALLNUM
+
 def test_RelativeValueIteration_exampleForest():
     a = RelativeValueIteration(Pf, Rf)
     itr = 4
     p = matrix('0 0 0')
-    v = matrix('-4.360000000000000 -0.760000000000000 3.240000000000000')
+    #v = matrix('-4.360000000000000 -0.760000000000000 3.240000000000000')
+    ar = 2.43000000000000
     a.iterate()
     assert (array(a.policy) == p).all()
     assert a.iter == itr
-    assert (absolute(array(a.V) - v) < SMALLNUM).all()
+    #assert (absolute(array(a.V) - v) < SMALLNUM).all()
+    assert absolute(a.average_reward - ar) < SMALLNUM
 
 # ValueIteration
 

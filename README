@@ -13,18 +13,19 @@ doc folder or from `the MDPtoolbox homepage <http://www.>`_.
 
 Installation
 ------------
-    1. Download the stable release from http:// or get a local copy of the
-       source with Git
+    1. Download the latest stable release from 
+       `http://code.google.com/p/pymdptoolbox/downloads/list`_  or clone the
+       Git repository
        ``git clone https://code.google.com/p/pymdptoolbox/``
 
     2. If you downloaded the `*.zip` or `*.tar.gz` archive, then extract it
-       ``tar -xzvf pymdptoolbox.tar.gz``
-       ``unzip pymdptoolbox``
+       ``tar -xzvf pymdptoolbox-<VERSION>.tar.gz``
+       ``unzip pymdptoolbox-<VERSION>``
 
     3. Change to the MDP toolbox directory 
        ``cd pymdptoolbox``
 
-    4. Install via Docutils either to the filesystem or to a home directory
+    4. Install via Distutils, either to the filesystem or to a home directory
        ``python setup.py install``
        ``python setup.py install --home=<dir>``
 
