@@ -1,5 +1,14 @@
+2013-02-05
+The first alpha release of v4.0 will be tagged today, which indicates that the
+documentation and testing is starting to approach a level suitable for a final
+release. A 4.0 release date has not been set, but once there are unittests for
+all classes and functions, and the documentation is in a stable state, then it
+can be tagged.
+
 2013-01-26
-The release of v0.14 will be made today. With this all the functionality should be available to use. The initial version release
-of 4.0 will be made once the documentation has been finalised and unit tests have been written to cover all of the classes.
-The first release will be 4.0 to match the MATLAB/Octave/Scilab/R MDP Toolboxes that are available at
+The release of v0.14 will be made today. With this all the functionality should
+be available to use. The initial version release of 4.0 will be made once the
+documentation has been finalised and unit tests have been written to cover all
+of the classes. The first release will be 4.0 to match the MATLAB, Octave, 
+Scilab and R MDP Toolboxes that are available at 
 http://www.inra.fr/mia/T/MDPtoolbox/
