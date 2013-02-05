@@ -4,8 +4,8 @@ from distutils.core import setup
 
 setup(name="PyMDPtoolbox",
       version="4.0alpha1",
-      description="Python Markov Decision Problem Toolbox",
-      author="Steven Cordwell",
+      description="Markov Decision Process (MDP) Toolbox 4.0",
+      author="Steven A. W. Cordwell",
       author_email="steven.cordwell@uqconnect.edu.au",
       url="http://code.google.com/p/pymdptoolbox/",
       license="New BSD License",
