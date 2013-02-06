@@ -1,3 +1,7 @@
+2013-02-06
+v4.0a2 - Fixes a bug that didn't allow sparse matrices to be used in the
+        ValueIteration class.
+
 2013-02-05
 v4.0alpha1 - the documentation has started to take shape, and the modules
         docstring is now in a stable condition. The module *should* be useful
