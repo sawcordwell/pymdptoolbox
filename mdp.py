@@ -750,16 +750,26 @@ class MDP(object):
         #
         # Make P be an object array with (S, S) shaped array elements. Save it
         # as a matrix.
-        if P.dtype == object:
-            self.P = P
-            self.A = self.P.shape[0]
-            self.S = self.P[0].shape[0]
-        else: # convert to an object array
+        try:
             self.A = P.shape[0]
-            self.S = P.shape[1]
-            self.P = zeros(self.A, dtype=object)
-            for aa in range(self.A):
-                self.P[aa] = matrix(P[aa, :, :])
+            if P.ndim == 3:
+                self.S = P.shape[1]
+            else: # we are dealing with numpy array with dtype=object
+                self.S = P[0].shape[0]
+        except AttributeError:
+            try:
+                self.A = len(P)
+                self.S = P[0].shape[0]
+            except:
+                raise
+        except:
+            raise
+        # convert Ps to matrices
+        self.P = []
+        for aa in xrange(self.A):
+            self.P.append(matrix(P[aa]))
+        self.P = tuple(self.P)
+        
         # Make R have the shape (S, A) and save it as a matrix
         if R.dtype == object:
             # R is object shaped (A,) with each element shaped (S, S)
