@@ -485,7 +485,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     A : int
         number of actions (> 0)
     is_sparse : logical, optional
-        false to have matrices in plain format, true to have sparse
+        false to have matrices in dense format, true to have sparse
         matrices (default false).
     mask : array or None, optional
         matrix with 0 and 1 (0 indicates a place for a zero
