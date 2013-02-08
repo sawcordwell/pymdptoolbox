@@ -99,6 +99,29 @@ def test_check_P_square_stochastic_nonnegative_list_sparse():
         P.append(speye(STATES, STATES).tocsr())
     assert (check(P, R) == None)
 
+# check: P - square, stochastic and non-negative dicts
+
+def test_check_P_square_stochastic_nonnegative_dict_array():
+    P = {}
+    R = rand(STATES, ACTIONS)
+    for a in xrange(ACTIONS):
+        P[a] = eye(STATES)
+    assert (check(P, R) == None)
+
+def test_check_P_square_stochastic_nonnegative_dict_matrix():
+    P = []
+    R = rand(STATES, ACTIONS)
+    for a in xrange(ACTIONS):
+        P[a] = matrix(eye(STATES))
+    assert (check(P, R) == None)
+
+def test_check_P_square_stochastic_nonnegative_dict_sparse():
+    P = []
+    R = rand(STATES, ACTIONS)
+    for a in xrange(ACTIONS):
+        P[a] = speye(STATES, STATES).tocsr()
+    assert (check(P, R) == None)
+
 # check: R - square stochastic and non-negative sparse
 
 def test_check_R_square_stochastic_nonnegative_sparse():
