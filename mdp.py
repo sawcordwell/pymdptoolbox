@@ -184,7 +184,8 @@ def check(P, R):
         if P.ndim == 3:
             aP, sP0, sP1 = P.shape
         elif P.ndim == 1:
-            # A hack so that we can go into the next try-except statement
+            # A hack so that we can go into the next try-except statement and
+            # continue checking from there
             raise AttributeError
         else:
             raise ValueError(mdperr["P_shape"])
@@ -365,7 +366,7 @@ def checkSquareStochastic(Z):
                 raise ValueError(mdperr["mat_nonneg"])
         except AttributeError:
             raise TypeError("Matrix should be a numpy type.")
-    except (ValueError, TypeError):
+    except:
         raise
     
     return(None)
