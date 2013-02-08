@@ -179,6 +179,7 @@ def check(P, R):
     Raises an error if P and R do not define a MDP.
 
     """
+    # a small change to see what happens
     # Check P
     # tranitions must be a numpy array either an AxSxS ndarray (with any 
     # dtype other than "object"); or, a 1xA ndarray with a "object" dtype, 
