@@ -109,14 +109,14 @@ def test_check_P_square_stochastic_nonnegative_dict_array():
     assert (check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_dict_matrix():
-    P = []
+    P = {}
     R = rand(STATES, ACTIONS)
     for a in xrange(ACTIONS):
         P[a] = matrix(eye(STATES))
     assert (check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_dict_sparse():
-    P = []
+    P = {}
     R = rand(STATES, ACTIONS)
     for a in xrange(ACTIONS):
         P[a] = speye(STATES, STATES).tocsr()
