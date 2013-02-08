@@ -96,8 +96,8 @@ from math import ceil, log, sqrt
 from random import randint, random
 from time import time
 
-from numpy import absolute, array, diag, matrix, mean, mod, multiply, ndarray
-from numpy import ones, zeros
+from numpy import absolute, array, diag, empty, matrix, mean, mod, multiply
+from numpy import ndarray, ones, zeros
 from numpy.random import rand
 from scipy.sparse import csr_matrix as sparse
 
@@ -541,9 +541,9 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     # generate the transition and reward matrices based on S, A and mask
     if is_sparse:
         # definition of transition matrix : square stochastic matrix
-        P = zeros((A, ), dtype=object)
+        P = empty(A, dtype=object)
         # definition of reward matrix (values between -1 and +1)
-        R = zeros((A, ), dtype=object)
+        R = empty(A, dtype=object)
         for a in range(A):
             if mask.ndim == 3:
                 PP = mask[a, :, :] * rand(S, S)
