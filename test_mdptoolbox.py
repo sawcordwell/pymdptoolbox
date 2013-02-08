@@ -76,6 +76,15 @@ def test_check_P_square_stochastic_nonnegative_object_sparse():
         P[a] = speye(STATES, STATES).tocsr()
     assert (check(P, R) == None)
 
+# check: P - square, stochastic and non-negative lists
+
+def test_check_P_square_stochastic_nonnegative_list_array():
+    P = []
+    R = rand(STATES, ACTIONS)
+    for a in xrange(ACTIONS):
+        P.append(eye(STATES))
+    assert (check(P, R) == None)
+
 # check: R - square stochastic and non-negative sparse
 
 def test_check_R_square_stochastic_nonnegative_sparse():
