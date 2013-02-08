@@ -59,7 +59,7 @@ source code use ``mdp.ValueIteration??<ENTER>``.
 Acknowledgments
 ---------------
 This module is modified from the MDPtoolbox (c) 2009 INRA available at 
-`http://www.inra.fr/mia/T/MDPtoolbox/`_.
+http://www.inra.fr/mia/T/MDPtoolbox/.
 
 """
 
@@ -750,18 +750,14 @@ class MDP(object):
         #
         # Make P be an object array with (S, S) shaped array elements. Save it
         # as a matrix.
+        self.A = len(P)
         try:
-            self.A = P.shape[0]
             if P.ndim == 3:
                 self.S = P.shape[1]
-            else: # we are dealing with numpy array with dtype=object
-                self.S = P[0].shape[0]
+            else:
+               self.S = P[0].shape[0]
         except AttributeError:
-            try:
-                self.A = len(P)
-                self.S = P[0].shape[0]
-            except:
-                raise
+            self.S = P[0].shape[0]
         except:
             raise
         # convert Ps to matrices
