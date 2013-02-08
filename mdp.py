@@ -183,6 +183,9 @@ def check(P, R):
     try:
         if P.ndim == 3:
             aP, sP0, sP1 = P.shape
+        elif P.ndim == 1:
+            # A hack so that we can go into the next try-except statement
+            raise AttributeError
         else:
             raise ValueError(mdperr["P_shape"])
     except AttributeError:
@@ -204,6 +207,9 @@ def check(P, R):
             sR1 = sR0
         elif R.ndim == 3:
             aR, sR0, sR1 = R.shape
+        elif R.ndim == 1:
+            # A hack so that we can go into the next try-except statement
+            raise AttributeError
         else:
             raise ValueError(mdperr["R_shape"])
     except AttributeError:
