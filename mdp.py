@@ -748,8 +748,8 @@ class MDP(object):
         # We assume that P and R define a MDP i,e. assumption is that
         # check(P, R) has already been run and doesn't fail.
         #
-        # Make P be an object array with (S, S) shaped array elements. Save it
-        # as a matrix.
+        # Set self.P as a tuple of length A, with each element storing an S×S
+        # matrix.
         self.A = len(P)
         try:
             if P.ndim == 3:
@@ -765,24 +765,22 @@ class MDP(object):
         for aa in xrange(self.A):
             self.P.append(matrix(P[aa]))
         self.P = tuple(self.P)
-        
-        # Make R have the shape (S, A) and save it as a matrix
-        if R.dtype == object:
-            # R is object shaped (A,) with each element shaped (S, S)
-            self.R = matrix(zeros((self.S, self.A)))
-            for aa in range(self.A):
-                self.R[:, aa] = (
-                    multiply(P[aa], R[aa]).sum(1).reshape(self.S, 1))
-        else:
+        # Set self.R as a tuple of length A, with each element storing an S×1
+        # vector array.
+        try:
             if R.ndim == 2:
-                # R already has shape (S, A)
-                self.R = matrix(R)
+                self.R = []
+                for aa in xrange(self.A):
+                    self.R.append(R[:, aa].reshape(self.S, 1))
             else:
-                # R has shape (A, S, S)
-                self.R = matrix(zeros((self.S, self.A)))
-                for aa in range(self.A):
-                    self.R[:, aa] = (
-                        multiply(P[aa], R[aa, :, :]).sum(1).reshape(self.S, 1))
+                raise AttributeError
+        except AttributeError:
+            self.R = []
+            for aa in xrange(self.A):
+                self.R.append(multiply(P[aa], R[aa]).sum(1).reshape(self.S, 1))
+        except:
+            raise
+        self.R = tuple(self.R)
     
     def iterate(self):
         """Raise error because child classes should implement this function."""
