@@ -542,27 +542,28 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     # generate the transition and reward matrices based on S, A and mask
     if is_sparse:
         # definition of transition matrix : square stochastic matrix
-        P = empty(A, dtype=object)
+        P = []
         # definition of reward matrix (values between -1 and +1)
-        R = empty(A, dtype=object)
-        for a in range(A):
+        R = []
+        for a in xrange(A):
             if mask.ndim == 3:
                 PP = mask[a, :, :] * rand(S, S)
                 for s in range(S):
                     if mask[a, s, :].sum() == 0:
                        PP[s, randint(0, S - 1)] = 1
                     PP[s, :] = PP[s, :] / PP[s, :].sum()
-                P[a] = sparse(PP)
-                R[a] = sparse(mask[a, :, :] * (2*rand(S, S) - ones((S, S))))
+                P.append(sparse(PP))
+                R.append(sparse(mask[a] * (2*rand(S, S) - ones((S, S)))))
             else:
                 PP = mask * rand(S, S)
                 for s in range(S):
                     if mask[s, :].sum() == 0:
                         PP[s, randint(0, S - 1)] = 1
                     PP[s, :] = PP[s, :] / PP[s, :].sum()
-                P[a] = sparse(PP)
-                R[a] = sparse(mask * (2*rand(S, S) - ones((S, S))))
-                
+                P.append(sparse(PP))
+                R.append(sparse(mask * (2*rand(S, S) - ones((S, S)))))
+        P = tuple(P)
+        R = tuple(R)
     else:
         # definition of transition matrix : square stochastic matrix
         P = zeros((A, S, S))
@@ -694,7 +695,9 @@ class MDP(object):
         # set the initial iteration count to zero
         self.iter = 0
         
+        # V should be stored as a vector ie shape of (S,) or (1, S)
         self.V = None
+        # policy can also be stored as a vector
         self.policy = None
     
     def _bellmanOperator(self, V=None):
@@ -712,14 +715,14 @@ class MDP(object):
             V = self.V
         else:
             try:
-                if V.shape != (self.S, 1):
+                if V.shape not in ((self.S,), (1, self.S)):
                     raise ValueError("bellman: V is not the right shape.")
             except AttributeError:
                 raise TypeError("bellman: V must be a numpy array or matrix.")
         
         Q = empty((self.S, self.A))
         for aa in range(self.A):
-            Q[:, aa] = self.R[aa] + (self.discount * self.P[aa].dot(V))
+            Q[:, aa] = self.R[aa] + self.discount * self.P[aa].dot(V)
         
         # Which way is better?
         # 1. Return, (policy, value)
@@ -766,19 +769,24 @@ class MDP(object):
         for aa in xrange(self.A):
             self.P.append(P[aa])
         self.P = tuple(self.P)
-        # Set self.R as a tuple of length A, with each element storing an S×1
-        # vector array.
+        # Set self.R as a tuple of length A, with each element storing an 1×S
+        # vector.
         try:
             if R.ndim == 2:
                 self.R = []
                 for aa in xrange(self.A):
-                    self.R.append(R[:, aa].reshape(self.S, 1))
+                    self.R.append(array(R[:, aa]).reshape(self.S))
             else:
                 raise AttributeError
         except AttributeError:
             self.R = []
             for aa in xrange(self.A):
-                self.R.append(multiply(P[aa], R[aa]).sum(1).reshape(self.S, 1))
+                try:
+                    self.R.append(P[aa].multiply(R[aa]).sum(1).reshape(self.S))
+                except AttributeError:
+                    self.R.append(multiply(P[aa],R[aa]).sum(1).reshape(self.S))
+                except:
+                    raise
         except:
             raise
         self.R = tuple(self.R)
@@ -854,17 +862,18 @@ class FiniteHorizon(MDP):
             raise ValueError('PyMDPtoolbox: N must be greater than 0')
         else:
             self.N = N
-        
+        # Initialise the base class
         MDP.__init__(self, transitions, reward, discount, None, None)
-        
-        # remove the iteration counter
+        # remove the iteration counter, it is not meaningful for backwards
+        # induction
         del self.iter
-        
+        # There are value vectors for each time step up to the horizon
         self.V = zeros((self.S, N + 1))
-        
-        self.policy = zeros((self.S, N), dtype=int)
-        
-        if not h is None:
+        # There are policy vectors for each time step before the horizon, when
+        # we reach the horizon we don't need to make decisions anymore.
+        self.policy = empty((self.S, N), dtype=int)
+        # Set the reward for the final transition to h, if specified.
+        if h is not None:
             self.V[:, N] = h
         
     def iterate(self):
@@ -872,15 +881,24 @@ class FiniteHorizon(MDP):
         self.time = time()
         
         for n in range(self.N):
-            W, X = self._bellmanOperator(
-                matrix(self.V[:, self.N - n]).reshape(self.S, 1))
-            self.V[:, self.N - n - 1] = X.A1
-            self.policy[:, self.N - n - 1] = W.A1
+            W, X = self._bellmanOperator(self.V[:, self.N - n])
+            self.V[:, self.N - n - 1] = X
+            self.policy[:, self.N - n - 1] = W
             if self.verbose:
                 print("stage: %s ... policy transpose : %s") % (
                     self.N - n, self.policy[:, self.N - n -1].tolist())
         
         self.time = time() - self.time
+        # After this we could create a tuple of tuples for the values and 
+        # policies.
+        #V = []
+        #p = []
+        #for n in xrange(self.N):
+        #    V.append()
+        #    p.append()
+        #V.append()
+        #self.V = tuple(V)
+        #self.policy = tuple(p)
 
 class LP(MDP):
     
@@ -957,7 +975,7 @@ class LP(MDP):
         # (Octave uses glpk) and perhaps Matlab. If solver=None (ie using the 
         # default cvxopt solver) then V agrees with the Octave equivalent
         # only to 10e-8 places.
-        self.V = matrix(self._linprog(f, M, -h, solver='glpk')['x'])
+        self.V = array(self._linprog(f, M, -h, solver='glpk')['x'])
         
         self.policy, self.V =  self._bellmanOperator()
         
@@ -1019,7 +1037,7 @@ class PolicyIteration(MDP):
         if policy0 == None:
             # initialise the policy to the one which maximises the expected
             # immediate reward
-            self.V = matrix(zeros((self.S, 1)))
+            self.V = zeros(self.S)
             self.policy, null = self._bellmanOperator()
             del null
         else:
@@ -1029,7 +1047,7 @@ class PolicyIteration(MDP):
                 raise ValueError("PyMDPtolbox: policy0 must a vector with "
                                  "length S.")
             
-            policy0 = matrix(policy0.reshape(self.S, 1))
+            policy0 = policy0.reshape(self.S)
             
             if (mod(policy0, 1).any() or (policy0 < 0).any() or
                     (policy0 >= self.S).any()):
@@ -1039,7 +1057,7 @@ class PolicyIteration(MDP):
                 self.policy = policy0
         
         # set or reset the initial values to zero
-        self.V = matrix(zeros((self.S, 1)))
+        self.V = zeros(self.S)
         
         if eval_type in (0, "matrix"):
             from numpy.linalg import solve
@@ -1076,29 +1094,24 @@ class PolicyIteration(MDP):
         PRpolicy(S)   = reward matrix for policy
         
         """
-        Ppolicy = matrix(zeros((self.S, self.S)))
-        Rpolicy = matrix(zeros((self.S, 1)))
+        Ppolicy = empty((self.S, self.S))
+        Rpolicy = zeros(self.S)
         for aa in range(self.A): # avoid looping over S
-        
-            # the rows that use action a. .getA1() is used to make sure that
-            # ind is a 1 dimensional vector
-            ind = (self.policy == aa).nonzero()[0].getA1()
+            # the rows that use action a.
+            ind = (self.policy == aa).nonzero()[0]
             # if no rows use action a, then no need to assign this
             if ind.size > 0:
                 Ppolicy[ind, :] = self.P[aa][ind, :]
-                
                 #PR = self._computePR() # an apparently uneeded line, and
                 # perhaps harmful in this implementation c.f.
                 # mdp_computePpolicyPRpolicy.m
                 Rpolicy[ind] = self.R[aa][ind]
-        
         # self.R cannot be sparse with the code in its current condition, but
         # it should be possible in the future. Also, if R is so big that its
         # a good idea to use a sparse matrix for it, then converting PRpolicy
         # from a dense to sparse matrix doesn't seem very memory efficient
         if type(self.R) is sparse:
             Rpolicy = sparse(Rpolicy)
-        
         #self.Ppolicy = Ppolicy
         #self.Rpolicy = Rpolicy
         return (Ppolicy, Rpolicy)
@@ -1136,7 +1149,7 @@ class PolicyIteration(MDP):
         
         """
         if (type(V0) in (int, float)) and (V0 == 0):
-            policy_V = zeros((self.S, 1))
+            policy_V = zeros(self.S)
         else:
             if (type(V0) in (ndarray, matrix)) and (V0.shape == (self.S, 1)):
                 policy_V = V0
