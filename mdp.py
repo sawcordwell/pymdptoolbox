@@ -1166,7 +1166,7 @@ class PolicyIteration(MDP):
         itr = 0
         done = False
         while not done:
-            itr = itr + 1
+            itr += 1
             
             Vprev = policy_V
             policy_V = policy_R + self.discount * policy_P * Vprev
@@ -1226,7 +1226,7 @@ class PolicyIteration(MDP):
         self.time = time()
         
         while not done:
-            self.iter = self.iter + 1
+            self.iter += 1
             
             # these _evalPolicy* functions will update the classes value
             # attribute
@@ -1352,7 +1352,7 @@ class PolicyIterationModified(PolicyIteration):
         
         done = False
         while not done:
-            self.iter = self.iter + 1
+            self.iter += 1
             
             self.policy, Vnext = self._bellmanOperator()
             #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
@@ -1635,7 +1635,7 @@ class RelativeValueIteration(MDP):
         
         while not done:
             
-            self.iter = self.iter + 1;
+            self.iter += 1;
             
             self.policy, Vnext = self._bellmanOperator()
             Vnext = Vnext - self.gain
@@ -1874,7 +1874,7 @@ class ValueIteration(MDP):
         self.time = time()
         done = False
         while not done:
-            self.iter = self.iter + 1
+            self.iter += 1
             
             Vprev = self.V.copy()
             
@@ -1964,7 +1964,7 @@ class ValueIterationGS(ValueIteration):
         self.time = time()
         
         while not done:
-            self.iter = self.iter + 1
+            self.iter += 1
             
             Vprev = self.V.copy()
             
