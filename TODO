@@ -1,0 +1,19 @@
+1. Improve the documentation and rewrite it as neccessary.
+
+2. Work on converting the storage of the transitions and rewards as tuples of
+   arrays.
+
+3. Implement a nicer linnear programming interface to cvxopt, or write own
+   linear programming code.
+
+4. Write unittests for all the classes.
+
+5. Implement own exception class.
+
+6. Move evalPolicy* functions to be module functions, as these are useful for
+   checking policies
+
+7. Try to use rows for the Bellman computations rather than columns (perhaps
+   this storage is more Pythonic? or more NumPyic?)
+
+8. 

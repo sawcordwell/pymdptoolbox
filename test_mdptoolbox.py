@@ -235,38 +235,48 @@ def test_exampleRand_sparse_check():
 # MDP
 
 def test_MDP_P_R_1():
-    P1 = zeros((2, ), dtype=object)
-    P1[0] = matrix('0.5 0.5; 0.8 0.2')
-    P1[1] = matrix('0 1; 0.1 0.9')
-    R1 = matrix('5 10; -1 2')
-    a = MDP(P, R, 0.9, 0.01, 1)
-    assert a.P.dtype == P1.dtype
-    assert a.R.dtype == R1.dtype
-    for kk in range(2):
-        assert (a.P[kk] == P1[kk]).all()
-    assert (a.R == R1).all()
-
-def test_MDP_P_R_2():
-    R = array([[[5, 10], [-1, 2]], [[1, 2], [3, 4]]])
-    P1 = empty(2, dtype=object)
-    P1[0] = matrix('0.5 0.5; 0.8 0.2')
-    P1[1] = matrix('0 1; 0.1 0.9')
-    R1 = matrix('7.5 2; -0.4 3.9')
+    P1 = []
+    P1.append(matrix('0.5 0.5; 0.8 0.2'))
+    P1.append(matrix('0 1; 0.1 0.9'))
+    P1 = tuple(P1)
+    R1 = []
+    R1.append(matrix('5; -1'))
+    R1.append(matrix('10; 2'))
+    R1 = tuple(R1)
     a = MDP(P, R, 0.9, 0.01, 1)
     assert type(a.P) == type(P1)
     assert type(a.R) == type(R1)
-    assert a.P.dtype == P1.dtype
-    assert a.R.dtype == R1.dtype
     for kk in range(2):
         assert (a.P[kk] == P1[kk]).all()
-    assert (absolute(a.R - R1) < SMALLNUM).all()
+        assert (a.R[kk] == R1[kk]).all()
+
+def test_MDP_P_R_2():
+    R = array([[[5, 10], [-1, 2]], [[1, 2], [3, 4]]])
+    P1 = []
+    P1.append(matrix('0.5 0.5; 0.8 0.2'))
+    P1.append(matrix('0 1; 0.1 0.9'))
+    P1 = tuple(P1)
+    R1 = []
+    R1.append(matrix('7.5; -0.4'))
+    R1.append(matrix('2; 3.9'))
+    R1 = tuple(R1)
+    a = MDP(P, R, 0.9, 0.01, 1)
+    assert type(a.P) == type(P1)
+    assert type(a.R) == type(R1)
+    for kk in range(2):
+        assert (a.P[kk] == P1[kk]).all()
+        assert (absolute(a.R[kk] - R1[kk]) < SMALLNUM).all()
 
 def test_MDP_P_R_3():
     P = array([[[0.6116, 0.3884],[0, 1]],[[0.6674, 0.3326],[0, 1]]])
     R = array([[[-0.2433, 0.7073],[0, 0.1871]],[[-0.0069, 0.6433],[0, 0.2898]]])
-    PR = matrix('0.12591304 0.20935652; 0.1871 0.2898')
+    PR = []
+    PR.append(matrix('0.12591304; 0.1871'))
+    PR.append(matrix('0.20935652;0.2898'))
+    PR = tuple(PR)
     a = MDP(P, R, 0.9, 0.01, 1)
-    assert (absolute(a.R - PR) < SMALLNUM).all()
+    for kk in range(2):
+        assert (absolute(a.R[kk] - PR[kk]) < SMALLNUM).all()
 
 # LP
 
