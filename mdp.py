@@ -717,9 +717,9 @@ class MDP(object):
             except AttributeError:
                 raise TypeError("bellman: V must be a numpy array or matrix.")
         
-        Q = matrix(empty((self.S, self.A)))
+        Q = empty((self.S, self.A))
         for aa in range(self.A):
-            Q[:, aa] = self.R[:, aa] + (self.discount * self.P[aa] * V)
+            Q[:, aa] = self.R[:, aa] + (self.discount * self.P[aa].dot(V))
         
         # Which way is better?
         # 1. Return, (policy, value)
