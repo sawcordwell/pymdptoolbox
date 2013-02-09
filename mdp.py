@@ -96,8 +96,8 @@ from math import ceil, log, sqrt
 from random import randint, random
 from time import time
 
-from numpy import absolute, array, diag, matrix, mean, mod, multiply, ndarray
-from numpy import ones, zeros
+from numpy import absolute, array, empty, diag, matrix, mean, mod, multiply
+from numpy import ndarray, ones, zeros
 from numpy.random import rand
 from scipy.sparse import csr_matrix as sparse
 
@@ -335,7 +335,7 @@ def checkSquareStochastic(Z):
     
     Parameters
     ----------
-    Z : array
+    Z : matrix
         This should be a two dimensional array with a shape of (S, S). It can
         possibly be sparse.
     
@@ -717,7 +717,7 @@ class MDP(object):
             except AttributeError:
                 raise TypeError("bellman: V must be a numpy array or matrix.")
         
-        Q = matrix(zeros((self.S, self.A)))
+        Q = empty((self.S, self.A))
         for aa in range(self.A):
             Q[:, aa] = self.R[:, aa] + (self.discount * self.P[aa] * V)
         
