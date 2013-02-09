@@ -718,7 +718,7 @@ class MDP(object):
         
         Q = matrix(zeros((self.S, self.A)))
         for aa in range(self.A):
-            Q[:, aa] = self.R[:, aa] + (self.discount * self.P[aa] * V)
+            Q[:, aa] = self.R[aa] + (self.discount * self.P[aa] * V)
         
         # Which way is better?
         # 1. Return, (policy, value)
@@ -1089,7 +1089,7 @@ class PolicyIteration(MDP):
                 #PR = self._computePR() # an apparently uneeded line, and
                 # perhaps harmful in this implementation c.f.
                 # mdp_computePpolicyPRpolicy.m
-                Rpolicy[ind] = self.R[ind, aa]
+                Rpolicy[ind] = self.R[aa][ind]
         
         # self.R cannot be sparse with the code in its current condition, but
         # it should be possible in the future. Also, if R is so big that its
@@ -1958,7 +1958,7 @@ class ValueIterationGS(ValueIteration):
             for s in range(self.S):
                 Q = []
                 for a in range(self.A):
-                    Q.append(float(self.R[s, a]  +
+                    Q.append(float(self.R[a][s]  +
                                    self.discount * self.P[a][s, :] * self.V))
                 
                 self.V[s] = max(Q)
@@ -1984,7 +1984,7 @@ class ValueIterationGS(ValueIteration):
         for s in range(self.S):
             Q = zeros(self.A)
             for a in range(self.A):
-                Q[a] =  self.R[s,a] + self.P[a][s,:] * self.discount * self.V
+                Q[a] =  self.R[a][s] + self.P[a][s,:] * self.discount * self.V
             
             self.V[s] = Q.max()
             self.policy.append(int(Q.argmax()))
