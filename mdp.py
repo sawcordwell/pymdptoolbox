@@ -763,7 +763,7 @@ class MDP(object):
         # convert Ps to matrices
         self.P = []
         for aa in xrange(self.A):
-            self.P.append(matrix(P[aa]))
+            self.P.append(P[aa])
         self.P = tuple(self.P)
         # Set self.R as a tuple of length A, with each element storing an S×1
         # vector array.
@@ -1829,15 +1829,14 @@ class ValueIteration(MDP):
         h = zeros(self.S)
         
         for ss in range(self.S):
-            PP = matrix(zeros((self.S, self.A)))
+            PP = zeros((self.S, self.A))
             for aa in range(self.A):
                 try:
                     PP[:, aa] = self.P[aa][:, ss]
                 except ValueError:
-                    try:
-                        PP[:, aa] = self.P[aa][:, ss].todense()
-                    except:
-                        raise
+                    PP[:, aa] = self.P[aa][:, ss].todense()
+                except:
+                    raise
             # the function "min()" without any arguments finds the
             # minimum of the entire array.
             h[ss] = PP.min()
