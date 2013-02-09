@@ -1796,15 +1796,18 @@ class ValueIteration(MDP):
         
         # initialization of optional arguments
         if initial_value == 0:
-            self.V = matrix(zeros((self.S, 1)))
+            self.V = zeros(self.S)
         else:
-            if not initial_value.shape in ((self.S, ), (self.S, 1),
-                                           (1, self.S)):
-                raise ValueError("PyMDPtoolbox: The initial value must be a "
-                                 "vector of length S.")
+            if len(initial_value) != self.S:
+                raise ValueError("PyMDPtoolbox: The initial value must be "
+                                 "a vector of length S.")
             else:
-                self.V = matrix(initial_value)
-        
+                try:
+                    self.V = initial_value.reshape(self.S)
+                except AttributeError:
+                    self.V = array(initial_value)
+                except:
+                    raise
         if self.discount < 1:
             # compute a bound for the number of iterations and update the
             # stored value of self.max_iter
