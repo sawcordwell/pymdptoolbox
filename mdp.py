@@ -59,7 +59,7 @@ source code use ``mdp.ValueIteration??<ENTER>``.
 Acknowledgments
 ---------------
 This module is modified from the MDPtoolbox (c) 2009 INRA available at 
-`http://www.inra.fr/mia/T/MDPtoolbox/`_.
+http://www.inra.fr/mia/T/MDPtoolbox/.
 
 """
 
@@ -96,7 +96,7 @@ from math import ceil, log, sqrt
 from random import randint, random
 from time import time
 
-from numpy import absolute, array, empty, diag, matrix, mean, mod, multiply
+from numpy import absolute, array, diag, empty, matrix, mean, mod, multiply
 from numpy import ndarray, ones, zeros
 from numpy.random import rand
 from scipy.sparse import csr_matrix as sparse
@@ -542,9 +542,9 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     # generate the transition and reward matrices based on S, A and mask
     if is_sparse:
         # definition of transition matrix : square stochastic matrix
-        P = zeros((A, ), dtype=object)
+        P = empty(A, dtype=object)
         # definition of reward matrix (values between -1 and +1)
-        R = zeros((A, ), dtype=object)
+        R = empty(A, dtype=object)
         for a in range(A):
             if mask.ndim == 3:
                 PP = mask[a, :, :] * rand(S, S)
@@ -719,7 +719,7 @@ class MDP(object):
         
         Q = matrix(empty((self.S, self.A)))
         for aa in range(self.A):
-            Q[:, aa] = self.R[:, aa] + (self.discount * self.P[aa] * V)
+            Q[:, aa] = self.R[aa] + (self.discount * self.P[aa] * V)
         
         # Which way is better?
         # 1. Return, (policy, value)
@@ -749,35 +749,39 @@ class MDP(object):
         # We assume that P and R define a MDP i,e. assumption is that
         # check(P, R) has already been run and doesn't fail.
         #
-        # Make P be an object array with (S, S) shaped array elements. Save it
-        # as a matrix.
-        if P.dtype == object:
-            self.P = P
-            self.A = self.P.shape[0]
-            self.S = self.P[0].shape[0]
-        else: # convert to an object array
-            self.A = P.shape[0]
-            self.S = P.shape[1]
-            self.P = zeros(self.A, dtype=object)
-            for aa in range(self.A):
-                self.P[aa] = matrix(P[aa, :, :])
-        # Make R have the shape (S, A) and save it as a matrix
-        if R.dtype == object:
-            # R is object shaped (A,) with each element shaped (S, S)
-            self.R = matrix(zeros((self.S, self.A)))
-            for aa in range(self.A):
-                self.R[:, aa] = (
-                    multiply(P[aa], R[aa]).sum(1).reshape(self.S, 1))
-        else:
-            if R.ndim == 2:
-                # R already has shape (S, A)
-                self.R = matrix(R)
+        # Set self.P as a tuple of length A, with each element storing an S×S
+        # matrix.
+        self.A = len(P)
+        try:
+            if P.ndim == 3:
+                self.S = P.shape[1]
             else:
-                # R has shape (A, S, S)
-                self.R = matrix(zeros((self.S, self.A)))
-                for aa in range(self.A):
-                    self.R[:, aa] = (
-                        multiply(P[aa], R[aa, :, :]).sum(1).reshape(self.S, 1))
+               self.S = P[0].shape[0]
+        except AttributeError:
+            self.S = P[0].shape[0]
+        except:
+            raise
+        # convert Ps to matrices
+        self.P = []
+        for aa in xrange(self.A):
+            self.P.append(P[aa])
+        self.P = tuple(self.P)
+        # Set self.R as a tuple of length A, with each element storing an S×1
+        # vector array.
+        try:
+            if R.ndim == 2:
+                self.R = []
+                for aa in xrange(self.A):
+                    self.R.append(R[:, aa].reshape(self.S, 1))
+            else:
+                raise AttributeError
+        except AttributeError:
+            self.R = []
+            for aa in xrange(self.A):
+                self.R.append(multiply(P[aa], R[aa]).sum(1).reshape(self.S, 1))
+        except:
+            raise
+        self.R = tuple(self.R)
     
     def iterate(self):
         """Raise error because child classes should implement this function."""
@@ -1086,7 +1090,7 @@ class PolicyIteration(MDP):
                 #PR = self._computePR() # an apparently uneeded line, and
                 # perhaps harmful in this implementation c.f.
                 # mdp_computePpolicyPRpolicy.m
-                Rpolicy[ind] = self.R[ind, aa]
+                Rpolicy[ind] = self.R[aa][ind]
         
         # self.R cannot be sparse with the code in its current condition, but
         # it should be possible in the future. Also, if R is so big that its
@@ -1826,15 +1830,14 @@ class ValueIteration(MDP):
         h = zeros(self.S)
         
         for ss in range(self.S):
-            PP = matrix(zeros((self.S, self.A)))
+            PP = zeros((self.S, self.A))
             for aa in range(self.A):
                 try:
                     PP[:, aa] = self.P[aa][:, ss]
                 except ValueError:
-                    try:
-                        PP[:, aa] = self.P[aa][:, ss].todense()
-                    except:
-                        raise
+                    PP[:, aa] = self.P[aa][:, ss].todense()
+                except:
+                    raise
             # the function "min()" without any arguments finds the
             # minimum of the entire array.
             h[ss] = PP.min()
@@ -1955,7 +1958,7 @@ class ValueIterationGS(ValueIteration):
             for s in range(self.S):
                 Q = []
                 for a in range(self.A):
-                    Q.append(float(self.R[s, a]  +
+                    Q.append(float(self.R[a][s]  +
                                    self.discount * self.P[a][s, :] * self.V))
                 
                 self.V[s] = max(Q)
@@ -1981,7 +1984,7 @@ class ValueIterationGS(ValueIteration):
         for s in range(self.S):
             Q = zeros(self.A)
             for a in range(self.A):
-                Q[a] =  self.R[s,a] + self.P[a][s,:] * self.discount * self.V
+                Q[a] =  self.R[a][s] + self.P[a][s,:] * self.discount * self.V
             
             self.V[s] = Q.max()
             self.policy.append(int(Q.argmax()))
