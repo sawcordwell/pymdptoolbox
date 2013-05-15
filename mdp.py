@@ -100,6 +100,7 @@ from numpy import absolute, array, diag, empty, matrix, mean, mod, multiply
 from numpy import ndarray, ones, zeros
 from numpy.random import rand
 from scipy.sparse import csr_matrix as sparse
+from scipy.sparse import coo_matrix
 
 # __all__ = ["check",  "checkSquareStochastic"]
 
@@ -371,15 +372,15 @@ def checkSquareStochastic(Z):
     
     return(None)
 
-def exampleForest(S=3, r1=4, r2=2, p=0.1):
+def exampleForest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     """Generate a MDP example based on a simple forest management scenario.
     
-    This function is used to generate a transition probability (A×S×S) array P
-    and a reward (S×A) matrix R that model the following problem.
-    A forest is managed by two actions: 'Wait' and 'Cut'.
-    An action is decided each year with first the objective to maintain an old
-    forest for wildlife and second to make money selling cut wood.
-    Each year there is a probability ``p`` that a fire burns the forest.
+    This function is used to generate a transition probability
+    (``A`` × ``S`` × ``S``) array ``P`` and a reward (``S`` × ``A``) matrix
+    ``R`` that model the following problem. A forest is managed by two actions:
+    'Wait' and 'Cut'. An action is decided each year with first the objective
+    to maintain an old forest for wildlife and second to make money selling cut
+    wood. Each year there is a probability ``p`` that a fire burns the forest.
     
     Here is how the problem is modelled.
     Let {1, 2 . . . ``S`` } be the states of the forest, with ``S`` being the 
@@ -471,12 +472,27 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     #             | .  .        .    |                  | . .          . |
     #             | .  .         1-p |                  | . .          . |
     #             | p  0  0....0 1-p |                  | 1 0..........0 |
-    P = zeros((2, S, S))
-    P[0, :, :] = (1 - p) * diag(ones(S - 1), 1)
-    P[0, :, 0] = p
-    P[0, S - 1, S - 1] = (1 - p)
-    P[1, :, :] = zeros((S, S))
-    P[1, :, 0] = 1
+    if is_sparse:
+        P = [{"row":[],"col":[],"val":[]}, {"row":[],"col":[],"val":[]}]
+        P[0]["row"] = range(S) * 2
+        P[0]["col"] = [0] * S
+        P[0]["col"].extend(range(1, S))
+        P[0]["col"].append(S - 1)
+        P[0]["val"] = [0.1] * S
+        P[0]["val"].extend([0.9] * S)
+        P[1]["row"] = range(S)
+        P[1]["col"] = [0] * S
+        P[1]["val"] = [1] * S
+        for x in range(2):
+            P[x] = coo_matrix((P[x]["val"], (P[x]["row"], P[x]["col"])),
+                              shape=(S,S)).tocsr()
+    else:
+        P = zeros((2, S, S))
+        P[0, :, :] = (1 - p) * diag(ones(S - 1), 1)
+        P[0, :, 0] = p
+        P[0, S - 1, S - 1] = (1 - p)
+        P[1, :, :] = zeros((S, S))
+        P[1, :, 0] = 1
     # Definition of Reward matrix R1 associated to action Wait and 
     # R2 associated to action Cut
     #           | 0  |                   | 0  |
