@@ -93,12 +93,12 @@ http://www.inra.fr/mia/T/MDPtoolbox/.
 # POSSIBILITY OF SUCH DAMAGE.
 
 from math import ceil, log, sqrt
-from random import randint, random
+from random import random
 from time import time
 
 from numpy import absolute, array, diag, empty, matrix, mean, mod, multiply
 from numpy import ndarray, ones, zeros
-from numpy.random import rand
+from numpy.random import rand, randint
 from scipy.sparse import csr_matrix as sparse
 from scipy.sparse import coo_matrix
 
@@ -562,7 +562,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                 PP = mask[a, :, :] * rand(S, S)
                 for s in range(S):
                     if mask[a, s, :].sum() == 0:
-                       PP[s, randint(0, S - 1)] = 1
+                       PP[s, randint(0, S)] = 1
                     PP[s, :] = PP[s, :] / PP[s, :].sum()
                 P[a] = sparse(PP)
                 R[a] = sparse(mask[a, :, :] * (2*rand(S, S) - ones((S, S))))
@@ -570,7 +570,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                 PP = mask * rand(S, S)
                 for s in range(S):
                     if mask[s, :].sum() == 0:
-                        PP[s, randint(0, S - 1)] = 1
+                        PP[s, randint(0, S)] = 1
                     PP[s, :] = PP[s, :] / PP[s, :].sum()
                 P[a] = sparse(PP)
                 R[a] = sparse(mask * (2*rand(S, S) - ones((S, S))))
@@ -585,7 +585,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                 P[a, :, :] = mask[a] * rand(S, S)
                 for s in range(S):
                     if mask[a, s, :].sum() == 0:
-                        P[a, s, randint(0, S - 1)] = 1
+                        P[a, s, randint(0, S)] = 1
                     P[a, s, :] = P[a, s, :] / P[a, s, :].sum()
                 R[a, :, :] = (mask[a, :, :] * (2*rand(S, S) -
                               ones((S, S), dtype=int)))
@@ -593,7 +593,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                 P[a, :, :] = mask * rand(S, S)
                 for s in range(S):
                     if mask[a, s, :].sum() == 0:
-                        P[a, s, randint(0, S - 1)] = 1
+                        P[a, s, randint(0, S)] = 1
                     P[a, s, :] = P[a, s, :] / P[a, s, :].sum()
                 R[a, :, :] = mask * (2*rand(S, S) - ones((S, S), dtype=int))
     # we want to return the generated transition and reward matrices
@@ -1490,13 +1490,13 @@ class QLearning(MDP):
         self.time = time()
         
         # initial state choice
-        s = randint(0, self.S - 1)
+        s = randint(0, self.S)
         
         for n in range(1, self.max_iter + 1):
             
             # Reinitialisation of trajectories every 100 transitions
             if ((n % 100) == 0):
-                s = randint(0, self.S - 1)
+                s = randint(0, self.S)
             
             # Action choice : greedy with increasing probability
             # probability 1-(1/log(n+2)) can be changed
@@ -1505,7 +1505,7 @@ class QLearning(MDP):
                 # optimal_action = self.Q[s, :].max()
                 a = self.Q[s, :].argmax()
             else:
-                a = randint(0, self.A - 1)
+                a = randint(0, self.A)
             
             # Simulating next state s_new and reward associated to <s,s_new,a>
             p_s_new = random()
