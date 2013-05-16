@@ -475,11 +475,8 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     if is_sparse:
         P = [{"row":[],"col":[],"val":[]}, {"row":[],"col":[],"val":[]}]
         P[0]["row"] = range(S) * 2
-        P[0]["col"] = [0] * S
-        P[0]["col"].extend(range(1, S))
-        P[0]["col"].append(S - 1)
-        P[0]["val"] = [0.1] * S
-        P[0]["val"].extend([0.9] * S)
+        P[0]["col"] = [0] * S + range(1, S) + [S - 1]
+        P[0]["val"] = [0.1] * S + [0.9] * S
         P[1]["row"] = range(S)
         P[1]["col"] = [0] * S
         P[1]["val"] = [1] * S
