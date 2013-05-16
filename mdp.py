@@ -95,12 +95,12 @@ http://www.inra.fr/mia/T/MDPtoolbox/.
 import sqlite3
 
 from math import ceil, log, sqrt
-from random import randint, random
+from random import random
 from time import time
 
 from numpy import absolute, arange, array, diag, empty, matrix, mean, mod
 from numpy import multiply, ndarray, ones, zeros
-from numpy.random import permutation, rand
+from numpy.random import permutation, rand, randint
 from scipy.sparse import csr_matrix as sparse
 
 # __all__ = ["check",  "checkSquareStochastic"]
@@ -549,13 +549,14 @@ def exampleRand(S, A, is_sparse=False, is_sqlite=False, mask=None):
         with conn:
             c = conn.cursor()
             for a in range(A):
-                c.execute("CREATE TABLE ")
+                c.execute("CREATE TABLE p%s (row INTEGER, col INTEGER, val REAL)" % a)
                 for s in range(S):
-                    n = randint(1, int(S/3) - 1)
-                    row = tuple([s] * n)
-                    col = tuple(permutation(arange(S))[0:n])
+                    n = randint(1, S//3)
+                    row = (s,) * n
+                    col = tuple(permutation(arange(S))[0:n].tolist())
                     val = rand(n)
-                    val = tuple(val / val.sum())
+                    # tuple(np.array.tolist()) is faster than tuple(np.array)
+                    val = tuple((val / val.sum()).tolist())
     elif is_sparse:
         # definition of transition matrix : square stochastic matrix
         P = empty(A, dtype=object)
