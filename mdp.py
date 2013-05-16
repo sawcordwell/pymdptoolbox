@@ -92,13 +92,15 @@ http://www.inra.fr/mia/T/MDPtoolbox/.
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sqlite3
+
 from math import ceil, log, sqrt
 from random import randint, random
 from time import time
 
-from numpy import absolute, array, diag, empty, matrix, mean, mod, multiply
-from numpy import ndarray, ones, zeros
-from numpy.random import rand
+from numpy import absolute, arange, array, diag, empty, matrix, mean, mod
+from numpy import multiply, ndarray, ones, zeros
+from numpy.random import permutation, rand
 from scipy.sparse import csr_matrix as sparse
 
 # __all__ = ["check",  "checkSquareStochastic"]
@@ -493,7 +495,7 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     # we want to return the generated transition and reward matrices
     return (P, R)
 
-def exampleRand(S, A, is_sparse=False, mask=None):
+def exampleRand(S, A, is_sparse=False, is_sqlite=False, mask=None):
     """Generate a random Markov Decision Process.
     
     Parameters
@@ -540,7 +542,21 @@ def exampleRand(S, A, is_sparse=False, mask=None):
         except AttributeError:
             raise TypeError(mdperr["mask_numpy"])
     # generate the transition and reward matrices based on S, A and mask
-    if is_sparse:
+    if is_sqlite:
+        # to be usefully represented as a sparse matrix, the number of nonzero
+        # entries should be less than 1/3 of dimesion of the matrix, so (SxS)/3
+        conn = sqlite3.connect("mdp.db")
+        with conn:
+            c = conn.cursor()
+            for a in range(A):
+                c.execute("CREATE TABLE ")
+                for s in range(S):
+                    n = randint(1, int(S/3) - 1)
+                    row = tuple([s] * n)
+                    col = tuple(permutation(arange(S))[0:n])
+                    val = rand(n)
+                    val = tuple(val / val.sum())
+    elif is_sparse:
         # definition of transition matrix : square stochastic matrix
         P = empty(A, dtype=object)
         # definition of reward matrix (values between -1 and +1)
