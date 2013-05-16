@@ -473,16 +473,15 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     #             | .  .         1-p |                  | . .          . |
     #             | p  0  0....0 1-p |                  | 1 0..........0 |
     if is_sparse:
-        P = [{"row":[],"col":[],"val":[]}, {"row":[],"col":[],"val":[]}]
-        P[0]["row"] = range(S) * 2
-        P[0]["col"] = [0] * S + range(1, S) + [S - 1]
-        P[0]["val"] = [0.1] * S + [0.9] * S
-        P[1]["row"] = range(S)
-        P[1]["col"] = [0] * S
-        P[1]["val"] = [1] * S
-        for x in range(2):
-            P[x] = coo_matrix((P[x]["val"], (P[x]["row"], P[x]["col"])),
-                              shape=(S,S)).tocsr()
+        P = []
+        rows = range(S) * 2
+        cols = [0] * S + range(1, S) + [S - 1]
+        vals = [0.1] * S + [0.9] * S
+        P.append(coo_matrix((vals, (rows, cols)), shape=(S,S)).tocsr())
+        rows = range(S)
+        cols = [0] * S
+        vals = [1] * S
+        P.append(coo_matrix((vals, (rows, cols)), shape=(S,S)).tocsr())
     else:
         P = zeros((2, S, S))
         P[0, :, :] = (1 - p) * diag(ones(S - 1), 1)
