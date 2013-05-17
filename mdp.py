@@ -545,19 +545,25 @@ def exampleRand(S, A, is_sparse=False, is_sqlite=False, mask=None):
     if is_sqlite:
         # to be usefully represented as a sparse matrix, the number of nonzero
         # entries should be less than 1/3 of dimesion of the matrix, so (SxS)/3
-        conn = sqlite3.connect(":memory:")
+        conn = sqlite3.connect("transition.db")
         with conn:
             c = conn.cursor()
+            c.executescript('''
+                CREATE TABLE info (name TEXT, value INTEGER);
+                INSERT INTO info VALUES('states', %s);
+                INSERT INTO info VALUES('actions', %s);''' % (S, A))
             for a in range(A):
-                c.execute("CREATE TABLE p%s (row INTEGER, col INTEGER, val REAL)" % a)
+                c.execute("CREATE TABLE transition%s (row INTEGER, col " \
+                          "INTEGER, val REAL)" % a)
                 for s in xrange(S):
                     n = randint(1, S//3)
-                    row = s*ones(n, dtype=int)
-                    col = permutation(arange(S))[0:n]
+                    row = (s*ones(n, dtype=int)).tolist()
+                    col = (permutation(arange(S))[0:n]).tolist()
                     val = rand(n)
-                    val = val / val.sum()
-                    cmd = "INSERT INTO p%s VALUES(?, ?, ?);" % a
+                    val = (val / val.sum()).tolist()
+                    cmd = "INSERT INTO transition%s VALUES(?, ?, ?)" % a
                     c.executemany(cmd, zip(row, col, val))
+        return
     elif is_sparse:
         # definition of transition matrix : square stochastic matrix
         P = empty(A, dtype=object)
