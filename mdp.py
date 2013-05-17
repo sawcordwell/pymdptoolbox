@@ -548,13 +548,20 @@ def exampleRand(S, A, is_sparse=False, is_sqlite=False, mask=None):
         conn = sqlite3.connect("transition.db")
         with conn:
             c = conn.cursor()
-            c.executescript('''
+            cmd = '''
                 CREATE TABLE info (name TEXT, value INTEGER);
                 INSERT INTO info VALUES('states', %s);
-                INSERT INTO info VALUES('actions', %s);''' % (S, A))
+                INSERT INTO info VALUES('actions', %s);''' % (S, A)
+            c.executescript(cmd)
             for a in range(A):
-                c.execute("CREATE TABLE transition%s (row INTEGER, col " \
-                          "INTEGER, val REAL)" % a)
+                cmd = '''
+                    CREATE TABLE transition%s (row INTEGER, "col INTEGER,
+                                               val REAL);
+                    CREATE TABLE reward%s (val REAL);''' % (a, a)
+                c.executescript(cmd)
+                reward = rand(S).tolist()
+                cmd = "INSERT INTO reward%s VALUES(?)" % a
+                c.executemany(cmd, reward)
                 for s in xrange(S):
                     n = randint(1, S//3)
                     row = (s*ones(n, dtype=int)).tolist()
