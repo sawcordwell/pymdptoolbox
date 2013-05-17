@@ -93,6 +93,7 @@ http://www.inra.fr/mia/T/MDPtoolbox/.
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sqlite3
+import os
 
 from math import ceil, log, sqrt
 from random import random
@@ -545,7 +546,12 @@ def exampleRand(S, A, is_sparse=False, is_sqlite=False, mask=None):
     if is_sqlite:
         # to be usefully represented as a sparse matrix, the number of nonzero
         # entries should be less than 1/3 of dimesion of the matrix, so (SxS)/3
-        conn = sqlite3.connect("transition.db")
+        db = "MDP.db"
+        if os.path.exists(db):
+            raise StandardError("Database already exists, not overwriting. " \
+                                "Delete '" + db + "' if you want to continue.")
+        else:
+            conn = sqlite3.connect(db)
         with conn:
             c = conn.cursor()
             cmd = '''
@@ -555,13 +561,13 @@ def exampleRand(S, A, is_sparse=False, is_sqlite=False, mask=None):
             c.executescript(cmd)
             for a in range(A):
                 cmd = '''
-                    CREATE TABLE transition%s (row INTEGER, "col INTEGER,
+                    CREATE TABLE transition%s (row INTEGER, col INTEGER,
                                                val REAL);
                     CREATE TABLE reward%s (val REAL);''' % (a, a)
                 c.executescript(cmd)
                 reward = rand(S).tolist()
                 cmd = "INSERT INTO reward%s VALUES(?)" % a
-                c.executemany(cmd, reward)
+                c.executemany(cmd, zip(reward))
                 for s in xrange(S):
                     n = randint(1, S//3)
                     row = (s*ones(n, dtype=int)).tolist()
