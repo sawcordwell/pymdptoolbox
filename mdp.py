@@ -540,10 +540,14 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     # if the user hasn't specified a mask, then we will make a random one now
     if mask is None:
         mask = rand(A, S, S)
-        for a in range(A):
+        if is_sparse:
+            # create a mask that has roughly two thirds of the cells set to 0
+            mask[mask <= 2/3] = 0
+            mask[mask > 2/3] = 1
+        else:
             r = random()
-            mask[a][mask[a, :, :] < r] = 0
-            mask[a][mask[a, :, :] >= r] = 1
+            mask[mask < r] = 0
+            mask[mask >= r] = 1
     else:
         # the mask needs to be SxS or AxSxS
         try:
