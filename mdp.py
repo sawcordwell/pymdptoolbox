@@ -542,8 +542,9 @@ def exampleRand(S, A, is_sparse=False, mask=None):
         mask = rand(A, S, S)
         if is_sparse:
             # create a mask that has roughly two thirds of the cells set to 0
-            mask[mask <= 2/3] = 0
-            mask[mask > 2/3] = 1
+            #for a in range(A):
+            mask[mask <= 2/3.0] = 0
+            mask[mask > 2/3.0] = 1
         else:
             r = random()
             mask[mask < r] = 0
@@ -562,9 +563,9 @@ def exampleRand(S, A, is_sparse=False, mask=None):
         # definition of reward matrix (values between -1 and +1)
         R = [None] * A
         for a in xrange(A):
-            try:
-                m = mask[a, :, :]
-            except IndexError:
+            if mask.shape == (A, S, S):
+                m = mask[a] # mask[a, :, :]
+            else:
                 m = mask
             # it may be more efficient to implement this by constructing lists
             # of rows, columns and values then creating a coo_matrix, but this
@@ -572,18 +573,24 @@ def exampleRand(S, A, is_sparse=False, mask=None):
             PP = dok_matrix((S, S))
             RR = dok_matrix((S, S))
             for s in xrange(S):
-                n = int(m[s,:].sum())
+                n = int(m[s].sum()) # m[s, :]
                 if n == 0:
                     PP[s, randint(0, S)] = 1
                 else:
                     rows = s * ones(n, dtype=int)
-                    cols = where(m[s,:])[0]
+                    cols = where(m[s])[0] # m[s, :]
                     vals = rand(n)
                     vals = vals / vals.sum()
                     reward = 2*rand(n) - ones(n)
+                    # I want to do this: PP[rows, cols] = vals, but it doesn't
+                    # seem to work, as val[-1] is stored as the value for each
+                    # row, column pair. Therefore the loop is needed.
                     for x in xrange(n):
                         PP[rows[x], cols[x]] = vals[x]
                         RR[rows[x], cols[x]] = reward[x]
+            # PP.tocsr() takes the same amount of time as PP.tocoo().tocsr()
+            # so constructing PP and RR as coo_matrix in the first place is
+            # probably "better"
             P[a] = PP.tocsr()
             R[a] = RR.tocsr()
     else:
