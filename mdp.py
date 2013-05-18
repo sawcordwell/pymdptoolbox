@@ -50,6 +50,8 @@ Code snippets are indicated by three greater-than signs::
 
   >>> x = 17
   >>> x = x + 1
+  >>> x
+  18
 
 The documentation can be displayed with
 `IPython <http://ipython.scipy.org>`_. For example, to view the docstring of
@@ -755,7 +757,7 @@ class MDP(object):
         
         # Which way is better?
         # 1. Return, (policy, value)
-        return (Q.argmax(axis=1), Q.max(axis=1))
+        return (Q.argmax(axis=0), Q.max(axis=0))
         # 2. update self.policy and self.V directly
         # self.V = Q.max(axis=1)
         # self.policy = Q.argmax(axis=1)
@@ -1739,7 +1741,7 @@ class ValueIteration(MDP):
         Greater than 0, optional (default: computed)
     initial_value : array, optional
         starting value function
-        optional (default: zeros(S,1)).
+        optional (default: zeros(S,)).
     
     Data Attributes
     ---------------
@@ -1804,7 +1806,7 @@ class ValueIteration(MDP):
     >>> import mdp
     >>> import numpy as np
     >>> from scipy.sparse import csr_matrix as sparse
-    >>> P = np.empty(2, dtype=object)
+    >>> P = [None] * 2
     >>> P[0] = sparse([[0.5, 0.5],[0.8, 0.2]])
     >>> P[1] = sparse([[0, 1],[0.1, 0.9]])
     >>> R = np.array([[5, 10], [-1, 2]])
@@ -1875,12 +1877,12 @@ class ValueIteration(MDP):
         h = zeros(self.S)
         
         for ss in range(self.S):
-            PP = zeros((self.S, self.A))
+            PP = zeros((self.A, self.S))
             for aa in range(self.A):
                 try:
-                    PP[:, aa] = self.P[aa][:, ss]
+                    PP[aa] = self.P[aa][:, ss]
                 except ValueError:
-                    PP[:, aa] = self.P[aa][:, ss].todense()
+                    PP[aa] = self.P[aa][:, ss].todense().A1
                 except:
                     raise
             # the function "min()" without any arguments finds the
@@ -1933,8 +1935,8 @@ class ValueIteration(MDP):
                           "iteration condition.")
         
         # store value and policy as tuples
-        self.V = tuple(self.V.getA1().tolist())
-        self.policy = tuple(self.policy.getA1().tolist())
+        self.V = tuple(self.V.tolist())
+        self.policy = tuple(self.policy.tolist())
         
         self.time = time() - self.time
 
