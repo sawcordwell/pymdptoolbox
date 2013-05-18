@@ -97,10 +97,10 @@ from random import random
 from time import time
 
 from numpy import absolute, array, diag, empty, matrix, mean, mod, multiply
-from numpy import ndarray, ones, zeros
+from numpy import ndarray, ones, where, zeros
 from numpy.random import rand, randint
 from scipy.sparse import csr_matrix as sparse
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, dok_matrix
 
 # __all__ = ["check",  "checkSquareStochastic"]
 
@@ -558,27 +558,34 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     # generate the transition and reward matrices based on S, A and mask
     if is_sparse:
         # definition of transition matrix : square stochastic matrix
-        P = empty(A, dtype=object)
+        P = [None] * A
         # definition of reward matrix (values between -1 and +1)
-        R = empty(A, dtype=object)
-        for a in range(A):
-            if mask.ndim == 3:
-                PP = mask[a, :, :] * rand(S, S)
-                for s in range(S):
-                    if mask[a, s, :].sum() == 0:
-                       PP[s, randint(0, S)] = 1
-                    PP[s, :] = PP[s, :] / PP[s, :].sum()
-                P[a] = sparse(PP)
-                R[a] = sparse(mask[a, :, :] * (2*rand(S, S) - ones((S, S))))
-            else:
-                PP = mask * rand(S, S)
-                for s in range(S):
-                    if mask[s, :].sum() == 0:
-                        PP[s, randint(0, S)] = 1
-                    PP[s, :] = PP[s, :] / PP[s, :].sum()
-                P[a] = sparse(PP)
-                R[a] = sparse(mask * (2*rand(S, S) - ones((S, S))))
-                
+        R = [None] * A
+        for a in xrange(A):
+            try:
+                m = mask[a, :, :]
+            except IndexError:
+                m = mask
+            # it may be more efficient to implement this by constructing lists
+            # of rows, columns and values then creating a coo_matrix, but this
+            # works for now
+            PP = dok_matrix((S, S))
+            RR = dok_matrix((S, S))
+            for s in xrange(S):
+                n = int(m[s,:].sum())
+                if n == 0:
+                    PP[s, randint(0, S)] = 1
+                else:
+                    rows = s * ones(n, dtype=int)
+                    cols = where(m[s,:])[0]
+                    vals = rand(n)
+                    vals = vals / vals.sum()
+                    reward = 2*rand(n) - ones(n)
+                    for x in xrange(n):
+                        PP[rows[x], cols[x]] = vals[x]
+                        RR[rows[x], cols[x]] = reward[n]
+            P[a] = PP.tocsr()
+            R[a] = RR.tocsr()
     else:
         # definition of transition matrix : square stochastic matrix
         P = zeros((A, S, S))
