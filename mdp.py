@@ -96,7 +96,7 @@ from math import ceil, log, sqrt
 from random import randint, random
 from time import time
 
-from numpy import absolute, array, diag, empty, matrix, mean, mod, multiply
+from numpy import absolute, array, diag, empty, mean, mod, multiply
 from numpy import ndarray, ones, zeros
 from numpy.random import rand
 from scipy.sparse import csr_matrix as sparse
