@@ -93,13 +93,14 @@ http://www.inra.fr/mia/T/MDPtoolbox/.
 # POSSIBILITY OF SUCH DAMAGE.
 
 from math import ceil, log, sqrt
-from random import randint, random
+from random import random
 from time import time
 
 from numpy import absolute, array, diag, empty, mean, mod, multiply
-from numpy import ndarray, ones, zeros
-from numpy.random import rand
+from numpy import ndarray, ones, where, zeros
+from numpy.random import rand, randint
 from scipy.sparse import csr_matrix as sparse
+from scipy.sparse import coo_matrix, dok_matrix
 
 # __all__ = ["check",  "checkSquareStochastic"]
 
@@ -371,15 +372,15 @@ def checkSquareStochastic(Z):
     
     return(None)
 
-def exampleForest(S=3, r1=4, r2=2, p=0.1):
+def exampleForest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     """Generate a MDP example based on a simple forest management scenario.
     
-    This function is used to generate a transition probability (A×S×S) array P
-    and a reward (S×A) matrix R that model the following problem.
-    A forest is managed by two actions: 'Wait' and 'Cut'.
-    An action is decided each year with first the objective to maintain an old
-    forest for wildlife and second to make money selling cut wood.
-    Each year there is a probability ``p`` that a fire burns the forest.
+    This function is used to generate a transition probability
+    (``A`` × ``S`` × ``S``) array ``P`` and a reward (``S`` × ``A``) matrix
+    ``R`` that model the following problem. A forest is managed by two actions:
+    'Wait' and 'Cut'. An action is decided each year with first the objective
+    to maintain an old forest for wildlife and second to make money selling cut
+    wood. Each year there is a probability ``p`` that a fire burns the forest.
     
     Here is how the problem is modelled.
     Let {1, 2 . . . ``S`` } be the states of the forest, with ``S`` being the 
@@ -471,12 +472,23 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     #             | .  .        .    |                  | . .          . |
     #             | .  .         1-p |                  | . .          . |
     #             | p  0  0....0 1-p |                  | 1 0..........0 |
-    P = zeros((2, S, S))
-    P[0, :, :] = (1 - p) * diag(ones(S - 1), 1)
-    P[0, :, 0] = p
-    P[0, S - 1, S - 1] = (1 - p)
-    P[1, :, :] = zeros((S, S))
-    P[1, :, 0] = 1
+    if is_sparse:
+        P = []
+        rows = range(S) * 2
+        cols = [0] * S + range(1, S) + [S - 1]
+        vals = [0.1] * S + [0.9] * S
+        P.append(coo_matrix((vals, (rows, cols)), shape=(S,S)).tocsr())
+        rows = range(S)
+        cols = [0] * S
+        vals = [1] * S
+        P.append(coo_matrix((vals, (rows, cols)), shape=(S,S)).tocsr())
+    else:
+        P = zeros((2, S, S))
+        P[0, :, :] = (1 - p) * diag(ones(S - 1), 1)
+        P[0, :, 0] = p
+        P[0, S - 1, S - 1] = (1 - p)
+        P[1, :, :] = zeros((S, S))
+        P[1, :, 0] = 1
     # Definition of Reward matrix R1 associated to action Wait and 
     # R2 associated to action Cut
     #           | 0  |                   | 0  |
@@ -528,10 +540,15 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     # if the user hasn't specified a mask, then we will make a random one now
     if mask is None:
         mask = rand(A, S, S)
-        for a in range(A):
+        if is_sparse:
+            # create a mask that has roughly two thirds of the cells set to 0
+            #for a in range(A):
+            mask[mask <= 2/3.0] = 0
+            mask[mask > 2/3.0] = 1
+        else:
             r = random()
-            mask[a][mask[a, :, :] < r] = 0
-            mask[a][mask[a, :, :] >= r] = 1
+            mask[mask < r] = 0
+            mask[mask >= r] = 1
     else:
         # the mask needs to be SxS or AxSxS
         try:
@@ -542,28 +559,40 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     # generate the transition and reward matrices based on S, A and mask
     if is_sparse:
         # definition of transition matrix : square stochastic matrix
-        P = []
+        P = [None] * A
         # definition of reward matrix (values between -1 and +1)
-        R = []
+        R = [None] * A
         for a in xrange(A):
-            if mask.ndim == 3:
-                PP = mask[a, :, :] * rand(S, S)
-                for s in range(S):
-                    if mask[a, s, :].sum() == 0:
-                       PP[s, randint(0, S - 1)] = 1
-                    PP[s, :] = PP[s, :] / PP[s, :].sum()
-                P.append(sparse(PP))
-                R.append(sparse(mask[a] * (2*rand(S, S) - ones((S, S)))))
+            if mask.shape == (A, S, S):
+                m = mask[a] # mask[a, :, :]
             else:
-                PP = mask * rand(S, S)
-                for s in range(S):
-                    if mask[s, :].sum() == 0:
-                        PP[s, randint(0, S - 1)] = 1
-                    PP[s, :] = PP[s, :] / PP[s, :].sum()
-                P.append(sparse(PP))
-                R.append(sparse(mask * (2*rand(S, S) - ones((S, S)))))
-        P = tuple(P)
-        R = tuple(R)
+                m = mask
+            # it may be more efficient to implement this by constructing lists
+            # of rows, columns and values then creating a coo_matrix, but this
+            # works for now
+            PP = dok_matrix((S, S))
+            RR = dok_matrix((S, S))
+            for s in xrange(S):
+                n = int(m[s].sum()) # m[s, :]
+                if n == 0:
+                    PP[s, randint(0, S)] = 1
+                else:
+                    rows = s * ones(n, dtype=int)
+                    cols = where(m[s])[0] # m[s, :]
+                    vals = rand(n)
+                    vals = vals / vals.sum()
+                    reward = 2*rand(n) - ones(n)
+                    # I want to do this: PP[rows, cols] = vals, but it doesn't
+                    # seem to work, as val[-1] is stored as the value for each
+                    # row, column pair. Therefore the loop is needed.
+                    for x in xrange(n):
+                        PP[rows[x], cols[x]] = vals[x]
+                        RR[rows[x], cols[x]] = reward[x]
+            # PP.tocsr() takes the same amount of time as PP.tocoo().tocsr()
+            # so constructing PP and RR as coo_matrix in the first place is
+            # probably "better"
+            P[a] = PP.tocsr()
+            R[a] = RR.tocsr()
     else:
         # definition of transition matrix : square stochastic matrix
         P = zeros((A, S, S))
@@ -574,7 +603,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                 P[a, :, :] = mask[a] * rand(S, S)
                 for s in range(S):
                     if mask[a, s, :].sum() == 0:
-                        P[a, s, randint(0, S - 1)] = 1
+                        P[a, s, randint(0, S)] = 1
                     P[a, s, :] = P[a, s, :] / P[a, s, :].sum()
                 R[a, :, :] = (mask[a, :, :] * (2*rand(S, S) -
                               ones((S, S), dtype=int)))
@@ -582,7 +611,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                 P[a, :, :] = mask * rand(S, S)
                 for s in range(S):
                     if mask[a, s, :].sum() == 0:
-                        P[a, s, randint(0, S - 1)] = 1
+                        P[a, s, randint(0, S)] = 1
                     P[a, s, :] = P[a, s, :] / P[a, s, :].sum()
                 R[a, :, :] = mask * (2*rand(S, S) - ones((S, S), dtype=int))
     # we want to return the generated transition and reward matrices
@@ -720,9 +749,9 @@ class MDP(object):
             except AttributeError:
                 raise TypeError("bellman: V must be a numpy array or matrix.")
         
-        Q = empty((self.S, self.A))
+        Q = empty((self.A, self.S))
         for aa in range(self.A):
-            Q[:, aa] = self.R[aa] + self.discount * self.P[aa].dot(V)
+            Q[aa] = self.R[aa] + self.discount * self.P[aa].dot(V)
         
         # Which way is better?
         # 1. Return, (policy, value)
@@ -1151,7 +1180,7 @@ class PolicyIteration(MDP):
         if (type(V0) in (int, float)) and (V0 == 0):
             policy_V = zeros(self.S)
         else:
-            if (type(V0) in (ndarray, matrix)) and (V0.shape == (self.S, 1)):
+            if (type(V0) in (ndarray)) and (V0.shape == (self.S, 1)):
                 policy_V = V0
             else:
                 raise ValueError("PyMDPtoolbox: V0 vector/array type not "
@@ -1337,7 +1366,7 @@ class PolicyIterationModified(PolicyIteration):
         self.epsilon = epsilon
         
         if discount == 1:
-            self.V = matrix(zeros((self.S, 1)))
+            self.V = zeros((self.S, 1))
         else:
             # min(min()) is not right
             self.V = 1 / (1 - discount) * self.R.min() * ones((self.S, 1))
@@ -1491,13 +1520,13 @@ class QLearning(MDP):
         self.time = time()
         
         # initial state choice
-        s = randint(0, self.S - 1)
+        s = randint(0, self.S)
         
         for n in range(1, self.max_iter + 1):
             
             # Reinitialisation of trajectories every 100 transitions
             if ((n % 100) == 0):
-                s = randint(0, self.S - 1)
+                s = randint(0, self.S)
             
             # Action choice : greedy with increasing probability
             # probability 1-(1/log(n+2)) can be changed
@@ -1506,7 +1535,7 @@ class QLearning(MDP):
                 # optimal_action = self.Q[s, :].max()
                 a = self.Q[s, :].argmax()
             else:
-                a = randint(0, self.A - 1)
+                a = randint(0, self.A)
             
             # Simulating next state s_new and reward associated to <s,s_new,a>
             p_s_new = random()
@@ -1619,7 +1648,7 @@ class RelativeValueIteration(MDP):
         self.epsilon = epsilon
         self.discount = 1
         
-        self.V = matrix(zeros((self.S, 1)))
+        self.V = zeros((self.S, 1))
         self.gain = 0 # self.U[self.S]
         
         self.average_reward = None
