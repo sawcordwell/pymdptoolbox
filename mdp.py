@@ -583,7 +583,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                     reward = 2*rand(n) - ones(n)
                     for x in xrange(n):
                         PP[rows[x], cols[x]] = vals[x]
-                        RR[rows[x], cols[x]] = reward[n]
+                        RR[rows[x], cols[x]] = reward[x]
             P[a] = PP.tocsr()
             R[a] = RR.tocsr()
     else:
