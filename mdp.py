@@ -570,7 +570,11 @@ def exampleRand(S, A, is_sparse=False, is_sqlite=False, mask=None):
                 c.executemany(cmd, zip(reward))
                 for s in xrange(S):
                     n = randint(1, S//3)
-                    row = (s*ones(n, dtype=int)).tolist()
+                    # timeit [90894] * 20330
+                    # ==> 10000 loops, best of 3: 141 us per loop
+                    # timeit (90894*np.ones(20330, dtype=int)).tolist()
+                    # ==> 1000 loops, best of 3: 548 us per loop
+                    row = [s] * n
                     col = (permutation(arange(S))[0:n]).tolist()
                     val = rand(n)
                     val = (val / val.sum()).tolist()
