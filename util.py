@@ -2,7 +2,7 @@
 
 import sqlite3
 
-class DatabaseManager(object):
+class MDPSQLite(object):
     """"""
     
     def __init__(self, db, discount, initial_V=0):
