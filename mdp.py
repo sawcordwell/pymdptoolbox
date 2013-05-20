@@ -562,12 +562,13 @@ def exampleRand(S, A, is_sparse=False, is_sqlite=False, mask=None):
             for a in range(A):
                 cmd = '''
                     CREATE TABLE transition%s (row INTEGER, col INTEGER,
-                                               val REAL);
-                    CREATE TABLE reward%s (val REAL);''' % (a, a)
+                                               prob REAL);
+                    CREATE TABLE reward%s (state INTEGER, val REAL);''' % (a, a)
                 c.executescript(cmd)
+                states = range(S)
                 reward = rand(S).tolist()
-                cmd = "INSERT INTO reward%s VALUES(?)" % a
-                c.executemany(cmd, zip(reward))
+                cmd = "INSERT INTO reward%s VALUES(?, ?)" % a
+                c.executemany(cmd, zip(states, reward))
                 for s in xrange(S):
                     n = randint(1, S//3)
                     # timeit [90894] * 20330
