@@ -8,6 +8,9 @@ from time import time
 from numpy import arange
 from numpy.random import permutation, random, randint
 
+def exampleForest(S=3, r1=4, r2=2, p=0.1):
+    pass
+
 def exampleRand(S, A):
     """WARNING: This will delete a database with the same name as 'db'."""
     db = "MDP-%sx%s.db" % (S, A)
