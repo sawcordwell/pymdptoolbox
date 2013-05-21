@@ -9,7 +9,43 @@ from numpy import arange
 from numpy.random import permutation, random, randint
 
 def exampleForest(S=3, r1=4, r2=2, p=0.1):
-    pass
+    db = "MDP-forest-%s.db" % S
+    if os.path.exists(db):
+        os.remove(db)
+    conn = sqlite3.connect(db)
+    with conn:
+        c = conn.cursor()
+        cmd = '''
+            CREATE TABLE info (name TEXT, value INTEGER);
+            INSERT INTO info VALUES('states', %s);
+            INSERT INTO info VALUES('actions', 2);''' % S
+        c.executescript(cmd)
+        cmd = '''
+            CREATE TABLE transition1 (row INTEGER, col INTEGER, prob REAL);
+            CREATE TABLE reward1 (state INTEGER PRIMARY KEY ASC, val REAL);
+            CREATE TABLE transition2 (row INTEGER, col INTEGER, prob REAL);
+            CREATE TABLE reward2 (state INTEGER PRIMARY KEY ASC, val REAL);'''
+        c.executescript(cmd)
+        rows = range(1, S + 1) * 2
+        cols = [1] * S + range(2, S + 1) + [S]
+        vals = [p] * S + [1-p] * S
+        cmd = "INSERT INTO transition1 VALUES(?, ?, ?)"
+        c.executemany(cmd, zip(rows, cols, vals))
+        rows = range(1, S + 1)
+        cols = [1] * S
+        vals = [1] * S
+        cmd = "INSERT INTO transition2 VALUES(?, ?, ?)"
+        c.executemany(cmd, zip(rows, cols, vals))
+        cmd = "INSERT INTO reward1(val) VALUES(?)"
+        c.executemany(cmd, zip([0] * (S - 1) + [r1]))
+        cmd = "INSERT INTO reward2(val) VALUES(?)"
+        c.executemany(cmd, zip([0] + [1] * (S - 2) + [r2]))
+        cmd = '''
+            CREATE INDEX Pidx1 ON transition1 (row, col);
+            CREATE INDEX Pidx2 ON transition2 (row, col);'''
+        c.executescript(cmd)
+    # return the databases name
+    return db
 
 def exampleRand(S, A):
     """WARNING: This will delete a database with the same name as 'db'."""
@@ -48,6 +84,8 @@ def exampleRand(S, A):
                 c.executemany(cmd, zip([s] * n, col, val))
             cmd = "CREATE UNIQUE INDEX Pidx%s ON transition%s (row, col);" % (a, a)
             c.execute(cmd)
+    # return the name of teh database
+    return db
 
 
 class MDP(object):
@@ -258,7 +296,7 @@ class ValueIteration(MDP):
         else:
             self.thresh = epsilon
         
-        #self._iterate()
+        self._iterate()
     
     def __del__(self):
         MDP.__del__(self)
