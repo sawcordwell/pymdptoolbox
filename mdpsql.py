@@ -24,7 +24,8 @@ def exampleRand(S, A):
         for a in range(1, A+1):
             cmd = '''
                 CREATE TABLE transition%s (row INTEGER, col INTEGER, prob REAL);
-                CREATE TABLE reward%s (state INTEGER PRIMARY KEY ASC, val REAL);''' % (a, a)
+                CREATE TABLE reward%s (state INTEGER PRIMARY KEY ASC, val REAL);
+                ''' % (a, a)
             c.executescript(cmd)
             cmd = "INSERT INTO reward%s(val) VALUES(?)" % a
             c.executemany(cmd, zip(random(S).tolist()))
@@ -61,14 +62,16 @@ class MDP(object):
         try:
             self.S = self._cur.fetchone()[0]
         except TypeError:
-            raise ValueError("Cannot determine number of states from database. "
-                             "There is no name 'states' in table 'info'.")
+            raise ValueError("Cannot determine number of states from "
+                             "database. There is no name 'states' in table "
+                             "'info'.")
         self._cur.execute("SELECT value FROM info WHERE name='actions'")
         try:
             self.A = self._cur.fetchone()[0]
         except TypeError:
-            raise ValueError("Cannot determine number of actions from database. "
-                             "There is no name 'actions' in table 'info'.")
+            raise ValueError("Cannot determine number of actions from "
+                             "database. There is no name 'actions' in table "
+                             "'info'.")
         self._checkSquareStochastic()
         self._initQ()
         self._initResults(initial_V)
@@ -85,27 +88,28 @@ class MDP(object):
             self._cur.execute(cmd)
             try:
                 if self._cur.fetchone()[0] != self.S:
-                    raise ValueError("The transition matrix for action %s " \
+                    raise ValueError("The transition matrix for action %s "
                                      "is not stochastic." % a)
             except TypeError:
-                raise StandardError("The check stochastic query for a=%s " \
+                raise StandardError("The check stochastic query for a=%s "
                                     "failed." % a)
             cmd = "SELECT MAX(row) FROM " + P
             self._cur.execute(cmd)
             row_max = self._cur.fetchone()[0]
             if int(row_max) != self.S:
-                raise ValueError("The transition matrix for action %s is " \
+                raise ValueError("The transition matrix for action %s is "
                                  "not square: row_max = %s" % (a, row_max))
             cmd = "SELECT MAX(col) FROM " + P
             self._cur.execute(cmd)
             col_max = self._cur.fetchone()[0]
             if int(col_max) > row_max:
-                raise ValueError("The transition matrix for action %a id " \
+                raise ValueError("The transition matrix for action %a id "
                                  "not square: col_max = %s" % (a, col_max))
     
     def _initQ(self):
         self._delQ()
-        self._cur.execute("CREATE TABLE Q (state INTEGER, action INTEGER, value REAL);")
+        self._cur.execute("CREATE TABLE Q (state INTEGER, action INTEGER, "
+                          "value REAL);")
         for a in range(1, self.A + 1):
             state = xrange(1, self.S + 1)
             action = [a] * self.S
@@ -139,7 +143,8 @@ class MDP(object):
             try:
                 self._cur.executemany(cmd1, zip(initial_V))
             except:
-                raise ValueError("V is of unsupported type, use a list or tuple.")
+                raise ValueError("V is of unsupported type, use a list or "
+                                 "tuple.")
         self._conn.commit()
     
     def _delResults(self):
