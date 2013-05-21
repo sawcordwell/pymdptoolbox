@@ -476,7 +476,7 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
         P = []
         rows = range(S) * 2
         cols = [0] * S + range(1, S) + [S - 1]
-        vals = [0.1] * S + [0.9] * S
+        vals = [p] * S + [1-p] * S
         P.append(coo_matrix((vals, (rows, cols)), shape=(S,S)).tocsr())
         rows = range(S)
         cols = [0] * S
