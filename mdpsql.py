@@ -1,10 +1,50 @@
 # -*- coding: utf-8 -*-
 
+import os
 import sqlite3
 
 from time import time
 
-class MDPSQLite(object):
+from numpy import arange
+from numpy.random import permutation, rand, randint
+
+def exampleRand(S, A):
+    # to be usefully represented as a sparse matrix, the number of nonzero
+    # entries should be less than 1/3 of dimesion of the matrix, so (SxS)/3
+    db = "MDP-%sx%s.db" % (S, A)
+    if os.path.exists(db):
+        os.remove(db)
+    conn = sqlite3.connect(db)
+    with conn:
+        c = conn.cursor()
+        cmd = '''
+            CREATE TABLE info (name TEXT, value INTEGER);
+            INSERT INTO info VALUES('states', %s);
+            INSERT INTO info VALUES('actions', %s);''' % (S, A)
+        c.executescript(cmd)
+        for a in range(A):
+            cmd = '''
+                CREATE TABLE transition%s (row INTEGER, col INTEGER, prob REAL);
+                CREATE TABLE reward%s (state INTEGER PRIMARY KEY ASC, val REAL);''' % (a, a)
+            c.executescript(cmd)
+            cmd = "INSERT INTO reward%s(val) VALUES(?)" % a
+            c.executemany(cmd, zip(rand(S).tolist()))
+            for s in xrange(S):
+                n = randint(1, S//3)
+                # timeit [90894] * 20330
+                # ==> 10000 loops, best of 3: 141 us per loop
+                # timeit (90894*np.ones(20330, dtype=int)).tolist()
+                # ==> 1000 loops, best of 3: 548 us per loop
+                col = (permutation(arange(S))[0:n]).tolist()
+                val = rand(n)
+                val = (val / val.sum()).tolist()
+                cmd = "INSERT INTO transition%s VALUES(?, ?, ?)" % a
+                c.executemany(cmd, zip([s] * n, col, val))
+            cmd = "CREATE UNIQUE INDEX Pidx%s ON transition%s (row, col);" % (a, a)
+            c.execute(cmd)
+    return
+
+class MDP(object):
     """"""
     
     def __init__(self, db, discount, epsilon, max_iter, initial_V=0):
@@ -166,12 +206,12 @@ class MDPSQLite(object):
             self._cur.executemany(cmd, zip(state, action, value))
         self._conn.commit()
 
-class ValueIterationSQLite(MDPSQLite):
+class ValueIteration(MDP):
     """"""
     
     def __init__(self, db, discount, epsilon=0.01, max_iter=1000,
                  initial_value=0):
-        MDPSQLite.__init__(self, db, discount, epsilon, max_iter, initial_value)
+        MDP.__init__(self, db, discount, epsilon, max_iter, initial_value)
         
         if self.discount < 1:
             self.thresh = epsilon * (1 - self.discount) / self.discount

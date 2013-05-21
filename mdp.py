@@ -92,16 +92,13 @@ http://www.inra.fr/mia/T/MDPtoolbox/.
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sqlite3
-import os
-
 from math import ceil, log, sqrt
 from random import random
 from time import time
 
-from numpy import absolute, arange, array, diag, empty, matrix, mean, mod
+from numpy import absolute, array, diag, empty, matrix, mean, mod
 from numpy import multiply, ndarray, ones, zeros
-from numpy.random import permutation, rand, randint
+from numpy.random import rand, randint
 from scipy.sparse import csr_matrix as sparse
 
 # __all__ = ["check",  "checkSquareStochastic"]
@@ -496,7 +493,7 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1):
     # we want to return the generated transition and reward matrices
     return (P, R)
 
-def exampleRand(S, A, is_sparse=False, is_sqlite=False, mask=None):
+def exampleRand(S, A, is_sparse=False, mask=None):
     """Generate a random Markov Decision Process.
     
     Parameters
@@ -543,44 +540,7 @@ def exampleRand(S, A, is_sparse=False, is_sqlite=False, mask=None):
         except AttributeError:
             raise TypeError(mdperr["mask_numpy"])
     # generate the transition and reward matrices based on S, A and mask
-    if is_sqlite:
-        # to be usefully represented as a sparse matrix, the number of nonzero
-        # entries should be less than 1/3 of dimesion of the matrix, so (SxS)/3
-        db = "MDP.db"
-        if os.path.exists(db):
-            raise StandardError("Database already exists, not overwriting. " \
-                                "Delete '" + db + "' if you want to continue.")
-        else:
-            conn = sqlite3.connect(db)
-        with conn:
-            c = conn.cursor()
-            cmd = '''
-                CREATE TABLE info (name TEXT, value INTEGER);
-                INSERT INTO info VALUES('states', %s);
-                INSERT INTO info VALUES('actions', %s);''' % (S, A)
-            c.executescript(cmd)
-            for a in range(A):
-                cmd = '''
-                    CREATE TABLE transition%s (row INTEGER, col INTEGER, prob REAL);
-                    CREATE TABLE reward%s (state INTEGER PRIMARY KEY ASC, val REAL);''' % (a, a)
-                c.executescript(cmd)
-                cmd = "INSERT INTO reward%s(val) VALUES(?)" % a
-                c.executemany(cmd, zip(rand(S).tolist()))
-                for s in xrange(S):
-                    n = randint(1, S//3)
-                    # timeit [90894] * 20330
-                    # ==> 10000 loops, best of 3: 141 us per loop
-                    # timeit (90894*np.ones(20330, dtype=int)).tolist()
-                    # ==> 1000 loops, best of 3: 548 us per loop
-                    col = (permutation(arange(S))[0:n]).tolist()
-                    val = rand(n)
-                    val = (val / val.sum()).tolist()
-                    cmd = "INSERT INTO transition%s VALUES(?, ?, ?)" % a
-                    c.executemany(cmd, zip([s] * n, col, val))
-                cmd = "CREATE UNIQUE INDEX Pidx%s ON transition%s (row, col);" % (a, a)
-                c.execute(cmd)
-        return
-    elif is_sparse:
+    if is_sparse:
         # definition of transition matrix : square stochastic matrix
         P = empty(A, dtype=object)
         # definition of reward matrix (values between -1 and +1)
