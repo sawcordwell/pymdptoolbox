@@ -561,26 +561,24 @@ def exampleRand(S, A, is_sparse=False, is_sqlite=False, mask=None):
             c.executescript(cmd)
             for a in range(A):
                 cmd = '''
-                    CREATE TABLE transition%s (row INTEGER, col INTEGER,
-                                               prob REAL);
-                    CREATE TABLE reward%s (state INTEGER, val REAL);''' % (a, a)
+                    CREATE TABLE transition%s (row INTEGER, col INTEGER, prob REAL);
+                    CREATE TABLE reward%s (state INTEGER PRIMARY KEY ASC, val REAL);''' % (a, a)
                 c.executescript(cmd)
-                states = range(S)
-                reward = rand(S).tolist()
-                cmd = "INSERT INTO reward%s VALUES(?, ?)" % a
-                c.executemany(cmd, zip(states, reward))
+                cmd = "INSERT INTO reward%s(val) VALUES(?)" % a
+                c.executemany(cmd, zip(rand(S).tolist()))
                 for s in xrange(S):
                     n = randint(1, S//3)
                     # timeit [90894] * 20330
                     # ==> 10000 loops, best of 3: 141 us per loop
                     # timeit (90894*np.ones(20330, dtype=int)).tolist()
                     # ==> 1000 loops, best of 3: 548 us per loop
-                    row = [s] * n
                     col = (permutation(arange(S))[0:n]).tolist()
                     val = rand(n)
                     val = (val / val.sum()).tolist()
                     cmd = "INSERT INTO transition%s VALUES(?, ?, ?)" % a
-                    c.executemany(cmd, zip(row, col, val))
+                    c.executemany(cmd, zip([s] * n, col, val))
+                cmd = "CREATE UNIQUE INDEX Pidx%s ON transition%s (row, col);" % (a, a)
+                c.execute(cmd)
         return
     elif is_sparse:
         # definition of transition matrix : square stochastic matrix

@@ -31,50 +31,55 @@ class MDPSQLite(object):
         self._initResults(initial_V)
     
     def _initQ(self):
-        self._cur.executescript('''
-            DROP TABLE IF EXISTS Q;
-            CREATE TABLE Q (state INTEGER, action INTEGER, value REAL);''')
+        self._delQ()
+        self._cur.execute("CREATE TABLE Q (state INTEGER, action INTEGER, value REAL);")
         for a in range(self.A):
             state = range(self.S)
             action = [a] * self.S
             value = [None] * self.S
             cmd = "INSERT INTO Q VALUES(?, ?, ?)"
             self._cur.executemany(cmd, zip(state, action, value))
+        self._cur.execute("CREATE UNIQUE INDEX Qidx ON Q (state, action);")
         self._conn.commit()
     
-    def _initResults(self, initial_V):
+    def _delQ(self):
         self._cur.executescript('''
-            DROP TABLE IF EXISTS policy;
-            DROP TABLE IF EXISTS V;
-            DROP TABLE IF EXISTS Vprev;
-            CREATE TABLE policy (state INTEGER, action INTEGER);
-            CREATE TABLE V (state INTEGER, value REAL);
-            CREATE TABLE Vprev (state INTEGER, value REAL);''')
-        cmd1 = "INSERT INTO V(state, value) VALUES(?, ?)"
-        cmd2 = "INSERT INTO policy(state, action) VALUES(?, ?)"
-        cmd3 = "INSERT INTO Vprev(state, value) VALUES(?, ?)"
-        state = range(self.S)
-        nones = [None] * self.S
-        values = zip(state, nones)
-        del nones
+            DROP TABLE IF EXISTS Q;
+            DROP INDEX IF EXISTS Qidx;''')
+    
+    def _initResults(self, initial_V):
+        self._delResults()
+        self._cur.executescript('''
+            CREATE TABLE policy (state INTEGER PRIMARY KEY, action INTEGER);
+            CREATE TABLE V (state INTEGER PRIMARY KEY, value REAL);
+            CREATE TABLE Vprev (state INTEGER PRIMARY KEY, value REAL);''')
+        cmd1 = "INSERT INTO V(value) VALUES(?)"
+        cmd2 = "INSERT INTO policy(action) VALUES(?)"
+        cmd3 = "INSERT INTO Vprev(value) VALUES(?)"
+        values = zip([None] * self.S)
         self._cur.executemany(cmd2, values)
         self._cur.executemany(cmd3, values)
         del values
         if initial_V==0:
-            V = [0] * self.S
-            self._cur.executemany(cmd1, zip(state, V))
+            self._cur.executemany(cmd1, zip([0] * self.S))
         else:
             try:
-                self._cur.executemany(cmd1, zip(state, V))
+                self._cur.executemany(cmd1, zip(initial_V))
             except:
                 raise ValueError("V is of unsupported type, use a list or tuple.")
         self._conn.commit()
     
+    def _delResults(self):
+        self._cur.executescript('''
+            DROP TABLE IF EXISTS policy;
+            DROP TABLE IF EXISTS V;
+            DROP TABLE IF EXISTS Vprev;''')
+    
     def __del__(self):
-        #self._cur.executescript('''
-        #    DROP TABLE IF EXISTS Q;
-        #    DROP TABLE IF EXISTS V;
-        #    DROP TABLE IF EXISTS policy;''')
+        self._delQ()
+        self._cur.executescript('''
+            DROP TABLE IF EXISTS Vprev;
+            VACUUM;''')
         self._cur.close()
         self._conn.close()
     
@@ -189,8 +194,10 @@ class ValueIterationSQLite(MDPSQLite):
                 done = True
             elif (self.itr == self.max_iter):
                 done = True
-        
+        # get the optimal policy
         self._calculatePolicy()
+        # calculate the time taken to finish
+        self.time = time() - self.time()
     
     def _copyPreviousValue(self):
         cmd = '''
