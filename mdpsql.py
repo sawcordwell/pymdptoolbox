@@ -158,7 +158,7 @@ class MDP(object):
     
     def _bellmanOperator(self):
         g = str(self.discount)
-        for a in range(self.A):
+        for a in range(1, self.A + 1):
             P = "transition%s" % a
             R = "reward%s" % a
             cmd = "" \
