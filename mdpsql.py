@@ -6,11 +6,9 @@ import sqlite3
 from time import time
 
 from numpy import arange
-from numpy.random import permutation, rand, randint
+from numpy.random import permutation, random, randint
 
 def exampleRand(S, A):
-    # to be usefully represented as a sparse matrix, the number of nonzero
-    # entries should be less than 1/3 of dimesion of the matrix, so (SxS)/3
     db = "MDP-%sx%s.db" % (S, A)
     if os.path.exists(db):
         os.remove(db)
@@ -28,21 +26,24 @@ def exampleRand(S, A):
                 CREATE TABLE reward%s (state INTEGER PRIMARY KEY ASC, val REAL);''' % (a, a)
             c.executescript(cmd)
             cmd = "INSERT INTO reward%s(val) VALUES(?)" % a
-            c.executemany(cmd, zip(rand(S).tolist()))
+            c.executemany(cmd, zip(random(S).tolist()))
             for s in xrange(S):
+                # to be usefully represented as a sparse matrix, the number of
+                # nonzero entries should be less than 1/3 of dimesion of the
+                # matrix, so S/3
                 n = randint(1, S//3)
                 # timeit [90894] * 20330
                 # ==> 10000 loops, best of 3: 141 us per loop
                 # timeit (90894*np.ones(20330, dtype=int)).tolist()
                 # ==> 1000 loops, best of 3: 548 us per loop
                 col = (permutation(arange(S))[0:n]).tolist()
-                val = rand(n)
+                val = random(n)
                 val = (val / val.sum()).tolist()
                 cmd = "INSERT INTO transition%s VALUES(?, ?, ?)" % a
                 c.executemany(cmd, zip([s] * n, col, val))
             cmd = "CREATE UNIQUE INDEX Pidx%s ON transition%s (row, col);" % (a, a)
             c.execute(cmd)
-    return
+
 
 class MDP(object):
     """"""
@@ -90,9 +91,9 @@ class MDP(object):
     def _initResults(self, initial_V):
         self._delResults()
         self._cur.executescript('''
-            CREATE TABLE policy (state INTEGER PRIMARY KEY, action INTEGER);
-            CREATE TABLE V (state INTEGER PRIMARY KEY, value REAL);
-            CREATE TABLE Vprev (state INTEGER PRIMARY KEY, value REAL);''')
+            CREATE TABLE policy (state INTEGER PRIMARY KEY ASC, action INTEGER);
+            CREATE TABLE V (state INTEGER PRIMARY KEY ASC, value REAL);
+            CREATE TABLE Vprev (state INTEGER PRIMARY KEY ASC, value REAL);''')
         cmd1 = "INSERT INTO V(value) VALUES(?)"
         cmd2 = "INSERT INTO policy(action) VALUES(?)"
         cmd3 = "INSERT INTO Vprev(value) VALUES(?)"
@@ -197,7 +198,6 @@ class MDP(object):
         return policy, value
     
     def _randomQ(self):
-        from numpy.random import random
         for a in range(self.A):
             state = range(self.S)
             action = [a] * self.S
@@ -220,6 +220,9 @@ class ValueIteration(MDP):
         
         self._iterate()
     
+    def __del__(self):
+        MDP.__del__()
+    
     def _iterate(self):
         self.time = time()
         done = False
@@ -237,7 +240,7 @@ class ValueIteration(MDP):
         # get the optimal policy
         self._calculatePolicy()
         # calculate the time taken to finish
-        self.time = time() - self.time()
+        self.time = time() - self.time
     
     def _copyPreviousValue(self):
         cmd = '''
