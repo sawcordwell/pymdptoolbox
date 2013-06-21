@@ -818,9 +818,9 @@ class MDP(object):
             raise
         self.R = tuple(self.R)
     
-    def iterate(self):
+    def _iterate(self):
         """Raise error because child classes should implement this function."""
-        raise NotImplementedError("You should create an iterate() method.")
+        raise NotImplementedError("You should create an _iterate() method.")
     
     def setSilent(self):
         """Set the MDP algorithm to silent mode."""
@@ -903,7 +903,10 @@ class FiniteHorizon(MDP):
         if h is not None:
             self.V[:, N] = h
         
-    def iterate(self):
+        # Call the iteration method
+        self._iterate()
+        
+    def _iterate(self):
         """Run the finite horizon algorithm."""
         self.time = time()
         
@@ -978,8 +981,11 @@ class LP(MDP):
         # this doesn't do what I want it to do c.f. issue #3
         if not self.verbose:
             solvers.options['show_progress'] = False
+        
+        # Call the iteration method
+        self._iterate()
     
-    def iterate(self):
+    def _iterate(self):
         """Run the linear programming algorithm."""
         self.time = time()
         # The objective is to resolve : min V / V >= PR + discount*P*V
@@ -1051,7 +1057,6 @@ class PolicyIteration(MDP):
     >>> import mdp
     >>> P, R = mdp.exampleRand(5, 3)
     >>> pi = mdp.PolicyIteration(P, R, 0.9)
-    >>> pi.iterate()
     
     """
     
@@ -1099,6 +1104,9 @@ class PolicyIteration(MDP):
                              "evaluation or 1 for iterative evaluation. "
                              "The strings 'matrix' and 'iterative' can also "
                              "be used.")
+        
+        # Call the iteration method
+        self._iterate()
     
     def _computePpolicyPRpolicy(self):
         """Compute the transition matrix and the reward matrix for a policy.
@@ -1243,7 +1251,7 @@ class PolicyIteration(MDP):
         self.V = self._lin_eq(
             (self._speye(self.S, self.S) - self.discount * Ppolicy), Rpolicy)
     
-    def iterate(self):
+    def _iterate(self):
         """Run the policy iteration algorithm."""
         
         if self.verbose:
@@ -1368,8 +1376,11 @@ class PolicyIterationModified(PolicyIteration):
         else:
             # min(min()) is not right
             self.V = 1 / (1 - discount) * self.R.min() * ones((self.S, 1))
+        
+        # Call the iteration method
+        self._iterate()
     
-    def iterate(self):
+    def _iterate(self):
         """Run the modified policy iteration algorithm."""
         
         if self.verbose:
@@ -1448,7 +1459,6 @@ class QLearning(MDP):
     >>> random.seed(0)
     >>> P, R = mdp.exampleForest()
     >>> ql = mdp.QLearning(P, R, 0.96)
-    >>> ql.iterate()
     >>> ql.Q
     array([[ 68.80977389,  46.62560314],
            [ 72.58265749,  43.1170545 ],
@@ -1465,7 +1475,6 @@ class QLearning(MDP):
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> random.seed(0)
     >>> ql = mdp.QLearning(P, R, 0.9)
-    >>> ql.iterate()
     >>> ql.Q
     array([[ 36.63245946,  42.24434307],
            [ 35.96582807,  32.70456417]])
@@ -1511,7 +1520,10 @@ class QLearning(MDP):
         self.Q = zeros((self.S, self.A))
         self.mean_discrepancy = []
         
-    def iterate(self):
+        # Call the iteration method
+        self._iterate()
+        
+    def _iterate(self):
         """Run the Q-learning algoritm."""
         discrepancy = []
         
@@ -1613,7 +1625,6 @@ class RelativeValueIteration(MDP):
     >>> import mdp
     >>> P, R = exampleForest()
     >>> rvi = mdp.RelativeValueIteration(P, R)
-    >>> rvi.iterate()
     >>> rvi.average_reward
     2.4300000000000002
     >>> rvi.policy
@@ -1625,8 +1636,7 @@ class RelativeValueIteration(MDP):
     >>> import numpy as np
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
-    >>> vi = mdp.RelativeValueIteration(P, R)
-    >>> rvi.iterate()
+    >>> rvi = mdp.RelativeValueIteration(P, R)
     >>> rvi.V
     (10.0, 3.885235246411831)
     >>> rvi.average_reward
@@ -1650,8 +1660,11 @@ class RelativeValueIteration(MDP):
         self.gain = 0 # self.U[self.S]
         
         self.average_reward = None
+        
+        # Call the iteration method
+        self._iterate()
     
-    def iterate(self):
+    def _iterate(self):
         """Run the relative value iteration algorithm."""
         
         done = False
@@ -1743,10 +1756,10 @@ class ValueIteration(MDP):
     ---------------
     V : value function
         A vector which stores the optimal value function. Prior to calling the
-        iterate() method it has a value of None. Shape is (S, ).
+        _iterate() method it has a value of None. Shape is (S, ).
     policy : epsilon-optimal policy
         A vector which stores the optimal policy. Prior to calling the
-        iterate() method it has a value of None. Shape is (S, ).
+        _iterate() method it has a value of None. Shape is (S, ).
     iter : number of iterations taken to complete the computation
         An integer
     time : used CPU time
@@ -1754,8 +1767,6 @@ class ValueIteration(MDP):
     
     Methods
     -------
-    iterate()
-        Starts the loop for the algorithm to be completed.
     setSilent()
         Sets the instance to silent mode.
     setVerbose()
@@ -1774,7 +1785,6 @@ class ValueIteration(MDP):
     >>> vi = mdp.ValueIteration(P, R, 0.96)
     >>> vi.verbose
     False
-    >>> vi.iterate()
     >>> vi.V
     (5.93215488, 9.38815488, 13.38815488)
     >>> vi.policy
@@ -1789,7 +1799,6 @@ class ValueIteration(MDP):
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> vi = mdp.ValueIteration(P, R, 0.9)
-    >>> vi.iterate()
     >>> vi.V
     (40.04862539271682, 33.65371175967546)
     >>> vi.policy
@@ -1807,7 +1816,6 @@ class ValueIteration(MDP):
     >>> P[1] = sparse([[0, 1],[0.1, 0.9]])
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> vi = mdp.ValueIteration(P, R, 0.9)
-    >>> vi.iterate()
     >>> vi.V
     (40.04862539271682, 33.65371175967546)
     >>> vi.policy
@@ -1845,6 +1853,9 @@ class ValueIteration(MDP):
         else: # discount == 1
             # threshold of variation for V for an epsilon-optimal policy
             self.thresh = epsilon
+        
+        # Call the iteration method
+        self._iterate()
     
     def _boundIter(self, epsilon):
         """Compute a bound for the number of iterations.
@@ -1895,7 +1906,7 @@ class ValueIteration(MDP):
         
         self.max_iter = int(ceil(max_iter))
     
-    def iterate(self):
+    def _iterate(self):
         """Run the value iteration algorithm."""
         
         if self.verbose:
@@ -1982,8 +1993,10 @@ class ValueIterationGS(ValueIteration):
         
         ValueIteration.__init__(self, transitions, reward, discount, epsilon,
                                 max_iter, initial_value)
+        # Call the iteration method
+        self._iterate()
     
-    def iterate(self):
+    def _iterate(self):
         """Run the value iteration Gauss-Seidel algorithm."""
         
         done = False
