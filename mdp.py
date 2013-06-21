@@ -1013,8 +1013,8 @@ class LP(MDP):
         self.time = time() - self.time
         
         # store value and policy as tuples
-        self.V = tuple(self.V.getA1().tolist())
-        self.policy = tuple(self.policy.getA1().tolist())
+        self.V = tuple(self.V.tolist())
+        self.policy = tuple(self.policy.tolist())
 
 class PolicyIteration(MDP):
     
@@ -1293,8 +1293,8 @@ class PolicyIteration(MDP):
         self.time = time() - self.time
         
         # store value and policy as tuples
-        self.V = tuple(self.V.getA1().tolist())
-        self.policy = tuple(self.policy.getA1().tolist())
+        self.V = tuple(self.V.tolist())
+        self.policy = tuple(self.policy.tolist())
 
 class PolicyIterationModified(PolicyIteration):
     
@@ -1409,8 +1409,8 @@ class PolicyIterationModified(PolicyIteration):
         self.time = time() - self.time
         
         # store value and policy as tuples
-        self.V = tuple(self.V.getA1().tolist())
-        self.policy = tuple(self.policy.getA1().tolist())
+        self.V = tuple(self.V.tolist())
+        self.policy = tuple(self.policy.tolist())
 
 class QLearning(MDP):
     
@@ -1695,8 +1695,8 @@ class RelativeValueIteration(MDP):
         self.time = time() - self.time
         
         # store value and policy as tuples
-        self.V = tuple(self.V.getA1().tolist())
-        self.policy = tuple(self.policy.getA1().tolist())
+        self.V = tuple(self.V.tolist())
+        self.policy = tuple(self.policy.tolist())
 
 class ValueIteration(MDP):
     
@@ -2038,7 +2038,7 @@ class ValueIterationGS(ValueIteration):
 
         self.time = time() - self.time
         
-        self.V = tuple(self.V.getA1().tolist())
+        self.V = tuple(self.V.tolist())
         self.policy = tuple(self.policy)
 
 if __name__ == "__main__":
