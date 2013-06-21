@@ -50,6 +50,8 @@ Code snippets are indicated by three greater-than signs::
 
   >>> x = 17
   >>> x = x + 1
+  >>> x
+  18
 
 The documentation can be displayed with
 `IPython <http://ipython.scipy.org>`_. For example, to view the docstring of
@@ -96,7 +98,7 @@ from math import ceil, log, sqrt
 from random import random
 from time import time
 
-from numpy import absolute, array, diag, empty, matrix, mean, mod, multiply
+from numpy import absolute, array, diag, empty, mean, mod, multiply
 from numpy import ndarray, ones, where, zeros
 from numpy.random import rand, randint
 from scipy.sparse import csr_matrix as sparse
@@ -724,7 +726,9 @@ class MDP(object):
         # set the initial iteration count to zero
         self.iter = 0
         
+        # V should be stored as a vector ie shape of (S,) or (1, S)
         self.V = None
+        # policy can also be stored as a vector
         self.policy = None
     
     def _bellmanOperator(self, V=None):
@@ -742,18 +746,18 @@ class MDP(object):
             V = self.V
         else:
             try:
-                if V.shape != (self.S, 1):
+                if V.shape not in ((self.S,), (1, self.S)):
                     raise ValueError("bellman: V is not the right shape.")
             except AttributeError:
                 raise TypeError("bellman: V must be a numpy array or matrix.")
         
-        Q = matrix(empty((self.S, self.A)))
+        Q = empty((self.A, self.S))
         for aa in range(self.A):
-            Q[:, aa] = self.R[aa] + (self.discount * self.P[aa] * V)
+            Q[aa] = self.R[aa] + self.discount * self.P[aa].dot(V)
         
         # Which way is better?
         # 1. Return, (policy, value)
-        return (Q.argmax(axis=1), Q.max(axis=1))
+        return (Q.argmax(axis=0), Q.max(axis=0))
         # 2. update self.policy and self.V directly
         # self.V = Q.max(axis=1)
         # self.policy = Q.argmax(axis=1)
@@ -796,19 +800,24 @@ class MDP(object):
         for aa in xrange(self.A):
             self.P.append(P[aa])
         self.P = tuple(self.P)
-        # Set self.R as a tuple of length A, with each element storing an S×1
-        # vector array.
+        # Set self.R as a tuple of length A, with each element storing an 1×S
+        # vector.
         try:
             if R.ndim == 2:
                 self.R = []
                 for aa in xrange(self.A):
-                    self.R.append(R[:, aa].reshape(self.S, 1))
+                    self.R.append(array(R[:, aa]).reshape(self.S))
             else:
                 raise AttributeError
         except AttributeError:
             self.R = []
             for aa in xrange(self.A):
-                self.R.append(multiply(P[aa], R[aa]).sum(1).reshape(self.S, 1))
+                try:
+                    self.R.append(P[aa].multiply(R[aa]).sum(1).reshape(self.S))
+                except AttributeError:
+                    self.R.append(multiply(P[aa],R[aa]).sum(1).reshape(self.S))
+                except:
+                    raise
         except:
             raise
         self.R = tuple(self.R)
@@ -884,17 +893,18 @@ class FiniteHorizon(MDP):
             raise ValueError('PyMDPtoolbox: N must be greater than 0')
         else:
             self.N = N
-        
+        # Initialise the base class
         MDP.__init__(self, transitions, reward, discount, None, None)
-        
-        # remove the iteration counter
+        # remove the iteration counter, it is not meaningful for backwards
+        # induction
         del self.iter
-        
+        # There are value vectors for each time step up to the horizon
         self.V = zeros((self.S, N + 1))
-        
-        self.policy = zeros((self.S, N), dtype=int)
-        
-        if not h is None:
+        # There are policy vectors for each time step before the horizon, when
+        # we reach the horizon we don't need to make decisions anymore.
+        self.policy = empty((self.S, N), dtype=int)
+        # Set the reward for the final transition to h, if specified.
+        if h is not None:
             self.V[:, N] = h
         
     def iterate(self):
@@ -902,15 +912,24 @@ class FiniteHorizon(MDP):
         self.time = time()
         
         for n in range(self.N):
-            W, X = self._bellmanOperator(
-                matrix(self.V[:, self.N - n]).reshape(self.S, 1))
-            self.V[:, self.N - n - 1] = X.A1
-            self.policy[:, self.N - n - 1] = W.A1
+            W, X = self._bellmanOperator(self.V[:, self.N - n])
+            self.V[:, self.N - n - 1] = X
+            self.policy[:, self.N - n - 1] = W
             if self.verbose:
                 print("stage: %s ... policy transpose : %s") % (
                     self.N - n, self.policy[:, self.N - n -1].tolist())
         
         self.time = time() - self.time
+        # After this we could create a tuple of tuples for the values and 
+        # policies.
+        #V = []
+        #p = []
+        #for n in xrange(self.N):
+        #    V.append()
+        #    p.append()
+        #V.append()
+        #self.V = tuple(V)
+        #self.policy = tuple(p)
 
 class LP(MDP):
     
@@ -987,15 +1006,15 @@ class LP(MDP):
         # (Octave uses glpk) and perhaps Matlab. If solver=None (ie using the 
         # default cvxopt solver) then V agrees with the Octave equivalent
         # only to 10e-8 places.
-        self.V = matrix(self._linprog(f, M, -h, solver='glpk')['x'])
+        self.V = array(self._linprog(f, M, -h, solver='glpk')['x'])
         
         self.policy, self.V =  self._bellmanOperator()
         
         self.time = time() - self.time
         
         # store value and policy as tuples
-        self.V = tuple(self.V.getA1().tolist())
-        self.policy = tuple(self.policy.getA1().tolist())
+        self.V = tuple(self.V.tolist())
+        self.policy = tuple(self.policy.tolist())
 
 class PolicyIteration(MDP):
     
@@ -1049,7 +1068,7 @@ class PolicyIteration(MDP):
         if policy0 == None:
             # initialise the policy to the one which maximises the expected
             # immediate reward
-            self.V = matrix(zeros((self.S, 1)))
+            self.V = zeros(self.S)
             self.policy, null = self._bellmanOperator()
             del null
         else:
@@ -1059,7 +1078,7 @@ class PolicyIteration(MDP):
                 raise ValueError("PyMDPtolbox: policy0 must a vector with "
                                  "length S.")
             
-            policy0 = matrix(policy0.reshape(self.S, 1))
+            policy0 = policy0.reshape(self.S)
             
             if (mod(policy0, 1).any() or (policy0 < 0).any() or
                     (policy0 >= self.S).any()):
@@ -1069,7 +1088,7 @@ class PolicyIteration(MDP):
                 self.policy = policy0
         
         # set or reset the initial values to zero
-        self.V = matrix(zeros((self.S, 1)))
+        self.V = zeros(self.S)
         
         if eval_type in (0, "matrix"):
             from numpy.linalg import solve
@@ -1106,29 +1125,24 @@ class PolicyIteration(MDP):
         PRpolicy(S)   = reward matrix for policy
         
         """
-        Ppolicy = matrix(zeros((self.S, self.S)))
-        Rpolicy = matrix(zeros((self.S, 1)))
+        Ppolicy = empty((self.S, self.S))
+        Rpolicy = zeros(self.S)
         for aa in range(self.A): # avoid looping over S
-        
-            # the rows that use action a. .getA1() is used to make sure that
-            # ind is a 1 dimensional vector
-            ind = (self.policy == aa).nonzero()[0].getA1()
+            # the rows that use action a.
+            ind = (self.policy == aa).nonzero()[0]
             # if no rows use action a, then no need to assign this
             if ind.size > 0:
                 Ppolicy[ind, :] = self.P[aa][ind, :]
-                
                 #PR = self._computePR() # an apparently uneeded line, and
                 # perhaps harmful in this implementation c.f.
                 # mdp_computePpolicyPRpolicy.m
                 Rpolicy[ind] = self.R[aa][ind]
-        
         # self.R cannot be sparse with the code in its current condition, but
         # it should be possible in the future. Also, if R is so big that its
         # a good idea to use a sparse matrix for it, then converting PRpolicy
         # from a dense to sparse matrix doesn't seem very memory efficient
         if type(self.R) is sparse:
             Rpolicy = sparse(Rpolicy)
-        
         #self.Ppolicy = Ppolicy
         #self.Rpolicy = Rpolicy
         return (Ppolicy, Rpolicy)
@@ -1166,9 +1180,9 @@ class PolicyIteration(MDP):
         
         """
         if (type(V0) in (int, float)) and (V0 == 0):
-            policy_V = zeros((self.S, 1))
+            policy_V = zeros(self.S)
         else:
-            if (type(V0) in (ndarray, matrix)) and (V0.shape == (self.S, 1)):
+            if (type(V0) in (ndarray)) and (V0.shape == (self.S, 1)):
                 policy_V = V0
             else:
                 raise ValueError("PyMDPtoolbox: V0 vector/array type not "
@@ -1186,7 +1200,7 @@ class PolicyIteration(MDP):
             itr += 1
             
             Vprev = policy_V
-            policy_V = policy_R + self.discount * policy_P * Vprev
+            policy_V = policy_R + self.discount * policy_P.dot(Vprev)
             
             variation = absolute(policy_V - Vprev).max()
             if self.verbose:
@@ -1279,8 +1293,8 @@ class PolicyIteration(MDP):
         self.time = time() - self.time
         
         # store value and policy as tuples
-        self.V = tuple(self.V.getA1().tolist())
-        self.policy = tuple(self.policy.getA1().tolist())
+        self.V = tuple(self.V.tolist())
+        self.policy = tuple(self.policy.tolist())
 
 class PolicyIterationModified(PolicyIteration):
     
@@ -1354,7 +1368,7 @@ class PolicyIterationModified(PolicyIteration):
         self.epsilon = epsilon
         
         if discount == 1:
-            self.V = matrix(zeros((self.S, 1)))
+            self.V = zeros((self.S, 1))
         else:
             # min(min()) is not right
             self.V = 1 / (1 - discount) * self.R.min() * ones((self.S, 1))
@@ -1395,8 +1409,8 @@ class PolicyIterationModified(PolicyIteration):
         self.time = time() - self.time
         
         # store value and policy as tuples
-        self.V = tuple(self.V.getA1().tolist())
-        self.policy = tuple(self.policy.getA1().tolist())
+        self.V = tuple(self.V.tolist())
+        self.policy = tuple(self.policy.tolist())
 
 class QLearning(MDP):
     
@@ -1636,7 +1650,7 @@ class RelativeValueIteration(MDP):
         self.epsilon = epsilon
         self.discount = 1
         
-        self.V = matrix(zeros((self.S, 1)))
+        self.V = zeros(self.S)
         self.gain = 0 # self.U[self.S]
         
         self.average_reward = None
@@ -1681,8 +1695,8 @@ class RelativeValueIteration(MDP):
         self.time = time() - self.time
         
         # store value and policy as tuples
-        self.V = tuple(self.V.getA1().tolist())
-        self.policy = tuple(self.policy.getA1().tolist())
+        self.V = tuple(self.V.tolist())
+        self.policy = tuple(self.policy.tolist())
 
 class ValueIteration(MDP):
     
@@ -1727,7 +1741,7 @@ class ValueIteration(MDP):
         Greater than 0, optional (default: computed)
     initial_value : array, optional
         starting value function
-        optional (default: zeros(S,1)).
+        optional (default: zeros(S,)).
     
     Data Attributes
     ---------------
@@ -1792,7 +1806,7 @@ class ValueIteration(MDP):
     >>> import mdp
     >>> import numpy as np
     >>> from scipy.sparse import csr_matrix as sparse
-    >>> P = np.empty(2, dtype=object)
+    >>> P = [None] * 2
     >>> P[0] = sparse([[0.5, 0.5],[0.8, 0.2]])
     >>> P[1] = sparse([[0, 1],[0.1, 0.9]])
     >>> R = np.array([[5, 10], [-1, 2]])
@@ -1813,15 +1827,18 @@ class ValueIteration(MDP):
         
         # initialization of optional arguments
         if initial_value == 0:
-            self.V = matrix(zeros((self.S, 1)))
+            self.V = zeros(self.S)
         else:
-            if not initial_value.shape in ((self.S, ), (self.S, 1),
-                                           (1, self.S)):
-                raise ValueError("PyMDPtoolbox: The initial value must be a "
-                                 "vector of length S.")
+            if len(initial_value) != self.S:
+                raise ValueError("PyMDPtoolbox: The initial value must be "
+                                 "a vector of length S.")
             else:
-                self.V = matrix(initial_value)
-        
+                try:
+                    self.V = initial_value.reshape(self.S)
+                except AttributeError:
+                    self.V = array(initial_value)
+                except:
+                    raise
         if self.discount < 1:
             # compute a bound for the number of iterations and update the
             # stored value of self.max_iter
@@ -1860,12 +1877,12 @@ class ValueIteration(MDP):
         h = zeros(self.S)
         
         for ss in range(self.S):
-            PP = zeros((self.S, self.A))
+            PP = zeros((self.A, self.S))
             for aa in range(self.A):
                 try:
-                    PP[:, aa] = self.P[aa][:, ss]
+                    PP[aa] = self.P[aa][:, ss]
                 except ValueError:
-                    PP[:, aa] = self.P[aa][:, ss].todense()
+                    PP[aa] = self.P[aa][:, ss].todense().A1
                 except:
                     raise
             # the function "min()" without any arguments finds the
@@ -1918,8 +1935,8 @@ class ValueIteration(MDP):
                           "iteration condition.")
         
         # store value and policy as tuples
-        self.V = tuple(self.V.getA1().tolist())
-        self.policy = tuple(self.policy.getA1().tolist())
+        self.V = tuple(self.V.tolist())
+        self.policy = tuple(self.policy.tolist())
         
         self.time = time() - self.time
 
@@ -1986,10 +2003,9 @@ class ValueIterationGS(ValueIteration):
             Vprev = self.V.copy()
             
             for s in range(self.S):
-                Q = []
-                for a in range(self.A):
-                    Q.append(float(self.R[a][s]  +
-                                   self.discount * self.P[a][s, :] * self.V))
+                Q = [float(self.R[a][s]+
+                           self.discount * self.P[a][s, :].dot(self.V))
+                     for a in range(self.A)]
                 
                 self.V[s] = max(Q)
             
@@ -2014,14 +2030,14 @@ class ValueIterationGS(ValueIteration):
         for s in range(self.S):
             Q = zeros(self.A)
             for a in range(self.A):
-                Q[a] =  self.R[a][s] + self.P[a][s,:] * self.discount * self.V
+                Q[a] =  self.R[a][s] + self.discount * self.P[a][s,:].dot(self.V)
             
             self.V[s] = Q.max()
             self.policy.append(int(Q.argmax()))
 
         self.time = time() - self.time
         
-        self.V = tuple(self.V.getA1().tolist())
+        self.V = tuple(self.V.tolist())
         self.policy = tuple(self.policy)
 
 if __name__ == "__main__":

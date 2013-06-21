@@ -16,4 +16,4 @@
 7. Try to use rows for the Bellman computations rather than columns (perhaps
    this storage is more Pythonic? or more NumPyic?)
 
-8. 
+8. Create the mask as a sparse matrix in exampleRand 
