@@ -18,9 +18,7 @@ from scipy.sparse import eye as speye
 from scipy.sparse import csr_matrix as sparse
 #from scipy.stats.distributions import poisson
 
-from mdp import check, checkSquareStochastic, exampleForest, exampleRand
-from mdp import MDP, PolicyIteration, QLearning, RelativeValueIteration
-from mdp import ValueIteration, ValueIterationGS
+import mdp
 
 STATES = 10
 ACTIONS = 3
@@ -32,9 +30,9 @@ R = array([[5, 10], [-1, 2]])
 Ps = empty(2, dtype=object)
 Ps[0] = sparse([[0.5, 0.5],[0.8, 0.2]])
 Ps[1] = sparse([[0, 1],[0.1, 0.9]])
-Pf, Rf = exampleForest()
-Pr, Rr = exampleRand(STATES, ACTIONS)
-Prs, Rrs = exampleRand(STATES, ACTIONS, is_sparse=True)
+Pf, Rf = mdp.exampleForest()
+Pr, Rr = mdp.exampleRand(STATES, ACTIONS)
+Prs, Rrs = mdp.exampleRand(STATES, ACTIONS, is_sparse=True)
 
 # check: square, stochastic and non-negative ndarrays
 
@@ -44,14 +42,14 @@ def test_check_square_stochastic_nonnegative_array_1():
     for a in range(ACTIONS):
         P[a, :, :] = eye(STATES)
         R[:, a] = rand(STATES)
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 def test_check_square_stochastic_nonnegative_array_2():
     P = zeros((ACTIONS, STATES, STATES))
     R = rand(ACTIONS, STATES, STATES)
     for a in range(ACTIONS):
         P[a, :, :] = eye(STATES)
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 # check: P - square, stochastic and non-negative object arrays
 
@@ -60,21 +58,21 @@ def test_check_P_square_stochastic_nonnegative_object_array():
     R = rand(STATES, ACTIONS)
     for a in range(ACTIONS):
         P[a] = eye(STATES)
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_object_matrix():
     P = empty(ACTIONS, dtype=object)
     R = rand(STATES, ACTIONS)
     for a in range(ACTIONS):
         P[a] = matrix(eye(STATES))
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_object_sparse():
     P = empty(ACTIONS, dtype=object)
     R = rand(STATES, ACTIONS)
     for a in range(ACTIONS):
         P[a] = speye(STATES, STATES).tocsr()
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 # check: P - square, stochastic and non-negative lists
 
@@ -83,21 +81,21 @@ def test_check_P_square_stochastic_nonnegative_list_array():
     R = rand(STATES, ACTIONS)
     for a in xrange(ACTIONS):
         P.append(eye(STATES))
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_list_matrix():
     P = []
     R = rand(STATES, ACTIONS)
     for a in xrange(ACTIONS):
         P.append(matrix(eye(STATES)))
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_list_sparse():
     P = []
     R = rand(STATES, ACTIONS)
     for a in xrange(ACTIONS):
         P.append(speye(STATES, STATES).tocsr())
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 # check: P - square, stochastic and non-negative dicts
 
@@ -106,21 +104,21 @@ def test_check_P_square_stochastic_nonnegative_dict_array():
     R = rand(STATES, ACTIONS)
     for a in xrange(ACTIONS):
         P[a] = eye(STATES)
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_dict_matrix():
     P = {}
     R = rand(STATES, ACTIONS)
     for a in xrange(ACTIONS):
         P[a] = matrix(eye(STATES))
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_dict_sparse():
     P = {}
     R = rand(STATES, ACTIONS)
     for a in xrange(ACTIONS):
         P[a] = speye(STATES, STATES).tocsr()
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 # check: R - square stochastic and non-negative sparse
 
@@ -129,7 +127,7 @@ def test_check_R_square_stochastic_nonnegative_sparse():
     R = sparse(rand(STATES, ACTIONS))
     for a in range(ACTIONS):
         P[a, :, :] = eye(STATES)
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 # check: R - square, stochastic and non-negative object arrays
 
@@ -139,7 +137,7 @@ def test_check_R_square_stochastic_nonnegative_object_array():
     for a in range(ACTIONS):
         P[a, :, :] = eye(STATES)
         R[a] = rand(STATES, STATES)
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 def test_check_R_square_stochastic_nonnegative_object_matrix():
     P = zeros((ACTIONS, STATES, STATES))
@@ -147,7 +145,7 @@ def test_check_R_square_stochastic_nonnegative_object_matrix():
     for a in range(ACTIONS):
         P[a, :, :] = eye(STATES)
         R[a] = matrix(rand(STATES, STATES))
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 def test_check_R_square_stochastic_nonnegative_object_sparse():
     P = zeros((ACTIONS, STATES, STATES))
@@ -155,7 +153,7 @@ def test_check_R_square_stochastic_nonnegative_object_sparse():
     for a in range(ACTIONS):
         P[a, :, :] = eye(STATES)
         R[a] = sparse(rand(STATES, STATES))
-    assert (check(P, R) == None)
+    assert (mdp.check(P, R) == None)
 
 # checkSquareStochastic: square, stochastic and non-negative
 
@@ -163,35 +161,35 @@ def test_checkSquareStochastic_square_stochastic_nonnegative_array():
     P = rand(STATES, STATES)
     for s in range(STATES):
         P[s, :] = P[s, :] / P[s, :].sum()
-    assert checkSquareStochastic(P) == None
+    assert mdp.checkSquareStochastic(P) == None
 
 def test_checkSquareStochastic_square_stochastic_nonnegative_matrix():
     P = rand(STATES, STATES)
     for s in range(STATES):
         P[s, :] = P[s, :] / P[s, :].sum()
     P = matrix(P)
-    assert checkSquareStochastic(P) == None
+    assert mdp.checkSquareStochastic(P) == None
 
 def test_checkSquareStochastic_square_stochastic_nonnegative_sparse():
     P = rand(STATES, STATES)
     for s in range(STATES):
         P[s, :] = P[s, :] / P[s, :].sum()
     P = sparse(P)
-    assert checkSquareStochastic(P) == None
+    assert mdp.checkSquareStochastic(P) == None
 
 # checkSquareStochastic: eye
 
 def test_checkSquareStochastic_eye_array():
     P = eye(STATES)
-    assert checkSquareStochastic(P) == None
+    assert mdp.checkSquareStochastic(P) == None
 
 def test_checkSquareStochastic_eye_matrix():
     P = matrix(eye(STATES))
-    assert checkSquareStochastic(P) == None
+    assert mdp.checkSquareStochastic(P) == None
 
 def test_checkSquareStochastic_eye_sparse():
     P = speye(STATES, STATES).tocsr()
-    assert checkSquareStochastic(P) == None
+    assert mdp.checkSquareStochastic(P) == None
 
 # exampleForest
 
@@ -209,8 +207,8 @@ def test_exampleForest_R_shape():
                         [4, 2]])).all()
 
 def test_exampleForest_check():
-    P, R = exampleForest(10, 5, 3, 0.2)
-    assert check(P, R) == None
+    P, R = mdp.exampleForest(10, 5, 3, 0.2)
+    assert mdp.check(P, R) == None
 
 # exampleRand
 
@@ -221,7 +219,7 @@ def test_exampleRand_dense_R_shape():
     assert (Rr.shape == (ACTIONS, STATES, STATES))
 
 def test_exampleRand_dense_check():
-    assert check(Pr, Rr) == None
+    assert mdp.check(Pr, Rr) == None
 
 def test_exampleRand_sparse_P_shape():
     assert (len(Prs) == ACTIONS)
@@ -230,7 +228,7 @@ def test_exampleRand_sparse_R_shape():
     assert (len(Rrs) == ACTIONS)
 
 def test_exampleRand_sparse_check():
-    assert check(Prs, Rrs) == None
+    assert mdp.check(Prs, Rrs) == None
 
 # MDP
 
@@ -243,7 +241,7 @@ def test_MDP_P_R_1():
     R1.append(matrix('5; -1'))
     R1.append(matrix('10; 2'))
     R1 = tuple(R1)
-    a = MDP(P, R, 0.9, 0.01, 1)
+    a = mdp.MDP(P, R, 0.9, 0.01, 1)
     assert type(a.P) == type(P1)
     assert type(a.R) == type(R1)
     for kk in range(2):
@@ -260,7 +258,7 @@ def test_MDP_P_R_2():
     R1.append(matrix('7.5; -0.4'))
     R1.append(matrix('2; 3.9'))
     R1 = tuple(R1)
-    a = MDP(P, R, 0.9, 0.01, 1)
+    a = mdp.MDP(P, R, 0.9, 0.01, 1)
     assert type(a.P) == type(P1)
     assert type(a.R) == type(R1)
     for kk in range(2):
@@ -274,7 +272,7 @@ def test_MDP_P_R_3():
     PR.append(matrix('0.12591304; 0.1871'))
     PR.append(matrix('0.20935652;0.2898'))
     PR = tuple(PR)
-    a = MDP(P, R, 0.9, 0.01, 1)
+    a = mdp.MDP(P, R, 0.9, 0.01, 1)
     for kk in range(2):
         assert (absolute(a.R[kk] - PR[kk]) < SMALLNUM).all()
 
@@ -291,17 +289,17 @@ def test_MDP_P_R_3():
 # PolicyIteration
 
 def test_PolicyIteration_init_policy0():
-    a = PolicyIteration(P, R, 0.9)
+    a = mdp.PolicyIteration(P, R, 0.9)
     p = matrix('1; 1')
     assert (a.policy == p).all()
 
 def test_PolicyIteration_init_policy0_exampleForest():
-    a = PolicyIteration(Pf, Rf, 0.9)
+    a = mdp.PolicyIteration(Pf, Rf, 0.9)
     p = matrix('0; 1; 0')
     assert (a.policy == p).all()
 
 def test_PolicyIteration_computePpolicyPRpolicy_exampleForest():
-    a = PolicyIteration(Pf, Rf, 0.9)
+    a = mdp.PolicyIteration(Pf, Rf, 0.9)
     P1 = matrix('0.1 0.9 0; 1 0 0; 0.1 0 0.9')
     R1 = matrix('0; 1; 4')
     Ppolicy, Rpolicy = a._computePpolicyPRpolicy()
@@ -312,7 +310,7 @@ def test_PolicyIteration_evalPolicyIterative_exampleForest():
     v0 = matrix('0; 0; 0')
     v1 = matrix('4.47504640074458; 5.02753258879703; 23.17234211944304')
     p = matrix('0; 1; 0')
-    a = PolicyIteration(Pf, Rf, 0.9)
+    a = mdp.PolicyIteration(Pf, Rf, 0.9)
     assert (absolute(a.V - v0) < SMALLNUM).all()
     a._evalPolicyIterative()
     assert (absolute(a.V - v1) < SMALLNUM).all()
@@ -321,14 +319,14 @@ def test_PolicyIteration_evalPolicyIterative_exampleForest():
 def test_PolicyIteration_evalPolicyIterative_bellmanOperator_exampleForest():
     v = matrix('4.47504640074458; 5.02753258879703; 23.17234211944304')
     p = matrix('0; 0; 0')
-    a = PolicyIteration(Pf, Rf, 0.9)
+    a = mdp.PolicyIteration(Pf, Rf, 0.9)
     a._evalPolicyIterative()
     policy, value = a._bellmanOperator()
     assert (policy == p).all()
     assert (absolute(a.V - v) < SMALLNUM).all()
 
 def test_PolicyIteration_iterative_exampleForest():
-    a = PolicyIteration(Pf, Rf, 0.9, eval_type=1)
+    a = mdp.PolicyIteration(Pf, Rf, 0.9, eval_type=1)
     v = matrix('26.2439058351861 29.4839058351861 33.4839058351861')
     p = matrix('0 0 0')
     itr = 2
@@ -339,12 +337,12 @@ def test_PolicyIteration_iterative_exampleForest():
 
 def test_PolicyIteration_evalPolicyMatrix_exampleForest():
     v_pol = matrix('4.47513812154696; 5.02762430939227; 23.17243384704857')
-    a = PolicyIteration(Pf, Rf, 0.9)
+    a = mdp.PolicyIteration(Pf, Rf, 0.9)
     a._evalPolicyMatrix()
     assert (absolute(a.V - v_pol) < SMALLNUM).all()
 
 def test_PolicyIteration_matrix_exampleForest():
-    a = PolicyIteration(Pf, Rf, 0.9)
+    a = mdp.PolicyIteration(Pf, Rf, 0.9)
     v = matrix('26.2440000000000 29.4840000000000 33.4840000000000')
     p = matrix('0 0 0')
     itr = 2
@@ -357,7 +355,7 @@ def test_PolicyIteration_matrix_exampleForest():
 
 def test_QLearning():
     randseed(0)
-    a = QLearning(P, R, 0.9)
+    a = mdp.QLearning(P, R, 0.9)
     q = matrix('36.63245946346517 42.24434307022128; ' \
                '35.96582807367007 32.70456417451635')
     v = matrix('42.24434307022128 35.96582807367007')
@@ -368,7 +366,7 @@ def test_QLearning():
     assert (array(a.policy) == p).all()
 
 def test_QLearning_exampleForest():
-    a = QLearning(Pf, Rf, 0.9)
+    a = mdp.QLearning(Pf, Rf, 0.9)
     #q = matrix('26.1841860892231 18.6273657021260; ' \
     #           '29.5880960371007 18.5901207622881; '\
     #           '33.3526406657418 25.2621054631519')
@@ -382,7 +380,7 @@ def test_QLearning_exampleForest():
 # RelativeValueIteration
 
 def test_RelativeValueIteration_dense():
-    a = RelativeValueIteration(P, R)
+    a = mdp.RelativeValueIteration(P, R)
     p= matrix('1 0')
     ar = 3.88523524641183
     itr = 29
@@ -392,7 +390,7 @@ def test_RelativeValueIteration_dense():
     assert absolute(a.average_reward - ar) < SMALLNUM
 
 def test_RelativeValueIteration_sparse():
-    a = RelativeValueIteration(Ps, R)
+    a = mdp.RelativeValueIteration(Ps, R)
     p= matrix('1 0')
     ar = 3.88523524641183
     itr = 29
@@ -402,7 +400,7 @@ def test_RelativeValueIteration_sparse():
     assert absolute(a.average_reward - ar) < SMALLNUM
 
 def test_RelativeValueIteration_exampleForest():
-    a = RelativeValueIteration(Pf, Rf)
+    a = mdp.RelativeValueIteration(Pf, Rf)
     itr = 4
     p = matrix('0 0 0')
     #v = matrix('-4.360000000000000 -0.760000000000000 3.240000000000000')
@@ -416,18 +414,18 @@ def test_RelativeValueIteration_exampleForest():
 # ValueIteration
 
 def test_ValueIteration_boundIter():
-    inst = ValueIteration(P, R, 0.9, 0.01)
+    inst = mdp.ValueIteration(P, R, 0.9, 0.01)
     assert (inst.max_iter == 28)
 
 def test_ValueIteration_iterate():
-    inst = ValueIteration(P, R, 0.9, 0.01)
+    inst = mdp.ValueIteration(P, R, 0.9, 0.01)
     inst.iterate()
     assert (inst.V == (40.048625392716822,  33.65371175967546))
     assert (inst.policy == (1, 0))
     assert (inst.iter == 26)
 
 def test_ValueIteration_exampleForest():
-    a = ValueIteration(Pf, Rf, 0.96)
+    a = mdp.ValueIteration(Pf, Rf, 0.96)
     a.iterate()
     assert (a.policy == array([0, 0, 0])).all()
     assert a.iter == 4
@@ -435,12 +433,12 @@ def test_ValueIteration_exampleForest():
 # ValueIterationGS
 
 def test_ValueIterationGS_boundIter_exampleForest():
-    a = ValueIterationGS(Pf, Rf, 0.9)
+    a = mdp.ValueIterationGS(Pf, Rf, 0.9)
     itr = 39
     assert (a.max_iter == itr)
 
 def test_ValueIterationGS_exampleForest():
-    a = ValueIterationGS(Pf, Rf, 0.9)
+    a = mdp.ValueIterationGS(Pf, Rf, 0.9)
     p = matrix('0 0 0')
     v = matrix('25.5833879767579 28.8306546355469 32.8306546355469')
     itr = 33
