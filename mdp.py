@@ -540,18 +540,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
     if (S < 1) or (A < 1):
         raise ValueError(mdperr["SA_gt_1"])
     # if the user hasn't specified a mask, then we will make a random one now
-    if mask is None:
-        mask = rand(A, S, S)
-        if is_sparse:
-            # create a mask that has roughly two thirds of the cells set to 0
-            #for a in range(A):
-            mask[mask <= 2/3.0] = 0
-            mask[mask > 2/3.0] = 1
-        else:
-            r = random()
-            mask[mask < r] = 0
-            mask[mask >= r] = 1
-    else:
+    if mask is not None:
         # the mask needs to be SxS or AxSxS
         try:
             if mask.shape not in ((S, S), (A, S, S)):
@@ -565,22 +554,26 @@ def exampleRand(S, A, is_sparse=False, mask=None):
         # definition of reward matrix (values between -1 and +1)
         R = [None] * A
         for a in xrange(A):
-            if mask.shape == (A, S, S):
-                m = mask[a] # mask[a, :, :]
-            else:
-                m = mask
             # it may be more efficient to implement this by constructing lists
             # of rows, columns and values then creating a coo_matrix, but this
             # works for now
             PP = dok_matrix((S, S))
             RR = dok_matrix((S, S))
             for s in xrange(S):
-                n = int(m[s].sum()) # m[s, :]
+                if mask is None:
+                    m = rand(S)
+                    m[m <= 2/3.0] = 0
+                    m[m > 2/3.0] = 1
+                elif mask.shape == (A, S, S):
+                    m = mask[a][s] # mask[a, s, :]
+                else:
+                    m = mask[s]
+                n = int(m.sum()) # m[s, :]
                 if n == 0:
                     PP[s, randint(0, S)] = 1
                 else:
                     rows = s * ones(n, dtype=int)
-                    cols = where(m[s])[0] # m[s, :]
+                    cols = where(m)[0] # m[s, :]
                     vals = rand(n)
                     vals = vals / vals.sum()
                     reward = 2*rand(n) - ones(n)
@@ -601,21 +594,24 @@ def exampleRand(S, A, is_sparse=False, mask=None):
         # definition of reward matrix (values between -1 and +1)
         R = zeros((A, S, S))
         for a in range(A):
-            if mask.ndim == 3:
-                P[a, :, :] = mask[a] * rand(S, S)
-                for s in range(S):
-                    if mask[a, s, :].sum() == 0:
-                        P[a, s, randint(0, S)] = 1
-                    P[a, s, :] = P[a, s, :] / P[a, s, :].sum()
-                R[a, :, :] = (mask[a, :, :] * (2*rand(S, S) -
-                              ones((S, S), dtype=int)))
-            else:
-                P[a, :, :] = mask * rand(S, S)
-                for s in range(S):
-                    if mask[a, s, :].sum() == 0:
-                        P[a, s, randint(0, S)] = 1
-                    P[a, s, :] = P[a, s, :] / P[a, s, :].sum()
-                R[a, :, :] = mask * (2*rand(S, S) - ones((S, S), dtype=int))
+            for s in range(S):
+                # create our own random mask if there is no user supplied one
+                if mask is None:
+                    m = rand(S)
+                    r = random()
+                    m[m <= r] = 0
+                    m[m > r] = 1
+                elif mask.shape == (A, S, S):
+                    m = mask[a][s] # mask[a, s, :]
+                else:
+                    m = mask[s]
+                # Make sure that there is atleast one transition in each state
+                if m.sum() == 0:
+                    P[a, s, randint(0, S)] = 1
+                else:
+                    P[a][s] = m * rand(S)
+                    P[a][s] = P[a][s] / P[a][s].sum()
+                R[a][s] = (m * (2*rand(S) - ones(S, dtype=int)))
     # we want to return the generated transition and reward matrices
     return (P, R)
 
