@@ -1046,12 +1046,13 @@ class PolicyIteration(MDP):
     >>> import mdp
     >>> P, R = mdp.exampleRand(5, 3)
     >>> pi = mdp.PolicyIteration(P, R, 0.9)
+    
     >>> P, R = mdp.exampleForest()
     >>> pi = mdp.PolicyIteration(P, R, 0.9)
     >>> pi.V
-    
+    (26.244000000000018, 29.48400000000002, 33.484000000000016)
     >>> pi.policy
-    
+    (0, 0, 0)
     """
     
     def __init__(self, transitions, reward, discount, policy0=None,
@@ -1444,32 +1445,37 @@ class QLearning(MDP):
 
     Examples
     ---------
-    >>> import random # this example is reproducible only if random seed is set
+    >>> # These examples are reproducible only if random seed is set to 0 in
+    >>> # both the random and numpy.random modules.
+    >>> import numpy as np
+    >>> import random
     >>> import mdp
+    >>> np.random.seed(0)
     >>> random.seed(0)
     >>> P, R = mdp.exampleForest()
     >>> ql = mdp.QLearning(P, R, 0.96)
     >>> ql.Q
-    array([[ 68.80977389,  46.62560314],
-           [ 72.58265749,  43.1170545 ],
-           [ 77.1332834 ,  65.01737419]])
+    array([[ 68.38037354,  43.24888454],
+           [ 72.37777922,  42.75549145],
+           [ 77.02892702,  64.68712932]])
     >>> ql.V
-    (68.80977388561172, 72.5826574913828, 77.13328339600116)
+    (68.38037354422798, 72.37777921607258, 77.02892701616531)
     >>> ql.policy
     (0, 0, 0)
     
-    >>> import random # this example is reproducible only if random seed is set
     >>> import mdp
+    >>> import random
     >>> import numpy as np
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
+    >>> np.random.seed(0)
     >>> random.seed(0)
     >>> ql = mdp.QLearning(P, R, 0.9)
     >>> ql.Q
-    array([[ 36.63245946,  42.24434307],
-           [ 35.96582807,  32.70456417]])
+    array([[ 39.933691  ,  43.17543338],
+           [ 36.94394224,  35.42568056]])
     >>> ql.V
-    (42.24434307022128, 35.96582807367007)
+    (43.17543338090149, 36.943942243204454)
     >>> ql.policy
     (1, 0)
     
@@ -1790,7 +1796,7 @@ class ValueIteration(MDP):
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> vi = mdp.ValueIteration(P, R, 0.9)
     >>> vi.V
-    (40.04862539271682, 33.65371175967546)
+    (40.048625392716815, 33.65371175967546)
     >>> vi.policy
     (1, 0)
     >>> vi.iter
@@ -1807,7 +1813,7 @@ class ValueIteration(MDP):
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> vi = mdp.ValueIteration(P, R, 0.9)
     >>> vi.V
-    (40.04862539271682, 33.65371175967546)
+    (40.048625392716815, 33.65371175967546)
     >>> vi.policy
     (1, 0)
     
