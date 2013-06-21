@@ -10,10 +10,10 @@ nosetests installed, and then run from the command line.
 
 """
 
-#from random import seed as randseed
+from random import seed as randseed
 
 from numpy import absolute, array, empty, eye, matrix, zeros
-from numpy.random import rand
+from numpy.random import rand, seed as nprandseed
 from scipy.sparse import eye as speye
 from scipy.sparse import csr_matrix as sparse
 #from scipy.stats.distributions import poisson
@@ -358,27 +358,28 @@ def test_PolicyIteration_matrix_exampleForest():
 # QLearning
 
 def test_QLearning():
-    #randseed(0)
+    randseed(0)
+    nprandseed(0)
     a = mdp.QLearning(P, R, 0.9)
-    #q = matrix('36.63245946346517 42.24434307022128; ' \
-    #           '35.96582807367007 32.70456417451635')
-    #v = matrix('42.24434307022128 35.96582807367007')
-    p = matrix('1 0')
-    a.iterate()
-    #assert (absolute(a.Q - q) < SMALLNUM).all()
-    #assert (absolute(array(a.V) - v) < SMALLNUM).all()
+    q = matrix("39.9336909966907 43.175433380901488; "
+               "36.943942243204454 35.42568055796341")
+    v = matrix("43.17543338090149, 36.943942243204454")
+    p = matrix("1 0")
+    assert (absolute(a.Q - q) < SMALLNUM).all()
+    assert (absolute(array(a.V) - v) < SMALLNUM).all()
     assert (array(a.policy) == p).all()
 
 def test_QLearning_exampleForest():
+    randseed(0)
+    nprandseed(0)
     a = mdp.QLearning(Pf, Rf, 0.9)
-    #q = matrix('26.1841860892231 18.6273657021260; ' \
-    #           '29.5880960371007 18.5901207622881; '\
-    #           '33.3526406657418 25.2621054631519')
-    #v = matrix('26.1841860892231 29.5880960371007 33.3526406657418')
-    p = matrix('0 0 0')
-    a.iterate()
-    #assert (absolute(a.Q - q) < SMALLNUM).all()
-    #assert (absolute(array(a.V) - v) < SMALLNUM).all()
+    q = matrix("26.209597296761608, 18.108253687076136; "
+               "29.54356354184715, 18.116618509050486; "
+               "33.61440797109655, 25.1820819845856")
+    v = matrix("26.209597296761608, 29.54356354184715, 33.61440797109655")
+    p = matrix("0 0 0")
+    assert (absolute(a.Q - q) < SMALLNUM).all()
+    assert (absolute(array(a.V) - v) < SMALLNUM).all()
     assert (array(a.policy) == p).all()
 
 # RelativeValueIteration
