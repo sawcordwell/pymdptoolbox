@@ -224,10 +224,10 @@ def test_exampleRand_dense_check():
     assert check(Pr, Rr) == None
 
 def test_exampleRand_sparse_P_shape():
-    assert (Prs.shape == (ACTIONS, ))
+    assert (len(Prs) == ACTIONS)
 
 def test_exampleRand_sparse_R_shape():
-    assert (Rrs.shape == (ACTIONS, ))
+    assert (len(Rrs) == ACTIONS)
 
 def test_exampleRand_sparse_check():
     assert check(Prs, Rrs) == None
