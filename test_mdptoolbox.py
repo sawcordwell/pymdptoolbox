@@ -223,9 +223,13 @@ def test_exampleRand_dense_check():
 
 def test_exampleRand_sparse_P_shape():
     assert (len(Prs) == ACTIONS)
+    for a in range(ACTIONS):
+        assert (Prs[a].shape == (STATES, STATES))
 
 def test_exampleRand_sparse_R_shape():
     assert (len(Rrs) == ACTIONS)
+    for a in range(ACTIONS):
+        assert (Rrs[a].shape == (STATES, STATES))
 
 def test_exampleRand_sparse_check():
     assert mdp.check(Prs, Rrs) == None
