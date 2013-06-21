@@ -688,7 +688,6 @@ class MDP(object):
         elif discount is not None:
             raise ValueError("PyMDPtoolbox: the discount must be a positive "
                              "real number less than or equal to one.")
-        
         # if the max_iter is None then the algorithm is assumed to not use it
         # in its computations
         if type(max_iter) in (int, float):
@@ -699,7 +698,7 @@ class MDP(object):
         elif max_iter is not None:
             raise ValueError("PyMDPtoolbox: max_iter must be a positive real "
                              "number greater than zero.")
-        
+        # check that epsilon is something sane
         if type(epsilon) in (int, float):
             if epsilon <= 0:
                 raise ValueError("PyMDPtoolbox: epsilon must be greater than "
@@ -707,50 +706,44 @@ class MDP(object):
         elif epsilon is not None:
             raise ValueError("PyMDPtoolbox: epsilon must be a positive real "
                              "number greater than zero.")
-        
         # we run a check on P and R to make sure they are describing an MDP. If
         # an exception isn't raised then they are assumed to be correct.
         check(transitions, reward)
-        
         # computePR will assign the variables self.S, self.A, self.P and self.R
         self._computePR(transitions, reward)
-        
         # the verbosity is by default turned off
         self.verbose = False
         # Initially the time taken to perform the computations is set to None
         self.time = None
         # set the initial iteration count to zero
         self.iter = 0
-        
         # V should be stored as a vector ie shape of (S,) or (1, S)
         self.V = None
         # policy can also be stored as a vector
         self.policy = None
     
     def _bellmanOperator(self, V=None):
-        """Apply the Bellman operator on the value function.
-        
-        Updates the value function and the Vprev-improving policy.
-        
-        Returns
-        -------
-        (policy, value) : tuple of new policy and its value
-        
-        """
+        # Apply the Bellman operator on the value function.
+        # Updates the value function and the Vprev-improving policy.
+        # Returns: (policy, value), tuple of new policy and its value
+        #
+        # If V hasn't been sent into the method, then we assume to be working
+        # on the objects V attribute
         if V is None:
             # this V should be a reference to the data rather than a copy
             V = self.V
         else:
+            # make sure the user supplied V is of the right shape
             try:
                 if V.shape not in ((self.S,), (1, self.S)):
                     raise ValueError("bellman: V is not the right shape.")
             except AttributeError:
                 raise TypeError("bellman: V must be a numpy array or matrix.")
-        
+        # Looping through each action the the Q-value matrix is calculated
         Q = empty((self.A, self.S))
         for aa in range(self.A):
             Q[aa] = self.R[aa] + self.discount * self.P[aa].dot(V)
-        
+        # Get the policy and value, for now it is being returned but...
         # Which way is better?
         # 1. Return, (policy, value)
         return (Q.argmax(axis=0), Q.max(axis=0))
@@ -759,23 +752,21 @@ class MDP(object):
         # self.policy = Q.argmax(axis=1)
     
     def _computePR(self, P, R):
-        """Compute the reward for the system in one state chosing an action.
-        
-        Arguments
-        ---------
-        Let S = number of states, A = number of actions
-            P(SxSxA)  = transition matrix 
-                P could be an array with 3 dimensions or  a cell array (1xA), 
-                each cell containing a matrix (SxS) possibly sparse
-            R(SxSxA) or (SxA) = reward matrix
-                R could be an array with 3 dimensions (SxSxA) or  a cell array 
-                (1xA), each cell containing a sparse matrix (SxS) or a 2D 
-                array(SxA) possibly sparse  
-        Evaluation
-        ----------
-            PR(SxA)   = reward matrix
-        
-        """
+        # Compute the reward for the system in one state chosing an action.
+        # Arguments
+        # ---------
+        # Let S = number of states, A = number of actions
+        #    P(SxSxA)  = transition matrix 
+        #        P could be an array with 3 dimensions or  a cell array (1xA), 
+        #        each cell containing a matrix (SxS) possibly sparse
+        #    R(SxSxA) or (SxA) = reward matrix
+        #        R could be an array with 3 dimensions (SxSxA) or  a cell array 
+        #        (1xA), each cell containing a sparse matrix (SxS) or a 2D 
+        #        array(SxA) possibly sparse  
+        # Evaluation
+        # ----------
+        #    PR(SxA)   = reward matrix
+        #
         # We assume that P and R define a MDP i,e. assumption is that
         # check(P, R) has already been run and doesn't fail.
         #
@@ -819,7 +810,7 @@ class MDP(object):
         self.R = tuple(self.R)
     
     def _iterate(self):
-        """Raise error because child classes should implement this function."""
+        # Raise error because child classes should implement this function.
         raise NotImplementedError("You should create an _iterate() method.")
     
     def setSilent(self):
@@ -902,14 +893,13 @@ class FiniteHorizon(MDP):
         # Set the reward for the final transition to h, if specified.
         if h is not None:
             self.V[:, N] = h
-        
         # Call the iteration method
         self._iterate()
         
     def _iterate(self):
-        """Run the finite horizon algorithm."""
+        # Run the finite horizon algorithm.
         self.time = time()
-        
+        # loop through each time period
         for n in range(self.N):
             W, X = self._bellmanOperator(self.V[:, self.N - n])
             self.V[:, self.N - n - 1] = X
@@ -917,7 +907,7 @@ class FiniteHorizon(MDP):
             if self.verbose:
                 print("stage: %s ... policy transpose : %s") % (
                     self.N - n, self.policy[:, self.N - n -1].tolist())
-        
+        # update time spent running
         self.time = time() - self.time
         # After this we could create a tuple of tuples for the values and 
         # policies.
@@ -964,7 +954,7 @@ class LP(MDP):
 
     def __init__(self, transitions, reward, discount):
         """Initialise a linear programming MDP."""
-        
+        # import some functions from cvxopt and set them as object methods
         try:
             from cvxopt import matrix, solvers
             self._linprog = solvers.lp
@@ -972,21 +962,21 @@ class LP(MDP):
         except ImportError:
             raise ImportError("The python module cvxopt is required to use "
                               "linear programming functionality.")
-        
+        # we also need diagonal matrices, and using a sparse one may be more
+        # memory efficient
         from scipy.sparse import eye as speye
         self._speye = speye
-        
+        # initialise the MDP. epsilon and max_iter are not needed
         MDP.__init__(self, transitions, reward, discount, None, None)
-        
+        # Set the cvxopt solver to be quiet by default, but ...
         # this doesn't do what I want it to do c.f. issue #3
         if not self.verbose:
             solvers.options['show_progress'] = False
-        
         # Call the iteration method
         self._iterate()
     
     def _iterate(self):
-        """Run the linear programming algorithm."""
+        #Run the linear programming algorithm.
         self.time = time()
         # The objective is to resolve : min V / V >= PR + discount*P*V
         # The function linprog of the optimisation Toolbox of Mathworks
@@ -1007,13 +997,12 @@ class LP(MDP):
         # Using the glpk option will make this behave more like Octave
         # (Octave uses glpk) and perhaps Matlab. If solver=None (ie using the 
         # default cvxopt solver) then V agrees with the Octave equivalent
-        # only to 10e-8 places.
+        # only to 10e-8 places. This assumes glpk is installed of course.
         self.V = array(self._linprog(f, M, -h, solver='glpk')['x'])
-        
+        # apply the Bellman operator
         self.policy, self.V =  self._bellmanOperator()
-        
+        # update the time spent solving
         self.time = time() - self.time
-        
         # store value and policy as tuples
         self.V = tuple(self.V.tolist())
         self.policy = tuple(self.policy.tolist())
@@ -1057,40 +1046,47 @@ class PolicyIteration(MDP):
     >>> import mdp
     >>> P, R = mdp.exampleRand(5, 3)
     >>> pi = mdp.PolicyIteration(P, R, 0.9)
+    >>> P, R = mdp.exampleForest()
+    >>> pi = mdp.PolicyIteration(P, R, 0.9)
+    >>> pi.V
+    
+    >>> pi.policy
     
     """
     
     def __init__(self, transitions, reward, discount, policy0=None,
                  max_iter=1000, eval_type=0):
-        """Initialise a policy iteration MDP."""
-        
+        # Initialise a policy iteration MDP.
+        #
+        # Set up the MDP, but don't need to worry about epsilon values
         MDP.__init__(self, transitions, reward, discount, None, max_iter)
-        
+        # Check if the user has supplied an initial policy. If not make one.
         if policy0 == None:
-            # initialise the policy to the one which maximises the expected
+            # Initialise the policy to the one which maximises the expected
             # immediate reward
-            self.V = zeros(self.S)
-            self.policy, null = self._bellmanOperator()
+            null = zeros(self.S)
+            self.policy, null = self._bellmanOperator(null)
             del null
         else:
+            # Use the policy that the user supplied
+            # Make sure it is a numpy array
             policy0 = array(policy0)
-            
+            # Make sure the policy is the right size and shape
             if not policy0.shape in ((self.S, ), (self.S, 1), (1, self.S)):
                 raise ValueError("PyMDPtolbox: policy0 must a vector with "
                                  "length S.")
-            
+            # reshape the policy to be a vector
             policy0 = policy0.reshape(self.S)
-            
+            # The policy can only contain integers between 1 and S
             if (mod(policy0, 1).any() or (policy0 < 0).any() or
                     (policy0 >= self.S).any()):
                 raise ValueError("PyMDPtoolbox: policy0 must be a vector of "
                                  "integers between 1 and S.")
             else:
                 self.policy = policy0
-        
-        # set or reset the initial values to zero
+        # set the initial values to zero
         self.V = zeros(self.S)
-        
+        # Do some setup depending on the evaluation type
         if eval_type in (0, "matrix"):
             from numpy.linalg import solve
             from scipy.sparse import eye
@@ -1104,31 +1100,29 @@ class PolicyIteration(MDP):
                              "evaluation or 1 for iterative evaluation. "
                              "The strings 'matrix' and 'iterative' can also "
                              "be used.")
-        
         # Call the iteration method
         self._iterate()
     
     def _computePpolicyPRpolicy(self):
-        """Compute the transition matrix and the reward matrix for a policy.
-        
-        Arguments
-        ---------
-        Let S = number of states, A = number of actions
-        P(SxSxA)  = transition matrix 
-             P could be an array with 3 dimensions or a cell array (1xA),
-             each cell containing a matrix (SxS) possibly sparse
-        R(SxSxA) or (SxA) = reward matrix
-             R could be an array with 3 dimensions (SxSxA) or 
-             a cell array (1xA), each cell containing a sparse matrix (SxS) or
-             a 2D array(SxA) possibly sparse  
-        policy(S) = a policy
-        
-        Evaluation
-        ----------
-        Ppolicy(SxS)  = transition matrix for policy
-        PRpolicy(S)   = reward matrix for policy
-        
-        """
+        # Compute the transition matrix and the reward matrix for a policy.
+        #
+        # Arguments
+        # ---------
+        # Let S = number of states, A = number of actions
+        # P(SxSxA)  = transition matrix 
+        #     P could be an array with 3 dimensions or a cell array (1xA),
+        #     each cell containing a matrix (SxS) possibly sparse
+        # R(SxSxA) or (SxA) = reward matrix
+        #     R could be an array with 3 dimensions (SxSxA) or 
+        #     a cell array (1xA), each cell containing a sparse matrix (SxS) or
+        #     a 2D array(SxA) possibly sparse  
+        # policy(S) = a policy
+        #
+        # Evaluation
+        # ----------
+        # Ppolicy(SxS)  = transition matrix for policy
+        # PRpolicy(S)   = reward matrix for policy
+        #
         Ppolicy = empty((self.S, self.S))
         Rpolicy = zeros(self.S)
         for aa in range(self.A): # avoid looping over S
@@ -1152,37 +1146,36 @@ class PolicyIteration(MDP):
         return (Ppolicy, Rpolicy)
     
     def _evalPolicyIterative(self, V0=0, epsilon=0.0001, max_iter=10000):
-        """Evaluate a policy using iteration.
-        
-        Arguments
-        ---------
-        Let S = number of states, A = number of actions
-        P(SxSxA)  = transition matrix 
-            P could be an array with 3 dimensions or 
-            a cell array (1xS), each cell containing a matrix possibly sparse
-        R(SxSxA) or (SxA) = reward matrix
-            R could be an array with 3 dimensions (SxSxA) or 
-            a cell array (1xA), each cell containing a sparse matrix (SxS) or
-            a 2D array(SxA) possibly sparse  
-        discount  = discount rate in ]0; 1[
-        policy(S) = a policy
-        V0(S)     = starting value function, optional (default : zeros(S,1))
-        epsilon   = epsilon-optimal policy search, upper than 0,
-            optional (default : 0.0001)
-        max_iter  = maximum number of iteration to be done, upper than 0, 
-            optional (default : 10000)
-            
-        Evaluation
-        ----------
-        Vpolicy(S) = value function, associated to a specific policy
-        
-        Notes
-        -----
-        In verbose mode, at each iteration, displays the condition which
-        stopped iterations: epsilon-optimum value function found or maximum
-        number of iterations reached.
-        
-        """
+        # Evaluate a policy using iteration.
+        #
+        # Arguments
+        # ---------
+        # Let S = number of states, A = number of actions
+        # P(SxSxA)  = transition matrix 
+        #    P could be an array with 3 dimensions or 
+        #    a cell array (1xS), each cell containing a matrix possibly sparse
+        # R(SxSxA) or (SxA) = reward matrix
+        #    R could be an array with 3 dimensions (SxSxA) or 
+        #    a cell array (1xA), each cell containing a sparse matrix (SxS) or
+        #    a 2D array(SxA) possibly sparse  
+        # discount  = discount rate in ]0; 1[
+        # policy(S) = a policy
+        # V0(S)     = starting value function, optional (default : zeros(S,1))
+        # epsilon   = epsilon-optimal policy search, upper than 0,
+        #    optional (default : 0.0001)
+        # max_iter  = maximum number of iteration to be done, upper than 0, 
+        #    optional (default : 10000)
+        #    
+        # Evaluation
+        # ----------
+        # Vpolicy(S) = value function, associated to a specific policy
+        #
+        # Notes
+        # -----
+        # In verbose mode, at each iteration, displays the condition which
+        # stopped iterations: epsilon-optimum value function found or maximum
+        # number of iterations reached.
+        #
         if (type(V0) in (int, float)) and (V0 == 0):
             policy_V = zeros(self.S)
         else:
@@ -1225,62 +1218,60 @@ class PolicyIteration(MDP):
         self.V = policy_V
     
     def _evalPolicyMatrix(self):
-        """Evaluate the value function of the policy using linear equations.
-        
-        Arguments 
-        ---------
-        Let S = number of states, A = number of actions
-        P(SxSxA) = transition matrix 
-             P could be an array with 3 dimensions or a cell array (1xA),
-             each cell containing a matrix (SxS) possibly sparse
-        R(SxSxA) or (SxA) = reward matrix
-             R could be an array with 3 dimensions (SxSxA) or 
-             a cell array (1xA), each cell containing a sparse matrix (SxS) or
-             a 2D array(SxA) possibly sparse  
-        discount = discount rate in ]0; 1[
-        policy(S) = a policy
-        
-        Evaluation
-        ----------
-        Vpolicy(S) = value function of the policy
-        
-        """
-        
+        # Evaluate the value function of the policy using linear equations.
+        #
+        # Arguments 
+        # ---------
+        # Let S = number of states, A = number of actions
+        # P(SxSxA) = transition matrix 
+        #      P could be an array with 3 dimensions or a cell array (1xA),
+        #      each cell containing a matrix (SxS) possibly sparse
+        # R(SxSxA) or (SxA) = reward matrix
+        #      R could be an array with 3 dimensions (SxSxA) or 
+        #      a cell array (1xA), each cell containing a sparse matrix (SxS) or
+        #      a 2D array(SxA) possibly sparse  
+        # discount = discount rate in ]0; 1[
+        # policy(S) = a policy
+        #
+        # Evaluation
+        # ----------
+        # Vpolicy(S) = value function of the policy
+        #
         Ppolicy, Rpolicy = self._computePpolicyPRpolicy()
         # V = PR + gPV  => (I-gP)V = PR  => V = inv(I-gP)* PR
         self.V = self._lin_eq(
             (self._speye(self.S, self.S) - self.discount * Ppolicy), Rpolicy)
     
     def _iterate(self):
-        """Run the policy iteration algorithm."""
-        
+        # Run the policy iteration algorithm.
+        # If verbose the print a header
         if self.verbose:
             print('  Iteration  Number_of_different_actions')
-        
+        # Set up the while stopping condition and the current time
         done = False
         self.time = time()
-        
+        # loop until a stopping condition is reached
         while not done:
             self.iter += 1
-            
             # these _evalPolicy* functions will update the classes value
             # attribute
             if self.eval_type == "matrix":
                 self._evalPolicyMatrix()
             elif self.eval_type == "iterative":
                 self._evalPolicyIterative()
-            
             # This should update the classes policy attribute but leave the
             # value alone
             policy_next, null = self._bellmanOperator()
             del null
-            
+            # calculate in how many places does the old policy disagree with
+            # the new policy
             n_different = (policy_next != self.policy).sum()
-            
+            # if verbose then continue printing a table
             if self.verbose:
                 print('       %s                 %s') % (self.iter,
                                                          n_different)
-            
+            # Once the policy is unchanging of the maximum number of 
+            # of iterations has been reached then stop
             if n_different == 0:
                 done = True
                 if self.verbose:
@@ -1293,9 +1284,8 @@ class PolicyIteration(MDP):
                           "of iteration condition.")
             else:
                 self.policy = policy_next
-        
+        # update the time to return th computation time
         self.time = time() - self.time
-        
         # store value and policy as tuples
         self.V = tuple(self.V.tolist())
         self.policy = tuple(self.policy.tolist())
@@ -1997,7 +1987,7 @@ class ValueIterationGS(ValueIteration):
         self._iterate()
     
     def _iterate(self):
-        """Run the value iteration Gauss-Seidel algorithm."""
+        # Run the value iteration Gauss-Seidel algorithm.
         
         done = False
         
