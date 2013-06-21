@@ -10,7 +10,7 @@ nosetests installed, and then run from the command line.
 
 """
 
-from random import seed as randseed
+#from random import seed as randseed
 
 from numpy import absolute, array, empty, eye, matrix, zeros
 from numpy.random import rand
