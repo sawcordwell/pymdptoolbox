@@ -234,12 +234,12 @@ def test_exampleRand_sparse_check():
 
 def test_MDP_P_R_1():
     P1 = []
-    P1.append(matrix('0.5 0.5; 0.8 0.2'))
-    P1.append(matrix('0 1; 0.1 0.9'))
+    P1.append(array(matrix('0.5 0.5; 0.8 0.2')))
+    P1.append(array(matrix('0 1; 0.1 0.9')))
     P1 = tuple(P1)
     R1 = []
-    R1.append(matrix('5; -1'))
-    R1.append(matrix('10; 2'))
+    R1.append(array(matrix('5, -1')))
+    R1.append(array(matrix('10, 2')))
     R1 = tuple(R1)
     a = mdp.MDP(P, R, 0.9, 0.01, 1)
     assert type(a.P) == type(P1)
@@ -251,12 +251,12 @@ def test_MDP_P_R_1():
 def test_MDP_P_R_2():
     R = array([[[5, 10], [-1, 2]], [[1, 2], [3, 4]]])
     P1 = []
-    P1.append(matrix('0.5 0.5; 0.8 0.2'))
-    P1.append(matrix('0 1; 0.1 0.9'))
+    P1.append(array(matrix('0.5 0.5; 0.8 0.2')))
+    P1.append(array(matrix('0 1; 0.1 0.9')))
     P1 = tuple(P1)
     R1 = []
-    R1.append(matrix('7.5; -0.4'))
-    R1.append(matrix('2; 3.9'))
+    R1.append(array(matrix('7.5, -0.4')))
+    R1.append(array(matrix('2, 3.9')))
     R1 = tuple(R1)
     a = mdp.MDP(P, R, 0.9, 0.01, 1)
     assert type(a.P) == type(P1)
@@ -269,8 +269,8 @@ def test_MDP_P_R_3():
     P = array([[[0.6116, 0.3884],[0, 1]],[[0.6674, 0.3326],[0, 1]]])
     R = array([[[-0.2433, 0.7073],[0, 0.1871]],[[-0.0069, 0.6433],[0, 0.2898]]])
     PR = []
-    PR.append(matrix('0.12591304; 0.1871'))
-    PR.append(matrix('0.20935652;0.2898'))
+    PR.append(array(matrix('0.12591304, 0.1871')))
+    PR.append(array(matrix('0.20935652,0.2898')))
     PR = tuple(PR)
     a = mdp.MDP(P, R, 0.9, 0.01, 1)
     for kk in range(2):
