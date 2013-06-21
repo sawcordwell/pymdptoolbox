@@ -1200,7 +1200,7 @@ class PolicyIteration(MDP):
             itr += 1
             
             Vprev = policy_V
-            policy_V = policy_R + self.discount * policy_P * Vprev
+            policy_V = policy_R + self.discount * policy_P.dot(Vprev)
             
             variation = absolute(policy_V - Vprev).max()
             if self.verbose:
