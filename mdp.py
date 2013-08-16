@@ -570,19 +570,14 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                     m = mask[s]
                 n = int(m.sum()) # m[s, :]
                 if n == 0:
-                    PP[s, randint(0, S)] = 1
-                else:
-                    rows = s * ones(n, dtype=int)
-                    cols = where(m)[0] # m[s, :]
-                    vals = rand(n)
-                    vals = vals / vals.sum()
-                    reward = 2*rand(n) - ones(n)
-                    # I want to do this: PP[rows, cols] = vals, but it doesn't
-                    # seem to work, as val[-1] is stored as the value for each
-                    # row, column pair. Therefore the loop is needed.
-                    for x in xrange(n):
-                        PP[rows[x], cols[x]] = vals[x]
-                        RR[rows[x], cols[x]] = reward[x]
+                    m[randint(0, S)] = 1
+                    n = 1
+                cols = where(m)[0] # m[s, :]
+                vals = rand(n)
+                vals = vals / vals.sum()
+                reward = 2*rand(n) - ones(n)
+                PP[s, cols] = vals
+                RR[s, cols] = reward
             # PP.tocsr() takes the same amount of time as PP.tocoo().tocsr()
             # so constructing PP and RR as coo_matrix in the first place is
             # probably "better"
