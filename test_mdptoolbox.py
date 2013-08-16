@@ -286,7 +286,6 @@ def test_MDP_P_R_3():
 #    a = LP(P, R, 0.9)
 #    v = matrix('42.4418604651163 36.0465116279070')
 #    p = matrix('1 0')
-#    a.iterate()
 #    assert (array(a.policy) == p).all()
 #    assert (absolute(array(a.V) - v) < SMALLNUM).all()
 
@@ -334,7 +333,6 @@ def test_PolicyIteration_iterative_exampleForest():
     v = matrix('26.2439058351861, 29.4839058351861, 33.4839058351861')
     p = matrix('0 0 0')
     itr = 2
-    a.iterate()
     assert (absolute(array(a.V) - v) < SMALLNUM).all()
     assert (array(a.policy) == p).all()
     assert a.iter == itr
@@ -350,7 +348,6 @@ def test_PolicyIteration_matrix_exampleForest():
     v = matrix('26.2440000000000, 29.4840000000000, 33.4840000000000')
     p = matrix('0 0 0')
     itr = 2
-    a.iterate()
     assert (absolute(array(a.V) - v) < SMALLNUM).all()
     assert (array(a.policy) == p).all()
     assert a.iter == itr
@@ -389,7 +386,6 @@ def test_RelativeValueIteration_dense():
     p= matrix('1 0')
     ar = 3.88523524641183
     itr = 29
-    a.iterate()
     assert (array(a.policy) == p).all()
     assert a.iter == itr
     assert absolute(a.average_reward - ar) < SMALLNUM
@@ -399,7 +395,6 @@ def test_RelativeValueIteration_sparse():
     p= matrix('1 0')
     ar = 3.88523524641183
     itr = 29
-    a.iterate()
     assert (array(a.policy) == p).all()
     assert a.iter == itr
     assert absolute(a.average_reward - ar) < SMALLNUM
@@ -410,7 +405,6 @@ def test_RelativeValueIteration_exampleForest():
     p = matrix('0 0 0')
     #v = matrix('-4.360000000000000 -0.760000000000000 3.240000000000000')
     ar = 2.43000000000000
-    a.iterate()
     assert (array(a.policy) == p).all()
     assert a.iter == itr
     #assert (absolute(array(a.V) - v) < SMALLNUM).all()
@@ -424,7 +418,6 @@ def test_ValueIteration_boundIter():
 
 def test_ValueIteration_iterate():
     inst = mdp.ValueIteration(P, R, 0.9, 0.01)
-    inst.iterate()
     v = array((40.048625392716822,  33.65371175967546))
     assert (absolute(array(inst.V) - v) < SMALLNUM).all()
     assert (inst.policy == (1, 0))
@@ -432,7 +425,6 @@ def test_ValueIteration_iterate():
 
 def test_ValueIteration_exampleForest():
     a = mdp.ValueIteration(Pf, Rf, 0.96)
-    a.iterate()
     assert (a.policy == array([0, 0, 0])).all()
     assert a.iter == 4
 
@@ -448,7 +440,6 @@ def test_ValueIterationGS_exampleForest():
     p = matrix('0 0 0')
     v = matrix('25.5833879767579 28.8306546355469 32.8306546355469')
     itr = 33
-    a.iterate()
     assert (array(a.policy) == p).all()
     assert a.iter == itr
     assert (absolute(array(a.V) - v) < SMALLNUM).all()
@@ -476,7 +467,6 @@ def test_ValueIterationGS_exampleForest():
 #                R[a, s, s1] = 10 * (cs - cs1) - 2 * abs(a)
 #    
 #    inst = PolicyIteration(P, R, 0.9)
-#    inst.iterate()
 #    #assert (inst.policy == )
 #
 #def test_JacksCarRental2():
@@ -484,7 +474,6 @@ def test_ValueIterationGS_exampleForest():
 #
 #def test_GamblersProblem():
 #    inst = ValueIteration()
-#    inst.iterate()
 #    #assert (inst.policy == )
 
 # checkSquareStochastic: not square, stochastic and non-negative
