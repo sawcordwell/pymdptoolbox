@@ -602,10 +602,10 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                     m = mask[s]
                 # Make sure that there is atleast one transition in each state
                 if m.sum() == 0:
-                    P[a, s, randint(0, S)] = 1
-                else:
-                    P[a][s] = m * rand(S)
-                    P[a][s] = P[a][s] / P[a][s].sum()
+                    m[randint(0, S)] = 1
+                    n = 1
+                P[a][s] = m * rand(S)
+                P[a][s] = P[a][s] / P[a][s].sum()
                 R[a][s] = (m * (2*rand(S) - ones(S, dtype=int)))
     # we want to return the generated transition and reward matrices
     return (P, R)
