@@ -29,7 +29,7 @@ class TicTacToeMDP(object):
          
     def __init__(self):
         """"""
-        self.P = {}
+        self.P = [None] * 9
         for a in xrange(9):
             self.P[a] = {}
         self.R = {}
@@ -121,20 +121,31 @@ class TicTacToeMDP(object):
             return True
         else:
             return False
-        
+    
+    def getReward(self, s):
+        if self.isWon(s, 1):
+            return 1
+        elif self.isWon(s, 2):
+            return -1
+        else:
+            return 0
+    
     def run(self):
         """"""
         l = (0,1,2)
         # Iterate through a generator of all the combinations
-        for s in ([a0,a1,a2,a3,a4,a5,a6,a7,a8] for a0 in l for a1 in l
+        for s in ((a0,a1,a2,a3,a4,a5,a6,a7,a8) for a0 in l for a1 in l
                    for a2 in l for a3 in l for a4 in l for a5 in l
                    for a6 in l for a7 in l for a8 in l):
             if self.isValid(s):
+                s_idn = self.rotate(s)
+                if not self.R.has_key(s_idn):
+                    self.R[s_idn] = self.getReward(s)
                 self.transition(s)
         # Convert P and R to ijv lists
         # Iterate through up to the theorectically maxmimum value of s
         for s in xrange(int('222211110',3)):
-            pass
+            print s
         # return (P, R)
     
     def toTuple(self, state):
@@ -159,13 +170,7 @@ class TicTacToeMDP(object):
                 idn_s_new = self.rotate(s_new)
                 if not self.P[a].has_key((idn_s, idn_s_new)):
                     self.P[a][(idn_s, idn_s_new)] = len(legal_m)
-                if not self.R.has_key((idn_s, idn_s_new)):
-                    if is_won:
-                        self.R[(idn_s, idn_s_new)] = 1
-                    elif self.isWon(s_new, 2):
-                        self.R[(idn_s, idn_s_new)] = -1
-                    else:
-                        self.R[(idn_s, idn_s_new)] = 0
+                    
 
 if __name__ == "__main__":
     P, R = TicTacToeMDP().run()
