@@ -2,7 +2,7 @@
 from distutils.core import setup
 
 setup(name="pymdptoolbox",
-      version="4.0a2",
+      version="4.0a3",
       author="Steven A. W. Cordwell",
       author_email="steven.cordwell@uqconnect.edu.au",
       url="http://code.google.com/p/pymdptoolbox/",
@@ -31,5 +31,6 @@ setup(name="pymdptoolbox",
       platforms=["Any"],
       license="New BSD",
       
-      py_modules=["mdp"],
+      packages=["mdptoolbox"],
+      package_dir={"": "src"},
       requires=["math", "numpy", "random", "scipy", "time"],)
