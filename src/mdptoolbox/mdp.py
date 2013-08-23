@@ -42,9 +42,9 @@ How to use the documentation
 Documentation is available both as docstrings provided with the code and
 in html or pdf format from 
 `The MDP toolbox homepage <http://www.somewhere.com>`_. The docstring
-examples assume that the `mdp` module has been imported::
+examples assume that the `mdp` module has been imported imported like so::
 
-  >>> import mdp
+  >>> import mdptoolbox.mdp as mdp
 
 Code snippets are indicated by three greater-than signs::
 
@@ -394,9 +394,9 @@ class FiniteHorizon(MDP):
     
     Examples
     --------
-    >>> import mdp
-    >>> P, R = mdp.exampleForest()
-    >>> fh = mdp.FiniteHorizon(P, R, 0.9, 3)
+    >>> import mdptoolbox, mdptoolbox.example
+    >>> P, R = mdptoolbox.example.forest()
+    >>> fh = mdptoolbox.mdp.FiniteHorizon(P, R, 0.9, 3)
     >>> fh.V
     array([[ 2.6973,  0.81  ,  0.    ,  0.    ],
            [ 5.9373,  3.24  ,  1.    ,  0.    ],
@@ -405,6 +405,7 @@ class FiniteHorizon(MDP):
     array([[0, 0, 0],
            [0, 0, 1],
            [0, 0, 0]])
+    
     """
 
     def __init__(self, transitions, reward, discount, N, h=None):
@@ -482,6 +483,9 @@ class LP(MDP):
     
     Examples
     --------
+    >>> import mdptoolbox, mdptoolbox.example
+    >>> P, R = mdptoolbox.example.forest()
+    >>> lp = mdptoolbox.mdp.LP(P, R, 0.9)
     
     """
 
@@ -576,12 +580,12 @@ class PolicyIteration(MDP):
     
     Examples
     --------
-    >>> import mdp
-    >>> P, R = mdp.exampleRand(5, 3)
-    >>> pi = mdp.PolicyIteration(P, R, 0.9)
+    >>> import mdptoolbox, mdptoolbox.example
+    >>> P, R = mdptoolbox.example.rand()
+    >>> pi = mdptoolbox.mdp.PolicyIteration(P, R, 0.9)
     
-    >>> P, R = mdp.exampleForest()
-    >>> pi = mdp.PolicyIteration(P, R, 0.9)
+    >>> P, R = mdptoolbox.example.forest()
+    >>> pi = mdptoolbox.mdp.PolicyIteration(P, R, 0.9)
     >>> pi.V
     (26.244000000000018, 29.48400000000002, 33.484000000000016)
     >>> pi.policy
@@ -860,7 +864,13 @@ class PolicyIterationModified(PolicyIteration):
     
     Examples
     --------
-    >>> import mdp
+    >>> import mdptoolbox, mdptoolbox.example
+    >>> P, R = mdptoolbox.example.forest()
+    >>> pim = mdptoolbox.mdp.PolicyIterationModified(P, R, 0.9)
+    >>> pim.policy
+    FIXME
+    >>> pim.V
+    FIXME
     
     """
     
@@ -982,11 +992,11 @@ class QLearning(MDP):
     >>> # both the random and numpy.random modules.
     >>> import numpy as np
     >>> import random
-    >>> import mdp
+    >>> import mdptoolbox, mdptoolbox.example
     >>> np.random.seed(0)
     >>> random.seed(0)
-    >>> P, R = mdp.exampleForest()
-    >>> ql = mdp.QLearning(P, R, 0.96)
+    >>> P, R = mdptoolbox.example.forest()
+    >>> ql = mdptoolbox.mdp.QLearning(P, R, 0.96)
     >>> ql.Q
     array([[ 68.38037354,  43.24888454],
            [ 72.37777922,  42.75549145],
@@ -996,14 +1006,14 @@ class QLearning(MDP):
     >>> ql.policy
     (0, 0, 0)
     
-    >>> import mdp
+    >>> import mdptoolbox
     >>> import random
     >>> import numpy as np
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> np.random.seed(0)
     >>> random.seed(0)
-    >>> ql = mdp.QLearning(P, R, 0.9)
+    >>> pim = mdptoolbox.mdp.QLearning(P, R, 0.9)
     >>> ql.Q
     array([[ 39.933691  ,  43.17543338],
            [ 36.94394224,  35.42568056]])
@@ -1151,9 +1161,9 @@ class RelativeValueIteration(MDP):
     
     Examples
     --------
-    >>> import mdp
-    >>> P, R = exampleForest()
-    >>> rvi = mdp.RelativeValueIteration(P, R)
+    >>> import mdptoolbox, mdptoolbox.example
+    >>> P, R = mdptoolbox.example.forest()
+    >>> rvi = mdptoolbox.mdp.RelativeValueIteration(P, R)
     >>> rvi.average_reward
     2.4300000000000002
     >>> rvi.policy
@@ -1161,11 +1171,11 @@ class RelativeValueIteration(MDP):
     >>> rvi.iter
     4
     
-    >>> import mdp
+    >>> import mdptoolbox
     >>> import numpy as np
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
-    >>> rvi = mdp.RelativeValueIteration(P, R)
+    >>> rvi = mdptoolbox.mdp.RelativeValueIteration(P, R)
     >>> rvi.V
     (10.0, 3.885235246411831)
     >>> rvi.average_reward
@@ -1309,9 +1319,9 @@ class ValueIteration(MDP):
     
     Examples
     --------
-    >>> import mdp
-    >>> P, R = mdp.exampleForest()
-    >>> vi = mdp.ValueIteration(P, R, 0.96)
+    >>> import mdptoolbox, mdptoolbox.example
+    >>> P, R = mdptoolbox.example.forest()
+    >>> vi = mdptoolbox.mdp.ValueIteration(P, R, 0.96)
     >>> vi.verbose
     False
     >>> vi.V
@@ -1323,11 +1333,11 @@ class ValueIteration(MDP):
     >>> vi.time
     0.0009911060333251953
     
-    >>> import mdp
+    >>> import mdptoolbox
     >>> import numpy as np
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
-    >>> vi = mdp.ValueIteration(P, R, 0.9)
+    >>> vi = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
     >>> vi.V
     (40.048625392716815, 33.65371175967546)
     >>> vi.policy
@@ -1337,14 +1347,14 @@ class ValueIteration(MDP):
     >>> vi.time
     0.0066509246826171875
     
-    >>> import mdp
+    >>> import mdptoolbox
     >>> import numpy as np
     >>> from scipy.sparse import csr_matrix as sparse
     >>> P = [None] * 2
     >>> P[0] = sparse([[0.5, 0.5],[0.8, 0.2]])
     >>> P[1] = sparse([[0, 1],[0.1, 0.9]])
     >>> R = np.array([[5, 10], [-1, 2]])
-    >>> vi = mdp.ValueIteration(P, R, 0.9)
+    >>> vi = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
     >>> vi.V
     (40.048625392716815, 33.65371175967546)
     >>> vi.policy
@@ -1513,6 +1523,9 @@ class ValueIterationGS(ValueIteration):
     
     Examples
     --------
+    >>> import mdptoolbox, mdptoolbox.example
+    >>> P, R = mdptoolbox.example.forest()
+    >>> vigs = mdptoolbox.mdp.ValueIterationGS(P, R, 0.9)
     
     """
     
