@@ -204,7 +204,7 @@ class MDP(object):
     """
     
     def __init__(self, transitions, reward, discount, epsilon, max_iter):
-        """Initialise a MDP based on the input parameters."""
+        # Initialise a MDP based on the input parameters.
         
         # if the discount is None then the algorithm is assumed to not use it
         # in its computations
@@ -408,7 +408,7 @@ class FiniteHorizon(MDP):
     """
 
     def __init__(self, transitions, reward, discount, N, h=None):
-        """Initialise a finite horizon MDP."""
+        # Initialise a finite horizon MDP.
         if N < 1:
             raise ValueError('PyMDPtoolbox: N must be greater than 0')
         else:
@@ -489,7 +489,7 @@ class LP(MDP):
     """
 
     def __init__(self, transitions, reward, discount):
-        """Initialise a linear programming MDP."""
+        # Initialise a linear programming MDP.
         # import some functions from cvxopt and set them as object methods
         try:
             from cvxopt import matrix, solvers
@@ -875,7 +875,7 @@ class PolicyIterationModified(PolicyIteration):
     
     def __init__(self, transitions, reward, discount, epsilon=0.01,
                  max_iter=10):
-        """Initialise a (modified) policy iteration MDP."""
+        # Initialise a (modified) policy iteration MDP.
         
         # Maybe its better not to subclass from PolicyIteration, because the
         # initialisation of the two are quite different. eg there is policy0
@@ -914,7 +914,7 @@ class PolicyIterationModified(PolicyIteration):
         self._iterate()
     
     def _iterate(self):
-        """Run the modified policy iteration algorithm."""
+        # Run the modified policy iteration algorithm.
         
         if self.verbose:
             print('  Iteration  V_variation')
@@ -1020,7 +1020,7 @@ class QLearning(MDP):
     """
     
     def __init__(self, transitions, reward, discount, n_iter=10000):
-        """Initialise a Q-learning MDP."""
+        # Initialise a Q-learning MDP.
         
         # The following check won't be done in MDP()'s initialisation, so let's
         # do it here
@@ -1058,7 +1058,7 @@ class QLearning(MDP):
         self._iterate()
         
     def _iterate(self):
-        """Run the Q-learning algoritm."""
+        # Run the Q-learning algoritm.
         discrepancy = []
         
         self.time = time()
@@ -1183,7 +1183,7 @@ class RelativeValueIteration(MDP):
     """
     
     def __init__(self, transitions, reward, epsilon=0.01, max_iter=1000):
-        """Initialise a relative value iteration MDP."""
+        # Initialise a relative value iteration MDP.
         
         MDP.__init__(self,  transitions, reward, None, epsilon, max_iter)
         
@@ -1199,7 +1199,7 @@ class RelativeValueIteration(MDP):
         self._iterate()
     
     def _iterate(self):
-        """Run the relative value iteration algorithm."""
+        # Run the relative value iteration algorithm.
         
         done = False
         if self.verbose:
@@ -1359,7 +1359,7 @@ class ValueIteration(MDP):
     
     def __init__(self, transitions, reward, discount, epsilon=0.01,
                  max_iter=1000, initial_value=0):
-        """Initialise a value iteration MDP."""
+        # Initialise a value iteration MDP.
         
         MDP.__init__(self, transitions, reward, discount, epsilon, max_iter)
         
@@ -1392,23 +1392,22 @@ class ValueIteration(MDP):
         self._iterate()
     
     def _boundIter(self, epsilon):
-        """Compute a bound for the number of iterations.
-        
-        for the value iteration
-        algorithm to find an epsilon-optimal policy with use of span for the 
-        stopping criterion
-        
-        Arguments -------------------------------------------------------------
-        Let S = number of states, A = number of actions
-            epsilon   = |V - V*| < epsilon,  upper than 0,
-                optional (default : 0.01)
-        Evaluation ------------------------------------------------------------
-            max_iter  = bound of the number of iterations for the value 
-            iteration algorithm to find an epsilon-optimal policy with use of
-            span for the stopping criterion
-            cpu_time  = used CPU time
-        
-        """
+        # Compute a bound for the number of iterations.
+        #
+        # for the value iteration
+        # algorithm to find an epsilon-optimal policy with use of span for the 
+        # stopping criterion
+        #
+        # Arguments -----------------------------------------------------------
+        # Let S = number of states, A = number of actions
+        #    epsilon   = |V - V*| < epsilon,  upper than 0,
+        #        optional (default : 0.01)
+        # Evaluation ----------------------------------------------------------
+        #    max_iter  = bound of the number of iterations for the value 
+        #    iteration algorithm to find an epsilon-optimal policy with use of
+        #    span for the stopping criterion
+        #    cpu_time  = used CPU time
+        #
         # See Markov Decision Processes, M. L. Puterman, 
         # Wiley-Interscience Publication, 1994 
         # p 202, Theorem 6.6.6
@@ -1441,7 +1440,7 @@ class ValueIteration(MDP):
         self.max_iter = int(ceil(max_iter))
     
     def _iterate(self):
-        """Run the value iteration algorithm."""
+        # Run the value iteration algorithm.
         
         if self.verbose:
             print('  Iteration  V_variation')
@@ -1526,7 +1525,7 @@ class ValueIterationGS(ValueIteration):
     
     def __init__(self, transitions, reward, discount, epsilon=0.01,
                  max_iter=10, initial_value=0):
-        """Initialise a value iteration Gauss-Seidel MDP."""
+        # Initialise a value iteration Gauss-Seidel MDP.
         
         ValueIteration.__init__(self, transitions, reward, discount, epsilon,
                                 max_iter, initial_value)
