@@ -33,4 +33,4 @@ setup(name="pymdptoolbox",
       
       packages=["mdptoolbox"],
       package_dir={"": "src"},
-      requires=["math", "numpy", "random", "scipy", "time"],)
+      requires=["math", "numpy", "scipy", "time"],)

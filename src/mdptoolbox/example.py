@@ -5,13 +5,11 @@ Created on Sun Aug 18 14:32:25 2013
 @author: steve
 """
 
-from random import random
-
 from numpy import diag, ones, where, zeros
-from numpy.random import rand, randint
+from numpy.random import randint, random
 from scipy.sparse import coo_matrix, dok_matrix
 
-def exampleForest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
+def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     """Generate a MDP example based on a simple forest management scenario.
     
     This function is used to generate a transition probability
@@ -144,7 +142,7 @@ def exampleForest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     # we want to return the generated transition and reward matrices
     return (P, R)
 
-def exampleRand(S, A, is_sparse=False, mask=None):
+def rand(S, A, is_sparse=False, mask=None):
     """Generate a random Markov Decision Process.
     
     Parameters
@@ -198,7 +196,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
             RR = dok_matrix((S, S))
             for s in xrange(S):
                 if mask is None:
-                    m = rand(S)
+                    m = random(S)
                     m[m <= 2/3.0] = 0
                     m[m > 2/3.0] = 1
                 elif mask.shape == (A, S, S):
@@ -210,9 +208,9 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                     m[randint(0, S)] = 1
                     n = 1
                 cols = where(m)[0] # m[s, :]
-                vals = rand(n)
+                vals = random(n)
                 vals = vals / vals.sum()
-                reward = 2*rand(n) - ones(n)
+                reward = 2*random(n) - ones(n)
                 PP[s, cols] = vals
                 RR[s, cols] = reward
             # PP.tocsr() takes the same amount of time as PP.tocoo().tocsr()
@@ -229,7 +227,7 @@ def exampleRand(S, A, is_sparse=False, mask=None):
             for s in range(S):
                 # create our own random mask if there is no user supplied one
                 if mask is None:
-                    m = rand(S)
+                    m = random(S)
                     r = random()
                     m[m <= r] = 0
                     m[m > r] = 1
@@ -241,8 +239,8 @@ def exampleRand(S, A, is_sparse=False, mask=None):
                 if m.sum() == 0:
                     m[randint(0, S)] = 1
                     n = 1
-                P[a][s] = m * rand(S)
+                P[a][s] = m * random(S)
                 P[a][s] = P[a][s] / P[a][s].sum()
-                R[a][s] = (m * (2*rand(S) - ones(S, dtype=int)))
+                R[a][s] = (m * (2*random(S) - ones(S, dtype=int)))
     # we want to return the generated transition and reward matrices
     return (P, R)

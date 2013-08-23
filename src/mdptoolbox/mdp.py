@@ -95,12 +95,11 @@ http://www.inra.fr/mia/T/MDPtoolbox/.
 # POSSIBILITY OF SUCH DAMAGE.
 
 from math import ceil, log, sqrt
-from random import random
 from time import time
 
 from numpy import absolute, array, empty, mean, mod, multiply
 from numpy import ndarray, ones, zeros
-from numpy.random import randint
+from numpy.random import randint, random
 from scipy.sparse import csr_matrix as sparse
 
 from utils import check, getSpan
@@ -991,10 +990,8 @@ class QLearning(MDP):
     >>> # These examples are reproducible only if random seed is set to 0 in
     >>> # both the random and numpy.random modules.
     >>> import numpy as np
-    >>> import random
     >>> import mdptoolbox, mdptoolbox.example
     >>> np.random.seed(0)
-    >>> random.seed(0)
     >>> P, R = mdptoolbox.example.forest()
     >>> ql = mdptoolbox.mdp.QLearning(P, R, 0.96)
     >>> ql.Q
@@ -1007,12 +1004,10 @@ class QLearning(MDP):
     (0, 0, 0)
     
     >>> import mdptoolbox
-    >>> import random
     >>> import numpy as np
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> np.random.seed(0)
-    >>> random.seed(0)
     >>> pim = mdptoolbox.mdp.QLearning(P, R, 0.9)
     >>> ql.Q
     array([[ 39.933691  ,  43.17543338],
