@@ -1,3 +1,8 @@
+2013-08-24
+v4.0a3 - Converted the module into a package format, and renamed it so now it
+         must be imported with:
+         >>> import mdptoolbox
+
 2013-02-06
 v4.0a2 - Fixes a bug that didn't allow sparse matrices to be used in the
         ValueIteration class.
