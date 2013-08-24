@@ -10,16 +10,11 @@ from numpy import absolute, ones
 # These need to be fixed so that we use classes derived from Error.
 mdperr = {
 "mat_nonneg" :
-    "Probabilities must be non-negative.",
+    "Transition probabilities must be non-negative.",
 "mat_square" :
-    "The matrix must be square.",
+    "A transition probability matrix must be square, with dimensions S×S.",
 "mat_stoch" :
-    "Rows of the matrix must sum to one (1).",
-"mask_numpy" :
-    "mask must be a numpy array or matrix; i.e. type(mask) is "
-    "ndarray or type(mask) is matrix.", 
-"mask_SbyS" : 
-    "The mask must have shape SxS; i.e. mask.shape = (S, S).",
+    "Each row of a transition probability matrix must sum to one (1).",
 "obj_shape" :
     "Object arrays for transition probabilities and rewards "
     "must have only 1 dimension: the number of actions A. Each element of "
@@ -37,22 +32,13 @@ mdperr = {
     "actions greater than 0. i.e. R.shape = (A, S, S)",
 "PR_incompat" :
     "Incompatibility between P and R dimensions.",
-"prob_in01" :
-    "Probability p must be in [0; 1].",
 "R_type" :
     "The rewards must be in a numpy array; i.e. type(R) is "
     "ndarray, or numpy matrix; i.e. type(R) is matrix.",
 "R_shape" :
     "The reward matrix R must be an array of shape (A, S, S) or "
     "(S, A) with S : number of states greater than 0 and A : number of "
-    "actions greater than 0. i.e. R.shape = (S, A) or (A, S, S).",
-"R_gt_0" :
-    "The rewards must be greater than 0.",
-"S_gt_1" :
-    "Number of states S must be greater than 1.",
-"SA_gt_1" : 
-    "The number of states S and the number of actions A must be "
-    "greater than 1."
+    "actions greater than 0. i.e. R.shape = (S, A) or (A, S, S)."
 }
 
 def check(P, R):
@@ -98,7 +84,7 @@ def check(P, R):
             # continue checking from there
             raise AttributeError
         else:
-            raise ValueError(mdperr["P_shape"])
+            raise InvalidMDPError(mdperr["P_shape"])
     except AttributeError:
         try:
             aP = len(P)
@@ -106,9 +92,9 @@ def check(P, R):
             for aa in xrange(1, aP):
                 sP0aa, sP1aa = P[aa].shape
                 if (sP0aa != sP0) or (sP1aa != sP1):
-                    raise ValueError(mdperr["obj_square"])
+                    raise InvalidMDPError(mdperr["obj_square"])
         except AttributeError:
-            raise TypeError(mdperr["P_shape"])
+            raise InvalidMDPError(mdperr["P_shape"])
     except:
         raise
     # Checking R
@@ -122,7 +108,7 @@ def check(P, R):
             # A hack so that we can go into the next try-except statement
             raise AttributeError
         else:
-            raise ValueError(mdperr["R_shape"])
+            raise InvalidMDPError(mdperr["R_shape"])
     except AttributeError:
         try:
             aR = len(R)
@@ -130,18 +116,18 @@ def check(P, R):
             for aa in range(1, aR):
                 sR0aa, sR1aa = R[aa].shape
                 if ((sR0aa != sR0) or (sR1aa != sR1)):
-                    raise ValueError(mdperr["obj_square"])
+                    raise InvalidMDPError(mdperr["obj_square"])
         except AttributeError:
-            raise ValueError(mdperr["R_shape"])
+            raise InvalidMDPError(mdperr["R_shape"])
     except:
         raise
     # Checking dimensions
     if (sP0 < 1) or (aP < 1) or (sP0 != sP1):
-        raise ValueError(mdperr["P_shape"])   
+        raise InvalidMDPError(mdperr["P_shape"])   
     if (sR0 < 1) or (aR < 1) or (sR0 != sR1):
-        raise ValueError(mdperr["R_shape"])
+        raise InvalidMDPError(mdperr["R_shape"])
     if (sP0 != sR0) or (aP != aR):
-        raise ValueError(mdperr["PR_incompat"])
+        raise InvalidMDPError(mdperr["PR_incompat"])
     # Check that the P's are square and stochastic
     for aa in xrange(aP):
         checkSquareStochastic(P[aa])
@@ -260,20 +246,20 @@ def checkSquareStochastic(Z):
     except AttributeError:
         raise TypeError("Matrix should be a numpy type.")
     except ValueError:
-        raise ValueError(mdperr["mat_square"])
+        raise InvalidMDPError(mdperr["mat_square"])
     # check that the matrix is square, and that each row sums to one
     if s1 != s2:
-        raise ValueError(mdperr["mat_square"])
+        raise InvalidMDPError(mdperr["mat_square"])
     elif (absolute(Z.sum(axis=1) - ones(s2))).max() > 10e-12:
-        raise ValueError(mdperr["mat_stoch"])
+        raise InvalidMDPError(mdperr["mat_stoch"])
     # make sure that there are no values less than zero
     try:
         if (Z < 0).any():
-            raise ValueError(mdperr["mat_nonneg"])
+            raise InvalidMDPError(mdperr["mat_nonneg"])
     except AttributeError:
         try:
             if (Z.data < 0).any():
-                raise ValueError(mdperr["mat_nonneg"])
+                raise InvalidMDPError(mdperr["mat_nonneg"])
         except AttributeError:
             raise TypeError("Matrix should be a numpy type.")
     except:
