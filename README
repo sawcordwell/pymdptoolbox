@@ -35,10 +35,9 @@ Start Python in your favourite way. Then follow the example below to import the
 module, set up an example Markov decision problem using a discount value of 0.9,
 and solve it using the value iteration algorithm.
 
-    >>> import mdp
-    >>> P, R = mdp.exampleForest()
-    >>> vi = mdp.ValueIteration(P, R, 0.9)
-    >>> vi.iterate()
+    >>> import mdptoolbox, mdptoolbox.example
+    >>> P, R = mdptoolbox.example.forest()
+    >>> vi = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
     >>> vi.policy
     (0, 0, 0)
 
