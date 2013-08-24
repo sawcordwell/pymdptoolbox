@@ -1474,6 +1474,10 @@ class ValueIterationGS(ValueIteration):
     >>> import mdptoolbox, mdptoolbox.example
     >>> P, R = mdptoolbox.example.forest()
     >>> vigs = mdptoolbox.mdp.ValueIterationGS(P, R, 0.9)
+    >>> vigs.V
+    (25.5833879767579, 28.830654635546928, 32.83065463554693)
+    >>> vigs.policy
+    (0, 0, 0)
     
     """
     
@@ -1481,8 +1485,33 @@ class ValueIterationGS(ValueIteration):
                  max_iter=10, initial_value=0):
         # Initialise a value iteration Gauss-Seidel MDP.
         
-        ValueIteration.__init__(self, transitions, reward, discount, epsilon,
-                                max_iter, initial_value)
+        MDP.__init__(self, transitions, reward, discount, epsilon, max_iter)
+        
+        # initialization of optional arguments
+        if initial_value == 0:
+            self.V = zeros(self.S)
+        else:
+            if len(initial_value) != self.S:
+                raise ValueError("PyMDPtoolbox: The initial value must be "
+                                 "a vector of length S.")
+            else:
+                try:
+                    self.V = initial_value.reshape(self.S)
+                except AttributeError:
+                    self.V = array(initial_value)
+                except:
+                    raise
+        if self.discount < 1:
+            # compute a bound for the number of iterations and update the
+            # stored value of self.max_iter
+            self._boundIter(epsilon)
+            # computation of threshold of variation for V for an epsilon-
+            # optimal policy
+            self.thresh = epsilon * (1 - self.discount) / self.discount
+        else: # discount == 1
+            # threshold of variation for V for an epsilon-optimal policy
+            self.thresh = epsilon
+        
         # Call the iteration method
         self._iterate()
     
