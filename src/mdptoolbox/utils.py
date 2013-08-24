@@ -7,6 +7,54 @@ Created on Sun Aug 18 14:30:09 2013
 
 from numpy import absolute, ones
 
+# These need to be fixed so that we use classes derived from Error.
+mdperr = {
+"mat_nonneg" :
+    "Probabilities must be non-negative.",
+"mat_square" :
+    "The matrix must be square.",
+"mat_stoch" :
+    "Rows of the matrix must sum to one (1).",
+"mask_numpy" :
+    "mask must be a numpy array or matrix; i.e. type(mask) is "
+    "ndarray or type(mask) is matrix.", 
+"mask_SbyS" : 
+    "The mask must have shape SxS; i.e. mask.shape = (S, S).",
+"obj_shape" :
+    "Object arrays for transition probabilities and rewards "
+    "must have only 1 dimension: the number of actions A. Each element of "
+    "the object array contains an SxS ndarray or matrix.",
+"obj_square" :
+    "Each element of an object array for transition "
+    "probabilities and rewards must contain an SxS ndarray or matrix; i.e. "
+    "P[a].shape = (S, S) or R[a].shape = (S, S).",
+"P_type" :
+    "The transition probabilities must be in a numpy array; "
+    "i.e. type(P) is ndarray.",
+"P_shape" :
+    "The transition probability array must have the shape "
+    "(A, S, S)  with S : number of states greater than 0 and A : number of "
+    "actions greater than 0. i.e. R.shape = (A, S, S)",
+"PR_incompat" :
+    "Incompatibility between P and R dimensions.",
+"prob_in01" :
+    "Probability p must be in [0; 1].",
+"R_type" :
+    "The rewards must be in a numpy array; i.e. type(R) is "
+    "ndarray, or numpy matrix; i.e. type(R) is matrix.",
+"R_shape" :
+    "The reward matrix R must be an array of shape (A, S, S) or "
+    "(S, A) with S : number of states greater than 0 and A : number of "
+    "actions greater than 0. i.e. R.shape = (S, A) or (A, S, S).",
+"R_gt_0" :
+    "The rewards must be greater than 0.",
+"S_gt_1" :
+    "Number of states S must be greater than 1.",
+"SA_gt_1" : 
+    "The number of states S and the number of actions A must be "
+    "greater than 1."
+}
+
 def check(P, R):
     """Check if P and R define a valid Markov Decision Process (MDP).
     
@@ -38,8 +86,7 @@ def check(P, R):
     >>> 
     >>> import numpy as np
     >>> P_invalid = np.random.rand(5, 100, 100)
-    >>> mdptoolbox.utils.check(P_invalid, R_valid)
-    Error
+    >>> mdptoolbox.utils.check(P_invalid, R_valid) # Raises an exception
 
     """
     # Checking P
@@ -241,3 +288,21 @@ def getSpan(W):
     
     """
     return (W.max() - W.min())
+
+class Error(Exception):
+    """Base class for exceptions in this module."""
+    
+    def __init__(self):
+        Exception.__init__(self)
+        self.message = "PyMDPToolbox: "
+    
+    def __str__(self):
+        return repr(self.message)
+
+class InvalidMDPError(Error):
+    """Class for invalid definitions of a MDP."""
+    
+    def __init__(self, msg):
+        Error.__init__(self)
+        self.message += msg
+        self.args = tuple(msg)

@@ -104,58 +104,6 @@ from scipy.sparse import csr_matrix as sparse
 
 from utils import check, getSpan
 
-# These need to be fixed so that we use classes derived from Error.
-mdperr = {
-"mat_nonneg" :
-    "PyMDPtoolbox: Probabilities must be non-negative.",
-"mat_square" :
-    "PyMDPtoolbox: The matrix must be square.",
-"mat_stoch" :
-    "PyMDPtoolbox: Rows of the matrix must sum to one (1).",
-"mask_numpy" :
-    "PyMDPtoolbox: mask must be a numpy array or matrix; i.e. type(mask) is "
-    "ndarray or type(mask) is matrix.", 
-"mask_SbyS" : 
-    "PyMDPtoolbox: The mask must have shape SxS; i.e. mask.shape = (S, S).",
-"obj_shape" :
-    "PyMDPtoolbox: Object arrays for transition probabilities and rewards "
-    "must have only 1 dimension: the number of actions A. Each element of "
-    "the object array contains an SxS ndarray or matrix.",
-"obj_square" :
-    "PyMDPtoolbox: Each element of an object array for transition "
-    "probabilities and rewards must contain an SxS ndarray or matrix; i.e. "
-    "P[a].shape = (S, S) or R[a].shape = (S, S).",
-"P_type" :
-    "PyMDPtoolbox: The transition probabilities must be in a numpy array; "
-    "i.e. type(P) is ndarray.",
-"P_shape" :
-    "PyMDPtoolbox: The transition probability array must have the shape "
-    "(A, S, S)  with S : number of states greater than 0 and A : number of "
-    "actions greater than 0. i.e. R.shape = (A, S, S)",
-"PR_incompat" :
-    "PyMDPtoolbox: Incompatibility between P and R dimensions.",
-"prob_in01" :
-    "PyMDPtoolbox: Probability p must be in [0; 1].",
-"R_type" :
-    "PyMDPtoolbox: The rewards must be in a numpy array; i.e. type(R) is "
-    "ndarray, or numpy matrix; i.e. type(R) is matrix.",
-"R_shape" :
-    "PyMDPtoolbox: The reward matrix R must be an array of shape (A, S, S) or "
-    "(S, A) with S : number of states greater than 0 and A : number of "
-    "actions greater than 0. i.e. R.shape = (S, A) or (A, S, S).",
-"R_gt_0" :
-    "PyMDPtoolbox: The rewards must be greater than 0.",
-"S_gt_1" :
-    "PyMDPtoolbox: Number of states S must be greater than 1.",
-"SA_gt_1" : 
-    "PyMDPtoolbox: The number of states S and the number of actions A must be "
-    "greater than 1.",
-"discount_rng" : 
-    "PyMDPtoolbox: Discount rate must be in ]0; 1]",
-"maxi_min" :
-    "PyMDPtoolbox: The maximum number of iterations must be greater than 0"
-}
-
 class MDP(object):
     
     """A Markov Decision Problem.
@@ -210,7 +158,7 @@ class MDP(object):
         # in its computations
         if type(discount) in (int, float):
             if (discount <= 0) or (discount > 1):
-                raise ValueError(mdperr["discount_rng"])
+                raise ValueError("Discount rate must be in ]0; 1]")
             else:
                 if discount == 1:
                     print("PyMDPtoolbox WARNING: check conditions of "
@@ -224,7 +172,8 @@ class MDP(object):
         # in its computations
         if type(max_iter) in (int, float):
             if max_iter <= 0:
-                raise ValueError(mdperr["maxi_min"])
+                raise ValueError("The maximum number of iterations must be "
+                                 "greater than 0")
             else:
                 self.max_iter = max_iter
         elif max_iter is not None:
