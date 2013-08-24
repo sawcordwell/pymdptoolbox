@@ -42,9 +42,9 @@ mdperr = {
 }
 
 def check(P, R):
-    """Check if P and R define a valid Markov Decision Process (MDP).
+    """Check if ``P`` and ``R`` define a valid Markov Decision Process (MDP).
     
-    Let S = number of states, A = number of actions.
+    Let ``S`` = number of states, ``A`` = number of actions.
     
     Parameters
     ---------
@@ -62,7 +62,7 @@ def check(P, R):
     
     Notes
     -----
-    Raises an error if P and R do not define a MDP.
+    Raises an error if ``P`` and ``R`` do not define a MDP.
     
     Examples
     --------
