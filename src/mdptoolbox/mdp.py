@@ -256,7 +256,9 @@ class MDP(object):
     
     def _bellmanOperator(self, V=None):
         # Apply the Bellman operator on the value function.
+        # 
         # Updates the value function and the Vprev-improving policy.
+        # 
         # Returns: (policy, value), tuple of new policy and its value
         #
         # If V hasn't been sent into the method, then we assume to be working
@@ -271,7 +273,10 @@ class MDP(object):
                     raise ValueError("bellman: V is not the right shape.")
             except AttributeError:
                 raise TypeError("bellman: V must be a numpy array or matrix.")
-        # Looping through each action the the Q-value matrix is calculated
+        # Looping through each action the the Q-value matrix is calculated.
+        # P and V can be any object that supports indexing, so it is important
+        # that you know they define a valid MDP before calling the
+        # _bellmanOperator method. Otherwise the results will be meaningless.
         Q = empty((self.A, self.S))
         for aa in range(self.A):
             Q[aa] = self.R[aa] + self.discount * self.P[aa].dot(V)

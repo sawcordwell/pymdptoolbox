@@ -8,7 +8,7 @@ Created on Sun Aug 18 14:30:09 2013
 from numpy import absolute, ones
 
 def check(P, R):
-    """Check if P and R define a Markov Decision Process.
+    """Check if P and R define a valid Markov Decision Process (MDP).
     
     Let S = number of states, A = number of actions.
     
@@ -29,6 +29,17 @@ def check(P, R):
     Notes
     -----
     Raises an error if P and R do not define a MDP.
+    
+    Examples
+    --------
+    >>> import mdptoolbox, mdptoolbox.example
+    >>> P_valid, R_valid = mdptoolbox.example.rand(100, 5)
+    >>> mdptoolbox.utils.check(P_valid, R_valid) # Nothing should happen
+    >>> 
+    >>> import numpy as np
+    >>> P_invalid = np.random.rand(5, 100, 100)
+    >>> mdptoolbox.utils.check(P_invalid, R_valid)
+    Error
 
     """
     # Checking P
