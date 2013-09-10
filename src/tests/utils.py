@@ -24,6 +24,12 @@ P_sparse[1] = sp.sparse.csr_matrix([[0, 1],[0.1, 0.9]])
 
 P_forest, R_forest = mdptoolbox.example.forest()
 
+P_forest_sparse, R_forest_sparse = mdptoolbox.example.forest(S=STATES,
+                                                             is_sparse=True)
+
+np.random.seed(0)
 P_rand, R_rand = mdptoolbox.example.rand(STATES, ACTIONS)
 
-P_rand_sparse, R_rand_sparse = mdptoolbox.example.rand(STATES, ACTIONS, is_sparse=True)
+np.random.seed(0)
+P_rand_sparse, R_rand_sparse = mdptoolbox.example.rand(STATES, ACTIONS,
+                                                       is_sparse=True)
