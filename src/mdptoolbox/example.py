@@ -95,12 +95,9 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
            [ 4.,  2.]])
     
     """
-    if S <= 1:
-        raise ValueError("The number of states 'S' must be greater than 1.")
-    if (r1 <= 0) or (r2 <= 0):
-        raise ValueError("The rewards must be greater than non-negative.")
-    if (p < 0) or (p > 1):
-        raise ValueError("The probability 'p' must be in [0; 1].")
+    assert S > 1, "The number of states S must be greater than 1."
+    assert (r1 > 0) and (r2 > 0), "The rewards must be non-negative."
+    assert 0 <= p <= 1, "The probability p must be in [0; 1]."
     # Definition of Transition matrix P(:,:,1) associated to action Wait
     # (action 1) and P(:,:,2) associated to action Cut (action 2)
     #             | p 1-p 0.......0  |                  | 1 0..........0 |
@@ -172,15 +169,14 @@ def rand(S, A, is_sparse=False, mask=None):
     
     """
     # making sure the states and actions are more than one
-    if (S < 1) or (A < 1):
-        raise ValueError("The number of states S and the number of actions A "
-        "must be greater than 1.")
+    assert S > 1, "The number of states S must be greater than 1."
+    assert A > 1, "The number of actions A must be greater than 1."
     # if the user hasn't specified a mask, then we will make a random one now
     if mask is not None:
         # the mask needs to be SxS or AxSxS
         try:
-            if mask.shape not in ((S, S), (A, S, S)):
-                raise ValueError("'mask' must have dimensions S×S or A×S×S.")
+            assert mask.shape in ((S, S), (A, S, S)), "'mask' must have " \
+            "dimensions S×S or A×S×S."
         except AttributeError:
             raise TypeError("'mask' must be a numpy array or matrix.")
     # generate the transition and reward matrices based on S, A and mask
