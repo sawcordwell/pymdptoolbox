@@ -203,6 +203,14 @@ class MDP(object):
         # policy can also be stored as a vector
         self.policy = None
     
+    def __repr__(self):
+        P_repr = "P: \n"
+        R_repr = "R: \n"
+        for aa in range(self.A):
+            P_repr += repr(self.P[aa]) + "\n"
+            R_repr += repr(self.R[aa]) + "\n"
+        print(P_repr + "\n" + R_repr)
+    
     def _bellmanOperator(self, V=None):
         # Apply the Bellman operator on the value function.
         # 
