@@ -986,13 +986,12 @@ class QLearning(MDP):
         
         # The following check won't be done in MDP()'s initialisation, so let's
         # do it here
-        if (n_iter < 10000):
-            raise ValueError("PyMDPtoolbox: n_iter should be greater than "
-                             "10000.")
+        self.max_iter = int(n_iter)
+        assert self.max_iter >= 10000, "PyMDPtoolbox: n_iter should be " \
+                                        "greater than 10000."
         
         # We don't want to send this to MDP because _computePR should not be
-        # run on it
-        # MDP.__init__(self, transitions, reward, discount, None, n_iter)
+        # run on it, so check that it defines an MDP
         check(transitions, reward)
         
         if (transitions.dtype is object):
@@ -1009,8 +1008,6 @@ class QLearning(MDP):
         self.R = reward
         
         self.discount = discount
-        
-        self.max_iter = n_iter
         
         # Initialisations
         self.Q = zeros((self.S, self.A))
