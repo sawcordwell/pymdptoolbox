@@ -156,37 +156,22 @@ class MDP(object):
         
         # if the discount is None then the algorithm is assumed to not use it
         # in its computations
-        if type(discount) in (int, float):
-            if (discount <= 0) or (discount > 1):
-                raise ValueError("Discount rate must be in ]0; 1]")
-            else:
-                if discount == 1:
-                    print("PyMDPtoolbox WARNING: check conditions of "
-                          "convergence. With no discount, convergence is not "
-                          "always assumed.")
-                self.discount = discount
-        elif discount is not None:
-            raise ValueError("PyMDPtoolbox: the discount must be a positive "
-                             "real number less than or equal to one.")
+        if discount is not None:
+            self.discount = float(discount)
+            assert 0.0 < self.discount <= 1.0, "Discount rate must be in ]0; 1]"
+            if self.discount == 1:
+                print("PyMDPtoolbox WARNING: check conditions of convergence. "
+                      "With no discount, convergence is not always assumed.")
         # if the max_iter is None then the algorithm is assumed to not use it
         # in its computations
-        if type(max_iter) in (int, float):
-            if max_iter <= 0:
-                raise ValueError("The maximum number of iterations must be "
-                                 "greater than 0")
-            else:
-                self.max_iter = max_iter
-        elif max_iter is not None:
-            raise ValueError("PyMDPtoolbox: max_iter must be a positive real "
-                             "number greater than zero.")
+        if max_iter is not None:
+            self.max_iter = int(max_iter)
+            assert self.max_iter > 0, "The maximum number of iterations " \
+                                      "must be greater than 0."
         # check that epsilon is something sane
-        if type(epsilon) in (int, float):
-            if epsilon <= 0:
-                raise ValueError("PyMDPtoolbox: epsilon must be greater than "
-                                 "0.")
-        elif epsilon is not None:
-            raise ValueError("PyMDPtoolbox: epsilon must be a positive real "
-                             "number greater than zero.")
+        if epsilon is not None:
+            self.epsilon = float(epsilon)
+            assert self.epsilon > 0, "Epsilon must be greater than 0."
         # we run a check on P and R to make sure they are describing an MDP. If
         # an exception isn't raised then they are assumed to be correct.
         check(transitions, reward)
@@ -226,10 +211,10 @@ class MDP(object):
         else:
             # make sure the user supplied V is of the right shape
             try:
-                if V.shape not in ((self.S,), (1, self.S)):
-                    raise ValueError("bellman: V is not the right shape.")
+                assert V.shape in ((self.S,), (1, self.S)), "V is not the " \
+                    "right shape (Bellman operator)."
             except AttributeError:
-                raise TypeError("bellman: V must be a numpy array or matrix.")
+                raise TypeError("V must be a numpy array or matrix.")
         # Looping through each action the the Q-value matrix is calculated.
         # P and V can be any object that supports indexing, so it is important
         # that you know they define a valid MDP before calling the
@@ -274,34 +259,20 @@ class MDP(object):
                self.S = P[0].shape[0]
         except AttributeError:
             self.S = P[0].shape[0]
-        except:
-            raise
-        # convert Ps to matrices
-        self.P = []
-        for aa in xrange(self.A):
-            self.P.append(P[aa])
-        self.P = tuple(self.P)
+        # convert P to a tuple of numpy arrays
+        self.P = tuple([P[aa] for aa in range(self.A)])
         # Set self.R as a tuple of length A, with each element storing an 1×S
         # vector.
         try:
             if R.ndim == 2:
-                self.R = []
-                for aa in xrange(self.A):
-                    self.R.append(array(R[:, aa]).reshape(self.S))
+                self.R = tuple([array(R[:, aa]).reshape(self.S)
+                                for aa in range(self.A)])
             else:
-                raise AttributeError
+                self.R = tuple([multiply(P[aa], R[aa]).sum(1).reshape(self.S)
+                                for aa in xrange(self.A)])
         except AttributeError:
-            self.R = []
-            for aa in xrange(self.A):
-                try:
-                    self.R.append(P[aa].multiply(R[aa]).sum(1).reshape(self.S))
-                except AttributeError:
-                    self.R.append(multiply(P[aa],R[aa]).sum(1).reshape(self.S))
-                except:
-                    raise
-        except:
-            raise
-        self.R = tuple(self.R)
+            self.R = tuple([multiply(P[aa], R[aa]).sum(1).reshape(self.S)
+                            for aa in xrange(self.A)])
     
     def _iterate(self):
         # Raise error because child classes should implement this function.
@@ -371,10 +342,8 @@ class FiniteHorizon(MDP):
 
     def __init__(self, transitions, reward, discount, N, h=None):
         # Initialise a finite horizon MDP.
-        if N < 1:
-            raise ValueError('PyMDPtoolbox: N must be greater than 0')
-        else:
-            self.N = N
+        self.N = int(N)
+        assert self.N > 0, 'PyMDPtoolbox: N must be greater than 0.'
         # Initialise the base class
         MDP.__init__(self, transitions, reward, discount, None, None)
         # remove the iteration counter, it is not meaningful for backwards

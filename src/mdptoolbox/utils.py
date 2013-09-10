@@ -7,6 +7,8 @@ Created on Sun Aug 18 14:30:09 2013
 
 from numpy import absolute, ones
 
+SMALLNUM = 10e-12
+
 # These need to be fixed so that we use classes derived from Error.
 mdperr = {
 "mat_nonneg" :
@@ -250,7 +252,7 @@ def checkSquareStochastic(Z):
     # check that the matrix is square, and that each row sums to one
     if s1 != s2:
         raise InvalidMDPError(mdperr["mat_square"])
-    elif (absolute(Z.sum(axis=1) - ones(s2))).max() > 10e-12:
+    elif (absolute(Z.sum(axis=1) - ones(s2))).max() > SMALLNUM:
         raise InvalidMDPError(mdperr["mat_stoch"])
     # make sure that there are no values less than zero
     try:

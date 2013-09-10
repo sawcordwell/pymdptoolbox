@@ -79,8 +79,8 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     
     Examples
     --------
-    >>> import mdp
-    >>> P, R = mdp.exampleForest()
+    >>> import mdptoolbox.example
+    >>> P, R = mdptoolbox.example.forest()
     >>> P
     array([[[ 0.1,  0.9,  0. ],
             [ 0.1,  0. ,  0.9],
@@ -164,8 +164,8 @@ def rand(S, A, is_sparse=False, mask=None):
 
     Examples
     --------
-    >>> import mdp
-    >>> P, R = mdp.exampleRand(5, 3)
+    >>> import mdptoolbox.example
+    >>> P, R = mdptoolbox.example.rand(5, 3)
     
     """
     # making sure the states and actions are more than one
