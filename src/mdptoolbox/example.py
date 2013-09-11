@@ -175,7 +175,7 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     R[0, 1] = 0
     R[S - 1, 1] = r2
     # we want to return the generated transition and reward matrices
-    return (P, R)
+    return(P, R)
 
 def rand(S, A, is_sparse=False, mask=None):
     """Generate a random Markov Decision Process.
@@ -278,7 +278,7 @@ def rand(S, A, is_sparse=False, mask=None):
                 P[a][s] = P[a][s] / P[a][s].sum()
                 R[a][s] = (m * (2*random(S) - ones(S, dtype=int)))
     # we want to return the generated transition and reward matrices
-    return (P, R)
+    return(P, R)
 
 if __name__ == "__main__":
     import doctest
