@@ -852,7 +852,7 @@ class PolicyIterationModified(PolicyIteration):
         # Run the modified policy iteration algorithm.
         
         if self.verbose:
-            print('  Iteration  V_variation')
+            print('\tIteration\tV-variation')
         
         self.time = time()
         
@@ -865,7 +865,7 @@ class PolicyIterationModified(PolicyIteration):
             
             variation = getSpan(Vnext - self.V)
             if self.verbose:
-                print("      %s         %s" % (self.iter, variation))
+                print("\t%s\t%s" % (self.iter, variation))
             
             self.V = Vnext
             if variation < self.thresh:
@@ -1169,57 +1169,61 @@ class ValueIteration(MDP):
     
     Description
     -----------
-    mdp.ValueIteration applies the value iteration algorithm to solve
-    discounted MDP. The algorithm consists in solving Bellman's equation
+    ValueIteration applies the value iteration algorithm to solve a
+    discounted MDP. The algorithm consists of solving Bellman's equation
     iteratively.
-    Iterating is stopped when an epsilon-optimal policy is found or after a
+    Iteration is stopped when an epsilon-optimal policy is found or after a
     specified number (max_iter) of iterations. 
     This function uses verbose and silent modes. In verbose mode, the function
-    displays the variation of V (value function) for each iteration and the
-    condition which stopped iterations: epsilon-policy found or maximum number
-    of iterations reached.
+    displays the variation of V (the value function) for each iteration and the
+    condition which stopped the iteration: epsilon-policy found or maximum
+    number of iterations reached.
     
     Let S = number of states, A = number of actions.
     
     Parameters
     ----------
     P : array
-        transition matrix 
-        P could be a numpy ndarray with 3 dimensions (AxSxS) or a 
-        numpy ndarray of dytpe=object with 1 dimenion (1xA), each 
-        element containing a numpy ndarray (SxS) or scipy sparse matrix. 
+        The transition probability matrices. There are several object type
+        options for P. It can be a list or tuple of length A, where each
+        element stores an SxS numpy array, matrix or sparse matrix. It can also
+        be an AxSxS numpy array. In summary, each action's transition matrix
+        must be indexable like ``P[a]`` where ``a`` ∈ {0, 1⋯A-1}.
     R : array
-        reward matrix
-        R could be a numpy ndarray with 3 dimensions (AxSxS) or numpy
-        ndarray of dtype=object with 1 dimension (1xA), each element
-        containing a sparse matrix (SxS). R also could be a numpy 
-        ndarray with 2 dimensions (SxA) possibly sparse.
+        The reward array. The same as for ``P`` except that in the list/tuple
+        case each element can be either a 1xA or SxS array. In addition to the
+        AxSxS array, an SxA array can also be specified. Any array can be
+        sparse.
     discount : float
-        discount rate
-        Greater than 0, less than or equal to 1. Beware to check conditions of
-        convergence for discount = 1.
-    epsilon : float, optional
-        epsilon-optimal policy search
-        Greater than 0, optional (default: 0.01).
-    max_iter : int, optional
-        maximum number of iterations to be done
-        Greater than 0, optional (default: computed)
-    initial_value : array, optional
-        starting value function
-        optional (default: zeros(S,)).
+        The discount rate. This must be greater than 0, and less than or equal
+        to 1. Beware to check conditions of convergence for ``discount`` of 1.
+        A warning is issued if discount equals 1.
+    epsilon : float, optional (default: 0.01)
+        The epsilon-optimal policy search value. This must be greater than 0
+        if sepcified, and is used to decide when to stop iterating.
+    max_iter : int, optional (default: computed)
+        The maximum number of iterations. This must be greater than 0 if
+        specified. If the value given in argument is greater than a computed
+        bound, a warning informs that the computed bound will be considered.
+        By default, if discount is not egal to 1, a bound for max_iter is
+        computed, if not max_iter = 1000.
+    initial_value : array, optional (default: zeros(S,))
+        The starting value function. By default ``initial_value`` is composed
+        of 0 elements.
     
     Data Attributes
     ---------------
-    V : value function
-        A vector which stores the optimal value function. Prior to calling the
-        _iterate() method it has a value of None. Shape is (S, ).
-    policy : epsilon-optimal policy
-        A vector which stores the optimal policy. Prior to calling the
-        _iterate() method it has a value of None. Shape is (S, ).
-    iter : number of iterations taken to complete the computation
-        An integer
-    time : used CPU time
-        A float
+    V : tuple
+        The optimal value function. Each element is a float corresponding to
+        the expected value of being in that state assuming the optimal policy
+        is followed.
+    policy : tuple
+        The optimal policy function. Each element is an integer corresponding
+        to an action which maximises the value function in that state.
+    iter : int
+        The number of iterations taken to complete the computation.
+    time : float
+        The amount of CPU time used to run the algorithm.
     
     Methods
     -------
@@ -1247,8 +1251,6 @@ class ValueIteration(MDP):
     (0, 0, 0)
     >>> vi.iter
     4
-    >>> vi.time
-    0.0009911060333251953
     
     >>> import mdptoolbox
     >>> import numpy as np
@@ -1261,8 +1263,6 @@ class ValueIteration(MDP):
     (1, 0)
     >>> vi.iter
     26
-    >>> vi.time
-    0.0066509246826171875
     
     >>> import mdptoolbox
     >>> import numpy as np
@@ -1289,16 +1289,12 @@ class ValueIteration(MDP):
         if initial_value == 0:
             self.V = zeros(self.S)
         else:
-            if len(initial_value) != self.S:
-                raise ValueError("PyMDPtoolbox: The initial value must be "
-                                 "a vector of length S.")
-            else:
-                try:
-                    self.V = initial_value.reshape(self.S)
-                except AttributeError:
-                    self.V = array(initial_value)
-                except:
-                    raise
+            assert len(initial_value) == self.S, "PyMDPtoolbox: The " \
+                "initial value must be a vector of length S."
+            try:
+                self.V = initial_value.reshape(self.S)
+            except AttributeError:
+                self.V = array(initial_value).reshape(self.S)
         if self.discount < 1:
             # compute a bound for the number of iterations and update the
             # stored value of self.max_iter
@@ -1345,9 +1341,7 @@ class ValueIteration(MDP):
                     PP[aa] = self.P[aa][:, ss]
                 except ValueError:
                     PP[aa] = self.P[aa][:, ss].todense().A1
-                except:
-                    raise
-            # the function "min()" without any arguments finds the
+            # the method "min()" without any arguments finds the
             # minimum of the entire array.
             h[ss] = PP.min()
         
@@ -1365,11 +1359,10 @@ class ValueIteration(MDP):
         # Run the value iteration algorithm.
         
         if self.verbose:
-            print('  Iteration  V_variation')
+            print('\tIteration\tV-variation')
         
         self.time = time()
-        done = False
-        while not done:
+        while True:
             self.iter += 1
             
             Vprev = self.V.copy()
@@ -1383,18 +1376,18 @@ class ValueIteration(MDP):
             variation = getSpan(self.V - Vprev)
             
             if self.verbose:
-                print("      %s         %s" % (self.iter, variation))
+                print("\t%s\t%s" % (self.iter, variation))
             
             if variation < self.thresh:
-                done = True
                 if self.verbose:
-                    print("...iterations stopped, epsilon-optimal policy "
-                          "found.")
+                    print("PyMDPToolbox: iterations stopped, epsilon-optimal "
+                          "policy found.")
+                break
             elif (self.iter == self.max_iter):
-                done = True 
                 if self.verbose:
-                    print("...iterations stopped by maximum number of "
-                          "iteration condition.")
+                    print("PyMDPToolbox: iterations stopped by maximum number "
+                          "of iterations condition.")
+                break
         
         # store value and policy as tuples
         self.V = tuple(self.V.tolist())
