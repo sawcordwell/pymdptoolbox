@@ -194,7 +194,7 @@ class MDP(object):
         for aa in range(self.A):
             P_repr += repr(self.P[aa]) + "\n"
             R_repr += repr(self.R[aa]) + "\n"
-        print(P_repr + "\n" + R_repr)
+        return(P_repr + "\n" + R_repr)
     
     def _bellmanOperator(self, V=None):
         # Apply the Bellman operator on the value function.
