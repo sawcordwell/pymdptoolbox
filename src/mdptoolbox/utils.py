@@ -291,22 +291,17 @@ def checkSquareStochastic(Z):
     except ValueError:
         raise InvalidMDPError(mdperr["mat_square"])
     # check that the matrix is square, and that each row sums to one
-    if s1 != s2:
-        raise InvalidMDPError(mdperr["mat_square"])
-    elif (absolute(Z.sum(axis=1) - ones(s2))).max() > SMALLNUM:
-        raise InvalidMDPError(mdperr["mat_stoch"])
+    assert s1 == s2, mdperr["mat_square"]
+    assert (absolute(Z.sum(axis=1) - ones(s2))).max() < SMALLNUM, \
+        mdperr["mat_stoch"]
     # make sure that there are no values less than zero
     try:
-        if (Z < 0).any():
-            raise InvalidMDPError(mdperr["mat_nonneg"])
-    except AttributeError:
+        assert (Z >= 0).all(), mdperr["mat_nonneg"]
+    except (AttributeError, TypeError):
         try:
-            if (Z.data < 0).any():
-                raise InvalidMDPError(mdperr["mat_nonneg"])
+            assert (Z.data >= 0).all(), mdperr["mat_nonneg"]
         except AttributeError:
             raise TypeError("Matrix should be a numpy type.")
-    except:
-        raise
     
     return(None)
 
