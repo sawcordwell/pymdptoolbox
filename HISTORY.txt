@@ -1,3 +1,7 @@
+2013-09-11
+v4.0a4 - Package is useable with Python 3.3, used 2tp3 script to convert. Still
+         needs a bit of cleaning up.
+
 2013-08-24
 v4.0a3 - Converted the module into a package format, and renamed it so now it
          must be imported with:
