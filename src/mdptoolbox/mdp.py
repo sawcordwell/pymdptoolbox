@@ -278,9 +278,9 @@ class MDP(object):
             self.R = tuple([multiply(P[aa], R[aa]).sum(1).reshape(self.S)
                             for aa in xrange(self.A)])
     
-    def _iterate(self):
+    def run(self):
         # Raise error because child classes should implement this function.
-        raise NotImplementedError("You should create an _iterate() method.")
+        raise NotImplementedError("You should create a run() method.")
     
     def setSilent(self):
         """Set the MDP algorithm to silent mode."""
@@ -333,6 +333,7 @@ class FiniteHorizon(MDP):
     >>> import mdptoolbox, mdptoolbox.example
     >>> P, R = mdptoolbox.example.forest()
     >>> fh = mdptoolbox.mdp.FiniteHorizon(P, R, 0.9, 3)
+    >>> fh.run()
     >>> fh.V
     array([[ 2.6973,  0.81  ,  0.    ,  0.    ],
            [ 5.9373,  3.24  ,  1.    ,  0.    ],
@@ -362,9 +363,9 @@ class FiniteHorizon(MDP):
         if h is not None:
             self.V[:, N] = h
         # Call the iteration method
-        self._iterate()
+        #self.run()
         
-    def _iterate(self):
+    def run(self):
         # Run the finite horizon algorithm.
         self.time = time()
         # loop through each time period
@@ -420,6 +421,7 @@ class LP(MDP):
     >>> import mdptoolbox, mdptoolbox.example
     >>> P, R = mdptoolbox.example.forest()
     >>> lp = mdptoolbox.mdp.LP(P, R, 0.9)
+    >>> lp.run()
     
     """
 
@@ -444,9 +446,9 @@ class LP(MDP):
         if not self.verbose:
             solvers.options['show_progress'] = False
         # Call the iteration method
-        self._iterate()
+        #self.run()
     
-    def _iterate(self):
+    def run(self):
         #Run the linear programming algorithm.
         self.time = time()
         # The objective is to resolve : min V / V >= PR + discount*P*V
@@ -517,9 +519,11 @@ class PolicyIteration(MDP):
     >>> import mdptoolbox, mdptoolbox.example
     >>> P, R = mdptoolbox.example.rand()
     >>> pi = mdptoolbox.mdp.PolicyIteration(P, R, 0.9)
+    >>> pi.run()
     
     >>> P, R = mdptoolbox.example.forest()
     >>> pi = mdptoolbox.mdp.PolicyIteration(P, R, 0.9)
+    >>> pi.run()
     >>> pi.V
     (26.244000000000018, 29.48400000000002, 33.484000000000016)
     >>> pi.policy
@@ -573,7 +577,7 @@ class PolicyIteration(MDP):
                              "The strings 'matrix' and 'iterative' can also "
                              "be used.")
         # Call the iteration method
-        self._iterate()
+        #self.run()
     
     def _computePpolicyPRpolicy(self):
         # Compute the transition matrix and the reward matrix for a policy.
@@ -714,7 +718,7 @@ class PolicyIteration(MDP):
         self.V = self._lin_eq(
             (self._speye(self.S, self.S) - self.discount * Ppolicy), Rpolicy)
     
-    def _iterate(self):
+    def run(self):
         # Run the policy iteration algorithm.
         # If verbose the print a header
         if self.verbose:
@@ -801,6 +805,7 @@ class PolicyIterationModified(PolicyIteration):
     >>> import mdptoolbox, mdptoolbox.example
     >>> P, R = mdptoolbox.example.forest()
     >>> pim = mdptoolbox.mdp.PolicyIterationModified(P, R, 0.9)
+    >>> pim.run()
     >>> pim.policy
     FIXME
     >>> pim.V
@@ -846,9 +851,9 @@ class PolicyIterationModified(PolicyIteration):
             self.V = 1 / (1 - discount) * self.R.min() * ones((self.S, 1))
         
         # Call the iteration method
-        self._iterate()
+        #self.run()
     
-    def _iterate(self):
+    def run(self):
         # Run the modified policy iteration algorithm.
         
         if self.verbose:
@@ -929,6 +934,7 @@ class QLearning(MDP):
     >>> np.random.seed(0)
     >>> P, R = mdptoolbox.example.forest()
     >>> ql = mdptoolbox.mdp.QLearning(P, R, 0.96)
+    >>> ql.run()
     >>> ql.Q
     array([[ 68.38037354,  43.24888454],
            [ 72.37777922,  42.75549145],
@@ -943,7 +949,8 @@ class QLearning(MDP):
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> np.random.seed(0)
-    >>> pim = mdptoolbox.mdp.QLearning(P, R, 0.9)
+    >>> ql = mdptoolbox.mdp.QLearning(P, R, 0.9)
+    >>> ql.run()
     >>> ql.Q
     array([[ 39.933691  ,  43.17543338],
            [ 36.94394224,  35.42568056]])
@@ -979,9 +986,9 @@ class QLearning(MDP):
         self.mean_discrepancy = []
         
         # Call the iteration method
-        self._iterate()
+        #self.run()
         
-    def _iterate(self):
+    def run(self):
         # Run the Q-learning algoritm.
         discrepancy = []
         
@@ -1081,8 +1088,9 @@ class RelativeValueIteration(MDP):
     >>> import mdptoolbox, mdptoolbox.example
     >>> P, R = mdptoolbox.example.forest()
     >>> rvi = mdptoolbox.mdp.RelativeValueIteration(P, R)
+    >>> rvi.run()
     >>> rvi.average_reward
-    2.4300000000000002
+    3.2399999999999993
     >>> rvi.policy
     (0, 0, 0)
     >>> rvi.iter
@@ -1093,6 +1101,7 @@ class RelativeValueIteration(MDP):
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> rvi = mdptoolbox.mdp.RelativeValueIteration(P, R)
+    >>> rvi.run()
     >>> rvi.V
     (10.0, 3.885235246411831)
     >>> rvi.average_reward
@@ -1118,9 +1127,9 @@ class RelativeValueIteration(MDP):
         self.average_reward = None
         
         # Call the iteration method
-        self._iterate()
+        #self.run()
     
-    def _iterate(self):
+    def run(self):
         # Run the relative value iteration algorithm.
         
         done = False
@@ -1245,6 +1254,7 @@ class ValueIteration(MDP):
     >>> vi = mdptoolbox.mdp.ValueIteration(P, R, 0.96)
     >>> vi.verbose
     False
+    >>> vi.run()
     >>> vi.V
     (5.93215488, 9.38815488, 13.38815488)
     >>> vi.policy
@@ -1257,6 +1267,36 @@ class ValueIteration(MDP):
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> vi = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
+    >>> vi.setVerbose()
+    >>> vi.run()
+        Iteration       V-variation
+        1       8.0
+        2       2.76
+        3       1.9872
+        4       1.430784
+        5       1.03016448
+        6       0.7417184256
+        7       0.534037266432
+        8       0.384506831831
+        9       0.276844918918
+        10      0.199328341621
+        11      0.143516405967
+        12      0.103331812296
+        13      0.0743989048534
+        14      0.0535672114945
+        15      0.038568392276
+        16      0.0277692424387
+        17      0.0199938545559
+        18      0.0143955752802
+        19      0.0103648142018
+        20      0.00746266622526
+        21      0.00537311968218
+        22      0.00386864617116
+        23      0.00278542524322
+        24      0.00200550617512
+        25      0.00144396444609
+        26      0.0010396544012
+    PyMDPToolbox: iteration stopped, epsilon-optimal policy found.
     >>> vi.V
     (40.048625392716815, 33.65371175967546)
     >>> vi.policy
@@ -1272,6 +1312,7 @@ class ValueIteration(MDP):
     >>> P[1] = sparse([[0, 1],[0.1, 0.9]])
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> vi = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
+    >>> vi.run()
     >>> vi.V
     (40.048625392716815, 33.65371175967546)
     >>> vi.policy
@@ -1307,7 +1348,7 @@ class ValueIteration(MDP):
             self.thresh = epsilon
         
         # Call the iteration method
-        self._iterate()
+        #self.run()
     
     def _boundIter(self, epsilon):
         # Compute a bound for the number of iterations.
@@ -1355,7 +1396,7 @@ class ValueIteration(MDP):
         
         self.max_iter = int(ceil(max_iter))
     
-    def _iterate(self):
+    def run(self):
         # Run the value iteration algorithm.
         
         if self.verbose:
@@ -1380,12 +1421,12 @@ class ValueIteration(MDP):
             
             if variation < self.thresh:
                 if self.verbose:
-                    print("PyMDPToolbox: iterations stopped, epsilon-optimal "
+                    print("PyMDPToolbox: iteration stopped, epsilon-optimal "
                           "policy found.")
                 break
             elif (self.iter == self.max_iter):
                 if self.verbose:
-                    print("PyMDPToolbox: iterations stopped by maximum number "
+                    print("PyMDPToolbox: iteration stopped by maximum number "
                           "of iterations condition.")
                 break
         
@@ -1435,6 +1476,7 @@ class ValueIterationGS(ValueIteration):
     >>> import mdptoolbox, mdptoolbox.example
     >>> P, R = mdptoolbox.example.forest()
     >>> vigs = mdptoolbox.mdp.ValueIterationGS(P, R, 0.9)
+    >>> vigs.run()
     >>> vigs.V
     (25.5833879767579, 28.830654635546928, 32.83065463554693)
     >>> vigs.policy
@@ -1474,9 +1516,9 @@ class ValueIterationGS(ValueIteration):
             self.thresh = epsilon
         
         # Call the iteration method
-        self._iterate()
+        #self.run()
     
-    def _iterate(self):
+    def run(self):
         # Run the value iteration Gauss-Seidel algorithm.
         
         done = False
