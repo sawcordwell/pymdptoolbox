@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Markov Decision Process (MDP) Toolbox
-=====================================
+"""Markov Decision Process (MDP) Toolbox: ``mdp`` module
+=====================================================
 
-The MDP toolbox provides classes and functions for the resolution of
-descrete-time Markov Decision Processes.
+The ``mdp`` module provides classes for the resolution of descrete-time Markov
+Decision Processes.
 
 Available classes
 -----------------
@@ -25,43 +25,6 @@ ValueIteration
     Value iteration MDP
 ValueIterationGS
     Gauss-Seidel value iteration MDP
-
-Available functions
--------------------
-check
-    Check that an MDP is properly defined
-checkSquareStochastic
-    Check that a matrix is square and stochastic
-exampleForest
-    A simple forest management example
-exampleRand
-    A random example
-
-How to use the documentation
-----------------------------
-Documentation is available both as docstrings provided with the code and
-in html or pdf format from 
-`The MDP toolbox homepage <http://www.somewhere.com>`_. The docstring
-examples assume that the `mdp` module has been imported imported like so::
-
-  >>> import mdptoolbox.mdp as mdp
-
-Code snippets are indicated by three greater-than signs::
-
-  >>> x = 17
-  >>> x = x + 1
-  >>> x
-  18
-
-The documentation can be displayed with
-`IPython <http://ipython.scipy.org>`_. For example, to view the docstring of
-the ValueIteration class use ``mdp.ValueIteration?<ENTER>``, and to view its
-source code use ``mdp.ValueIteration??<ENTER>``.
-
-Acknowledgments
----------------
-This module is modified from the MDPtoolbox (c) 2009 INRA available at 
-http://www.inra.fr/mia/T/MDPtoolbox/.
 
 """
 
