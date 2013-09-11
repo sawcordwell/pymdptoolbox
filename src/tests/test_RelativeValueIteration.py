@@ -9,8 +9,8 @@ import numpy as np
 
 import mdptoolbox
 
-from utils import SMALLNUM, P_forest, R_forest, P_forest_sparse
-from utils import R_forest_sparse, P_small, R_small, P_sparse
+from .utils import SMALLNUM, P_forest, R_forest, P_forest_sparse
+from .utils import R_forest_sparse, P_small, R_small, P_sparse
 
 def test_RelativeValueIteration_small():
     sdp = mdptoolbox.mdp.RelativeValueIteration(P_small, R_small)

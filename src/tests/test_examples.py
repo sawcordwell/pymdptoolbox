@@ -9,8 +9,8 @@ import numpy as np
 
 import mdptoolbox.example
 
-from utils import ACTIONS, STATES, P_forest, R_forest, P_rand, R_rand
-from utils import P_rand_sparse, R_rand_sparse
+from .utils import ACTIONS, STATES, P_forest, R_forest, P_rand, R_rand
+from .utils import P_rand_sparse, R_rand_sparse
 
 def test_exampleForest_P_shape():
     assert (P_forest == np.array([[[0.1, 0.9, 0.0],

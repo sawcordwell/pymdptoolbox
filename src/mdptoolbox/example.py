@@ -146,11 +146,11 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     #             | p  0  0....0 1-p |                  | 1 0..........0 |
     if is_sparse:
         P = []
-        rows = range(S) * 2
-        cols = [0] * S + range(1, S) + [S - 1]
+        rows = list(range(S)) * 2
+        cols = [0] * S + list(range(1, S)) + [S - 1]
         vals = [p] * S + [1-p] * S
         P.append(coo_matrix((vals, (rows, cols)), shape=(S,S)).tocsr())
-        rows = range(S)
+        rows = list(range(S))
         cols = [0] * S
         vals = [1] * S
         P.append(coo_matrix((vals, (rows, cols)), shape=(S,S)).tocsr())
@@ -223,13 +223,13 @@ def rand(S, A, is_sparse=False, mask=None):
         P = [None] * A
         # definition of reward matrix (values between -1 and +1)
         R = [None] * A
-        for a in xrange(A):
+        for a in range(A):
             # it may be more efficient to implement this by constructing lists
             # of rows, columns and values then creating a coo_matrix, but this
             # works for now
             PP = dok_matrix((S, S))
             RR = dok_matrix((S, S))
-            for s in xrange(S):
+            for s in range(S):
                 if mask is None:
                     m = random(S)
                     m[m <= 2/3.0] = 0

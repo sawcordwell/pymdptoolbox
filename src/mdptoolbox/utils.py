@@ -132,7 +132,7 @@ def check(P, R):
         try:
             aP = len(P)
             sP0, sP1 = P[0].shape
-            for aa in xrange(1, aP):
+            for aa in range(1, aP):
                 sP0aa, sP1aa = P[aa].shape
                 if (sP0aa != sP0) or (sP1aa != sP1):
                     raise InvalidMDPError(mdperr["obj_square"])
@@ -172,7 +172,7 @@ def check(P, R):
     if (sP0 != sR0) or (aP != aR):
         raise InvalidMDPError(mdperr["PR_incompat"])
     # Check that the P's are square and stochastic
-    for aa in xrange(aP):
+    for aa in range(aP):
         checkSquareStochastic(P[aa])
         #checkSquareStochastic(P[aa, :, :])
     # We are at the end of the checks, so if no exceptions have been raised

@@ -65,7 +65,7 @@ from numpy import ndarray, ones, zeros
 from numpy.random import randint, random
 from scipy.sparse import csr_matrix as sparse
 
-from utils import check, getSpan
+from .utils import check, getSpan
 
 class MDP(object):
     
@@ -236,10 +236,10 @@ class MDP(object):
                                 for aa in range(self.A)])
             else:
                 self.R = tuple([multiply(P[aa], R[aa]).sum(1).reshape(self.S)
-                                for aa in xrange(self.A)])
+                                for aa in range(self.A)])
         except AttributeError:
             self.R = tuple([multiply(P[aa], R[aa]).sum(1).reshape(self.S)
-                            for aa in xrange(self.A)])
+                            for aa in range(self.A)])
     
     def run(self):
         # Raise error because child classes should implement this function.
@@ -337,8 +337,8 @@ class FiniteHorizon(MDP):
             self.V[:, self.N - n - 1] = X
             self.policy[:, self.N - n - 1] = W
             if self.verbose:
-                print("stage: %s ... policy transpose : %s") % (
-                    self.N - n, self.policy[:, self.N - n -1].tolist())
+                print(("stage: %s ... policy transpose : %s") % (
+                    self.N - n, self.policy[:, self.N - n -1].tolist()))
         # update time spent running
         self.time = time() - self.time
         # After this we could create a tuple of tuples for the values and 
@@ -643,7 +643,7 @@ class PolicyIteration(MDP):
             
             variation = absolute(policy_V - Vprev).max()
             if self.verbose:
-                print('      %s         %s') % (itr, variation)
+                print(('      %s         %s') % (itr, variation))
             
             # ensure |Vn - Vpolicy| < epsilon
             if variation < ((1 - self.discount) / self.discount) * epsilon:
@@ -710,8 +710,8 @@ class PolicyIteration(MDP):
             n_different = (policy_next != self.policy).sum()
             # if verbose then continue printing a table
             if self.verbose:
-                print('       %s                 %s') % (self.iter,
-                                                         n_different)
+                print(('       %s                 %s') % (self.iter,
+                                                         n_different))
             # Once the policy is unchanging of the maximum number of 
             # of iterations has been reached then stop
             if n_different == 0:
@@ -836,7 +836,7 @@ class PolicyIterationModified(PolicyIteration):
             
             variation = getSpan(Vnext - self.V)
             if self.verbose:
-                print("\t%s\t%s" % (self.iter, variation))
+                print(("\t%s\t%s" % (self.iter, variation)))
             
             self.V = Vnext
             if variation < self.thresh:
@@ -1114,7 +1114,7 @@ class RelativeValueIteration(MDP):
             variation = getSpan(Vnext - self.V)
             
             if self.verbose:
-                print("      %s         %s" % (self.iter, variation))
+                print(("      %s         %s" % (self.iter, variation)))
             
             if variation < self.epsilon:
                  done = True
@@ -1383,7 +1383,7 @@ class ValueIteration(MDP):
             variation = getSpan(self.V - Vprev)
             
             if self.verbose:
-                print("\t%s\t%s" % (self.iter, variation))
+                print(("\t%s\t%s" % (self.iter, variation)))
             
             if variation < self.thresh:
                 if self.verbose:
@@ -1509,7 +1509,7 @@ class ValueIterationGS(ValueIteration):
             variation = getSpan(self.V - Vprev)
             
             if self.verbose:
-                print("      %s         %s" % (self.iter, variation))
+                print(("      %s         %s" % (self.iter, variation)))
             
             if variation < self.thresh: 
                 done = True

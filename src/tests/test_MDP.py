@@ -9,7 +9,7 @@ import numpy as np
 
 import mdptoolbox, mdptoolbox.example
 
-from utils import SMALLNUM, P_small, R_small
+from .utils import SMALLNUM, P_small, R_small
 
 def test_MDP_P_R_1():
     P1 = []

@@ -9,9 +9,9 @@ import numpy as np
 
 import mdptoolbox
 
-from utils import SMALLNUM, P_forest, R_forest, P_forest_sparse
-from utils import R_forest_sparse, P_rand, R_rand, P_rand_sparse, R_rand_sparse
-from utils import P_small, R_small, P_sparse
+from .utils import SMALLNUM, P_forest, R_forest, P_forest_sparse
+from .utils import R_forest_sparse, P_rand, R_rand, P_rand_sparse, R_rand_sparse
+from .utils import P_small, R_small, P_sparse
 
 def test_ValueIteration_small():
     sdp = mdptoolbox.mdp.ValueIteration(P_small, R_small, 0.9)

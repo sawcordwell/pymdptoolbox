@@ -10,7 +10,7 @@ import scipy as sp
 
 import mdptoolbox
 
-from utils import ACTIONS, STATES
+from .utils import ACTIONS, STATES
 
 def test_check_square_stochastic_nonnegative_array_1():
     P = np.zeros((ACTIONS, STATES, STATES))
@@ -55,21 +55,21 @@ def test_check_P_square_stochastic_nonnegative_object_sparse():
 def test_check_P_square_stochastic_nonnegative_list_array():
     P = []
     R = np.random.rand(STATES, ACTIONS)
-    for a in xrange(ACTIONS):
+    for a in range(ACTIONS):
         P.append(np.eye(STATES))
     assert (mdptoolbox.utils.check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_list_matrix():
     P = []
     R = np.random.rand(STATES, ACTIONS)
-    for a in xrange(ACTIONS):
+    for a in range(ACTIONS):
         P.append(np.matrix(np.eye(STATES)))
     assert (mdptoolbox.utils.check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_list_sparse():
     P = []
     R = np.random.rand(STATES, ACTIONS)
-    for a in xrange(ACTIONS):
+    for a in range(ACTIONS):
         P.append(sp.sparse.eye(STATES, STATES).tocsr())
     assert (mdptoolbox.utils.check(P, R) == None)
 
@@ -78,21 +78,21 @@ def test_check_P_square_stochastic_nonnegative_list_sparse():
 def test_check_P_square_stochastic_nonnegative_dict_array():
     P = {}
     R = np.random.rand(STATES, ACTIONS)
-    for a in xrange(ACTIONS):
+    for a in range(ACTIONS):
         P[a] = np.eye(STATES)
     assert (mdptoolbox.utils.check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_dict_matrix():
     P = {}
     R = np.random.rand(STATES, ACTIONS)
-    for a in xrange(ACTIONS):
+    for a in range(ACTIONS):
         P[a] = np.matrix(np.eye(STATES))
     assert (mdptoolbox.utils.check(P, R) == None)
 
 def test_check_P_square_stochastic_nonnegative_dict_sparse():
     P = {}
     R = np.random.rand(STATES, ACTIONS)
-    for a in xrange(ACTIONS):
+    for a in range(ACTIONS):
         P[a] = sp.sparse.eye(STATES, STATES).tocsr()
     assert (mdptoolbox.utils.check(P, R) == None)
 

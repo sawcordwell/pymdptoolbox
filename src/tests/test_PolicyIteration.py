@@ -9,8 +9,8 @@ import numpy as np
 
 import mdptoolbox
 
-from utils import SMALLNUM, P_forest, R_forest, P_small, R_small, P_sparse
-from utils import P_forest_sparse, R_forest_sparse
+from .utils import SMALLNUM, P_forest, R_forest, P_small, R_small, P_sparse
+from .utils import P_forest_sparse, R_forest_sparse
 
 def test_PolicyIteration_init_policy0():
     sdp = mdptoolbox.mdp.PolicyIteration(P_small, R_small, 0.9)
