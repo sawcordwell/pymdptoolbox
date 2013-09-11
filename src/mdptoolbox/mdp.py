@@ -606,7 +606,10 @@ class PolicyIteration(MDP):
             ind = (self.policy == aa).nonzero()[0]
             # if no rows use action a, then no need to assign this
             if ind.size > 0:
-                Ppolicy[ind, :] = self.P[aa][ind, :]
+                try:
+                    Ppolicy[ind, :] = self.P[aa][ind, :]
+                except ValueError:
+                    Ppolicy[ind, :] = self.P[aa][ind, :].todense()
                 #PR = self._computePR() # an apparently uneeded line, and
                 # perhaps harmful in this implementation c.f.
                 # mdp_computePpolicyPRpolicy.m
