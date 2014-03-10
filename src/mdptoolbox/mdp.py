@@ -518,18 +518,16 @@ class PolicyIteration(MDP):
             # Make sure it is a numpy array
             policy0 = array(policy0)
             # Make sure the policy is the right size and shape
-            if not policy0.shape in ((self.S, ), (self.S, 1), (1, self.S)):
-                raise ValueError("PyMDPtolbox: policy0 must a vector with "
-                                 "length S.")
+            assert policy0.shape in ((self.S, ), (self.S, 1), (1, self.S)), \
+                "'policy0' must a vector with length S."
             # reshape the policy to be a vector
             policy0 = policy0.reshape(self.S)
-            # The policy can only contain integers between 1 and S
-            if (mod(policy0, 1).any() or (policy0 < 0).any() or
-                    (policy0 >= self.S).any()):
-                raise ValueError("PyMDPtoolbox: policy0 must be a vector of "
-                                 "integers between 1 and S.")
-            else:
-                self.policy = policy0
+            # The policy can only contain integers between 0 and S-1
+            msg = "'policy0' must be a vector of integers between 0 and S-1."
+            assert not mod(policy0, 1).any(), msg
+            assert (policy0 >= 0).all(), msg
+            assert (policy0 < self.S).all(), msg
+            self.policy = policy0
         # set the initial values to zero
         self.V = zeros(self.S)
         # Do some setup depending on the evaluation type
