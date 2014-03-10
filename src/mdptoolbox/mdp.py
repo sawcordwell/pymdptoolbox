@@ -798,28 +798,21 @@ class PolicyIterationModified(PolicyIteration):
         
         # PolicyIteration doesn't pass epsilon to MDP.__init__() so we will
         # check it here
-        if type(epsilon) in (int, float):
-            if epsilon <= 0:
-                raise ValueError("PyMDPtoolbox: epsilon must be greater than "
-                                 "0.")
-        else:
-            raise ValueError("PyMDPtoolbox: epsilon must be a positive real "
-                             "number greater than zero.")
+        self.epsilon = float(epsilon)
+        assert epsilon > 0, "'epsilon' must be greater than 0."
         
         # computation of threshold of variation for V for an epsilon-optimal
         # policy
         if self.discount != 1:
-            self.thresh = epsilon * (1 - self.discount) / self.discount
+            self.thresh = self.epsilon * (1 - self.discount) / self.discount
         else:
-            self.thresh = epsilon
+            self.thresh = self.epsilon
         
-        self.epsilon = epsilon
-        
-        if discount == 1:
+        if self.discount == 1:
             self.V = zeros((self.S, 1))
         else:
-            # min(min()) is not right
-            self.V = 1 / (1 - discount) * self.R.min() * ones((self.S, 1))
+            Rmin = min(R.min() for R in self.R)
+            self.V = 1 / (1 - discount) * Rmin * ones((self.S,))
         
         # Call the iteration method
         #self.run()
