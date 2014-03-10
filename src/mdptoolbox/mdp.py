@@ -623,15 +623,15 @@ class PolicyIteration(MDP):
         # stopped iterations: epsilon-optimum value function found or maximum
         # number of iterations reached.
         #
-        if (type(V0) in (int, float)) and (V0 == 0):
-            policy_V = zeros(self.S)
-        else:
-            if (type(V0) in (ndarray)) and (V0.shape == (self.S, 1)):
-                policy_V = V0
+        try:
+            assert V0.shape in ((self.S, ), (self.S, 1), (1, self.S)), \
+                "'V0' must be a vector of length S."
+            policy_V = array(V0).reshape(self.S)
+        except AttributeError:
+            if len(V0) == self.S:
+                policy_V = array(V0).reshape(self.S)
             else:
-                raise ValueError("PyMDPtoolbox: V0 vector/array type not "
-                                 "supported. Use ndarray of matrix column "
-                                 "vector length S.")
+                policy_V = zeros(self.S)
         
         policy_P, policy_R = self._computePpolicyPRpolicy()
         
