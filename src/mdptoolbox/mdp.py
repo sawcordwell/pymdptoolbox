@@ -60,8 +60,7 @@ ValueIterationGS
 from math import ceil, log, sqrt
 from time import time
 
-from numpy import absolute, array, empty, mean, mod, multiply
-from numpy import ndarray, ones, zeros
+from numpy import absolute, array, empty, mean, mod, multiply, ones, zeros
 from numpy.random import randint, random
 from scipy.sparse import csr_matrix as sparse
 
