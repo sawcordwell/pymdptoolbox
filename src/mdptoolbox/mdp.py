@@ -118,7 +118,9 @@ class MDP(object):
     R : array
         Reward vectors.
     V : tuple
-        The optimal value function.
+        The optimal value function. Each element is a float corresponding to
+        the expected value of being in that state assuming the optimal policy
+        is followed.
     discount : float
         The discount rate on future rewards.
     max_iter : int
@@ -151,8 +153,8 @@ class MDP(object):
             self.discount = float(discount)
             assert 0.0 < self.discount <= 1.0, "Discount rate must be in ]0; 1]"
             if self.discount == 1:
-                print("PyMDPtoolbox WARNING: check conditions of convergence. "
-                      "With no discount, convergence is not always assumed.")
+                print("WARNING: check conditions of convergence. With no "
+                      "discount, convergence is can not be assumed.")
         # if the max_iter is None then the algorithm is assumed to not use it
         # in its computations
         if max_iter is not None:
@@ -292,8 +294,6 @@ class FiniteHorizon(MDP):
     
     """A MDP solved using the finite-horizon backwards induction algorithm.
     
-    Let S = number of states, A = number of actions
-    
     Parameters
     ----------
     transitions : array
@@ -305,23 +305,22 @@ class FiniteHorizon(MDP):
     discount : float
         Discount factor. See the documentation for the ``MDP`` class for
         details.
-    N        = number of periods, upper than 0
-    h(S)     = terminal reward, optional (default [0; 0; ... 0] )
+    N : int
+        Number of periods. Must be greater than 0.
+    h : array, optional
+        Terminal reward. Default: a vector of zeros.
     
-    Attributes
-    ----------
-    
-    Methods
-    -------
-    V(S,N+1)     = optimal value function
-                 V(:,n) = optimal value function at stage n
-                        with stage in 1, ..., N
-                        V(:,N+1) = value function for terminal stage 
-    policy(S,N)  = optimal policy
-                 policy(:,n) = optimal policy at stage n
-                        with stage in 1, ...,N
-                        policy(:,N) = policy for stage N
-    cpu_time = used CPU time
+    Data Attributes
+    ---------------
+    V : array 
+        Optimal value function. Shape = (S, N+1). ``V[:, n]`` = optimal value
+        function at stage ``n`` with stage in (0, 1...N-1). ``V[:, N]`` value
+        function for terminal stage. 
+    policy : array
+        Optimal policy. ``policy[:, n]`` = optimal policy at stage ``n`` with
+        stage in (0, 1...N). ``policy[:, N]`` = policy for stage ``N``.
+    time : float
+        used CPU time
   
     Notes
     -----
@@ -391,6 +390,8 @@ class FiniteHorizon(MDP):
 class LP(MDP):
     
     """A discounted MDP soloved using linear programming.
+    
+    This class requires the Python ``cvxopt`` module to be installed.
 
     Arguments
     ---------
@@ -403,13 +404,17 @@ class LP(MDP):
     discount : float
         Discount factor. See the documentation for the ``MDP`` class for
         details.
-    h(S)     = terminal reward, optional (default [0; 0; ... 0] )
+    h : array, optional
+        Terminal reward. Default: a vector of zeros.
     
-    Evaluation
-    ----------
-    V(S)   = optimal values
-    policy(S) = optimal policy
-    cpu_time = used CPU time
+    Data Attributes
+    ---------------
+    V : tuple
+        optimal values
+    policy : tuple
+        optimal policy
+    time : float
+        used CPU time
     
     Notes    
     -----
@@ -494,20 +499,26 @@ class PolicyIteration(MDP):
     discount : float
         Discount factor. See the documentation for the ``MDP`` class for
         details.
-    policy0(S) = starting policy, optional 
-    max_iter : int
+    policy0 : array, optional
+        Starting policy.
+    max_iter : int, optional
         Maximum number of iterations. See the documentation for the ``MDP``
         class for details. Default is 1000.
-    eval_type = type of function used to evaluate policy: 
-             0 for mdp_eval_policy_matrix, else mdp_eval_policy_iterative
-             optional (default 0)
+    eval_type : int or string, optional
+        Type of function used to evaluate policy. 0 or "matrix" to solve as a
+        set of linear equations. 1 or "iterative" to solve iteratively.
+        Default: 0.
              
-    Evaluation
-    ----------
-    V(S)   = value function 
-    policy(S) = optimal policy
-    iter     = number of done iterations
-    cpu_time = used CPU time
+    Data Attributes
+    ---------------
+    V : tuple
+        value function 
+    policy : tuple
+        optimal policy
+    iter : int
+        number of done iterations
+    time : float
+        used CPU time
     
     Notes
     -----
@@ -782,25 +793,23 @@ class PolicyIterationModified(PolicyIteration):
     discount : float
         Discount factor. See the documentation for the ``MDP`` class for
         details.
-    *policy0(S) = starting policy, optional 
-    max_iter : int
+    epsilon : float, optional
+        Stopping criterion. See the documentation for the ``MDP`` class for
+        details. Default: 0.01.
+    max_iter : int, optional
         Maximum number of iterations. See the documentation for the ``MDP``
-        class for details. Default is 1000.
-    eval_type = type of function used to evaluate policy: 
-             0 for mdp_eval_policy_matrix, else mdp_eval_policy_iterative
-             optional (default 0)
+        class for details. Default is 10.
     
     Data Attributes
     ---------------
-    V(S)   = value function 
-    policy(S) = optimal policy
-    iter     = number of done iterations
-    cpu_time = used CPU time
-    
-    Notes
-    -----
-    In verbose mode, at each iteration, displays the number 
-    of differents actions between policy n-1 and n
+    V : tuple
+        value function 
+    policy : tuple
+        optimal policy
+    iter : int
+        number of done iterations
+    time : float
+        used CPU time
     
     Examples
     --------
@@ -902,21 +911,21 @@ class QLearning(MDP):
     discount : float
         Discount factor. See the documentation for the ``MDP`` class for
         details. 
-    n_iter : int
-        Number of iterations to execute. Default value = 10000. This is ignored
-        unless it is an integer greater than the default value.
+    n_iter : int, optional
+        Number of iterations to execute. This is ignored unless it is an 
+        integer greater than the default value. Defaut: 10,000.
     
-    Results
-    -------
-    Q : learned Q matrix (SxA) 
-    
-    V : learned value function (S).
-    
-    policy : learned optimal policy (S).
-    
-    mean_discrepancy : vector of V discrepancy mean over 100 iterations
-        Then the length of this vector for the default value of N is 100 
-        (N/100).
+    Data Attributes
+    ---------------
+    Q : array
+        learned Q matrix (SxA)     
+    V : tuple
+        learned value function (S).    
+    policy : tuple
+        learned optimal policy (S).    
+    mean_discrepancy : array
+        Vector of V discrepancy mean over 100 iterations. Then the length of
+        this vector for the default value of N is 100 (N/100).
 
     Examples
     ---------
@@ -1057,18 +1066,21 @@ class RelativeValueIteration(MDP):
     reward : array
         Reward matrices or vectors. See the documentation for the ``MDP`` class
         for details. 
-    epsilon : float
+    epsilon : float, optional
         Stopping criterion. See the documentation for the ``MDP`` class for
-        details. 
-    max_iter : int
+        details. Default: 0.01.
+    max_iter : int, optional
         Maximum number of iterations. See the documentation for the ``MDP``
-        class for details. Default = 1000.
+        class for details. Default: 1000.
     
-    Evaluation
-    ----------
-    policy(S)       = epsilon-optimal policy
-    average_reward  = average reward of the optimal policy
-    cpu_time = used CPU time
+    Data Attributes
+    ---------------
+    policy : tuple
+        epsilon-optimal policy
+    average_reward  : tuple
+        average reward of the optimal policy
+    cpu_time : float
+        used CPU time
     
     Notes
     -----
@@ -1192,25 +1204,22 @@ class ValueIteration(MDP):
     discount : float
         Discount factor. See the documentation for the ``MDP`` class for
         details.
-    eepsilon : float
+    epsilon : float, optional
         Stopping criterion. See the documentation for the ``MDP`` class for
-        details. 
-    max_iter : int
-        Maximum number of iterations. See the documentation for the ``MDP``
-        class for details. **If the value given in argument is greater than a
-        computed bound, a warning informs that the computed bound will be
-        considered. By default, if discount is not equal to 1, a bound for
-        max_iter is computed, if not max_iter = 1000.**
-    initial_value : array, optional (default: zeros(S,))
-        The starting value function. By default ``initial_value`` is composed
-        of 0 elements.
+        details.  Default: 0.01.
+    max_iter : int, optional
+        Maximum number of iterations. If the value given is greater than a
+        computed bound, a warning informs that the computed bound will be used
+        instead. By default, if ``discount`` is not equal to 1, a bound for 
+        ``max_iter`` is computed, otherwise ``max_iter`` = 1000. See the 
+        documentation for the ``MDP`` class for further details.
+    initial_value : array, optional
+        The starting value function. Default: a vector of zeros.
     
     Data Attributes
     ---------------
     V : tuple
-        The optimal value function. Each element is a float corresponding to
-        the expected value of being in that state assuming the optimal policy
-        is followed.
+        The optimal value function.
     policy : tuple
         The optimal policy function. Each element is an integer corresponding
         to an action which maximises the value function in that state.
@@ -1221,6 +1230,8 @@ class ValueIteration(MDP):
     
     Methods
     -------
+    run()
+        Do the algorithm iteration.
     setSilent()
         Sets the instance to silent mode.
     setVerbose()
@@ -1402,13 +1413,12 @@ class ValueIteration(MDP):
             
             if variation < self.thresh:
                 if self.verbose:
-                    print("PyMDPToolbox: iteration stopped, epsilon-optimal "
-                          "policy found.")
+                    print("Iteration stopped, epsilon-optimal policy found.")
                 break
             elif (self.iter == self.max_iter):
                 if self.verbose:
-                    print("PyMDPToolbox: iteration stopped by maximum number "
-                          "of iterations condition.")
+                    print("Iteration stopped by maximum number of iterations "
+                          "condition.")
                 break
         
         # store value and policy as tuples
@@ -1422,8 +1432,8 @@ class ValueIterationGS(ValueIteration):
     """
     A discounted MDP solved using the value iteration Gauss-Seidel algorithm.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     transitions : array
         Transition probability matrices. See the documentation for the ``MDP``
         class for details.
@@ -1433,19 +1443,23 @@ class ValueIterationGS(ValueIteration):
     discount : float
         Discount factor. See the documentation for the ``MDP`` class for
         details.
-    epsilon : float
+    epsilon : float, optional
         Stopping criterion. See the documentation for the ``MDP`` class for
-        details. 
-    max_iter : int
+        details. Default: 0.01.
+    max_iter : int, optional
         Maximum number of iterations. See the documentation for the ``MDP``
         and ``ValueIteration`` classes for details. Default: computed.
-    V0(S)     = starting value function, optional (default : zeros(S,1))
+    initial_value : array, optional
+        The starting value function. Default: a vector of zeros.
     
-    Evaluation
-    ----------
-    policy(S) = epsilon-optimal policy
-    iter      = number of done iterations
-    cpu_time  = used CPU time
+    Data Attribues
+    --------------
+    policy : tuple
+        epsilon-optimal policy
+    iter : int
+        number of done iterations
+    time : float
+        used CPU time
     
     Notes
     -----
@@ -1477,8 +1491,8 @@ class ValueIterationGS(ValueIteration):
             self.V = zeros(self.S)
         else:
             if len(initial_value) != self.S:
-                raise ValueError("PyMDPtoolbox: The initial value must be "
-                                 "a vector of length S.")
+                raise ValueError("The initial value must be a vector of "
+                                 "length S.")
             else:
                 try:
                     self.V = initial_value.reshape(self.S)
@@ -1530,14 +1544,13 @@ class ValueIterationGS(ValueIteration):
             if variation < self.thresh: 
                 done = True
                 if self.verbose:
-                    print("MDP Toolbox : iterations stopped, epsilon-optimal "
-                          "policy found.")
+                    print("Iterations stopped, epsilon-optimal policy found.")
              
             elif self.iter == self.max_iter:
                 done = True 
                 if self.verbose:
-                    print("MDP Toolbox : iterations stopped by maximum number "
-                          "of iteration condition.")
+                    print("Iterations stopped by maximum number of iteration "
+                          "condition.")
         
         self.policy = []
         for s in range(self.S):
