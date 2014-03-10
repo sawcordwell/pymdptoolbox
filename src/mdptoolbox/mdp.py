@@ -778,9 +778,9 @@ class PolicyIterationModified(PolicyIteration):
     >>> pim = mdptoolbox.mdp.PolicyIterationModified(P, R, 0.9)
     >>> pim.run()
     >>> pim.policy
-    FIXME
+    (0, 0, 0)
     >>> pim.V
-    FIXME
+    (21.81408652334702, 25.054086523347017, 29.054086523347017)
     
     """
     
@@ -812,7 +812,7 @@ class PolicyIterationModified(PolicyIteration):
             self.V = zeros((self.S, 1))
         else:
             Rmin = min(R.min() for R in self.R)
-            self.V = 1 / (1 - discount) * Rmin * ones((self.S,))
+            self.V = 1 / (1 - self.discount) * Rmin * ones((self.S,))
         
         # Call the iteration method
         #self.run()
