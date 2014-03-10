@@ -231,15 +231,22 @@ class MDP(object):
         # Set self.R as a tuple of length A, with each element storing an 1×S
         # vector.
         try:
-            if R.ndim == 2:
+            if R.ndim == 1:
+                r = array(R).reshape(self.S)
+                self.R = tuple([r for aa in range(self.A)])
+            elif R.ndim == 2:
                 self.R = tuple([array(R[:, aa]).reshape(self.S)
                                 for aa in range(self.A)])
             else:
                 self.R = tuple([multiply(P[aa], R[aa]).sum(1).reshape(self.S)
                                 for aa in range(self.A)])
         except AttributeError:
-            self.R = tuple([multiply(P[aa], R[aa]).sum(1).reshape(self.S)
-                            for aa in range(self.A)])
+            if len(R) == self.A:
+                self.R = tuple([multiply(P[aa], R[aa]).sum(1).reshape(self.S)
+                                for aa in range(self.A)])
+            else:
+                r = array(R).reshape(self.S)
+                self.R = tuple([r for aa in range(self.A)])
     
     def run(self):
         # Raise error because child classes should implement this function.
