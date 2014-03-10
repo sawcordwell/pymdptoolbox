@@ -70,42 +70,71 @@ class MDP(object):
     
     """A Markov Decision Problem.
     
+    Let S = the number of states, and A = the number of acions.
+    
     Parameters
     ----------
     transitions : array
-            transition probability matrices
+        Transition probability matrices. These can be defined in a variety of 
+        ways. The simplest is a numpy array that has the shape (A, S, S),
+        though there are other possibilities. It can be a tuple or list or
+        numpy object array of length A, where each element contains a numpy
+        array or matrix that has the shape (S, S). This "list of matrices" form
+        is useful when the transition matrices are sparse as
+        scipy.sparse.csr_matrix matrices can be used. In summary, each action's
+        transition matrix must be indexable like ``P[a]`` where
+        ``a`` ∈ {0, 1...A-1}.
     reward : array
-            reward matrices
-    discount : float or None
-            discount factor
-    epsilon : float or None
-            stopping criteria
-    max_iter : int or None
-            maximum number of iterations
+        Reward matrices or vectors. Like the transition matrices, these can
+        also be defined in a variety of ways. Again the simplest is a numpy
+        array that has the shape (S, A), (S,) or (A, S, S). A list of lists can
+        be used, where each inner list has length S. A list of numpy arrays is
+        possible where each inner array can be of the shape (S,), (S, 1),
+        (1, S) or (S, S). Also scipy.sparse.csr_matrix can be used instead of
+        numpy arrays. In addition, the outer list can be replaced with a tuple
+        or numpy object array can be used.
+    discount : float
+        Discount factor. The per time-step discount factor on future rewards.
+        Valid values are greater than 0 upto and including 1. If the discount
+        factor is 1, then convergence is cannot be assumed and a warning will
+        be displayed. Subclasses of ``MDP`` may pass None in the case where the
+        algorithm does not use a discount factor.
+    epsilon : float
+        Stopping criterion. The maximum change in the value function at each
+        iteration is compared against ``epsilon``. Once the change falls below
+        this value, then the value function is considered to have converged to
+        the optimal value function. Subclasses of ``MDP`` may pass None in the
+        case where the algorithm does not use a stopping criterion.
+    max_iter : int
+        Maximum number of iterations. The algorithm will be terminated once
+        this many iterations have elapsed. This must be greater than 0 if
+        specified. Subclasses of ``MDP`` may pass None in the case where the 
+        algorithm does not use a maximum number of iterations.
     
     Attributes
     ----------
     P : array
-        Transition probability matrices
+        Transition probability matrices.
     R : array
-        Reward matrices
-    V : list
-        Value function
+        Reward vectors.
+    V : tuple
+        The optimal value function.
     discount : float
-        b
+        The discount rate on future rewards.
     max_iter : int
-        a
-    policy : list
-        a
+        The maximum number of iterations.
+    policy : tuple
+        The optimal policy.
     time : float
-        a
-    verbose : logical
-        a
+        The time used to converge to the optimal policy.
+    verbose : boolean
+        Whether verbose output should be displayed in not.
     
     Methods
     -------
-    iterate
-        To be implemented in child classes, raises exception
+    run
+        Implemented in child classes as the main algorithm loop. Raises and
+        exception if it has not been overridden.
     setSilent
         Turn the verbosity off
     setVerbose
@@ -267,14 +296,15 @@ class FiniteHorizon(MDP):
     
     Parameters
     ----------
-    P(SxSxA) = transition matrix 
-             P could be an array with 3 dimensions ora cell array (1xA),
-             each cell containing a matrix (SxS) possibly sparse
-    R(SxSxA) or (SxA) = reward matrix
-             R could be an array with 3 dimensions (SxSxA) or 
-             a cell array (1xA), each cell containing a sparse matrix (SxS) or
-             a 2D array(SxA) possibly sparse  
-    discount = discount factor, in ]0, 1]
+    transitions : array
+        Transition probability matrices. See the documentation for the ``MDP``
+        class for details.
+    reward : array
+        Reward matrices or vectors. See the documentation for the ``MDP`` class
+        for details.
+    discount : float
+        Discount factor. See the documentation for the ``MDP`` class for
+        details.
     N        = number of periods, upper than 0
     h(S)     = terminal reward, optional (default [0; 0; ... 0] )
     
@@ -364,15 +394,15 @@ class LP(MDP):
 
     Arguments
     ---------
-    Let S = number of states, A = number of actions
-    P(SxSxA) = transition matrix 
-             P could be an array with 3 dimensions or a cell array (1xA),
-             each cell containing a matrix (SxS) possibly sparse
-    R(SxSxA) or (SxA) = reward matrix
-             R could be an array with 3 dimensions (SxSxA) or 
-             a cell array (1xA), each cell containing a sparse matrix (SxS) or
-             a 2D array(SxA) possibly sparse  
-    discount = discount rate, in ]0; 1[
+    transitions : array
+        Transition probability matrices. See the documentation for the ``MDP``
+        class for details.
+    reward : array
+        Reward matrices or vectors. See the documentation for the ``MDP`` class
+        for details.
+    discount : float
+        Discount factor. See the documentation for the ``MDP`` class for
+        details.
     h(S)     = terminal reward, optional (default [0; 0; ... 0] )
     
     Evaluation
@@ -455,18 +485,19 @@ class PolicyIteration(MDP):
     
     Arguments
     ---------
-    Let S = number of states, A = number of actions
-    P(SxSxA) = transition matrix 
-             P could be an array with 3 dimensions or a cell array (1xA),
-             each cell containing a matrix (SxS) possibly sparse
-    R(SxSxA) or (SxA) = reward matrix
-             R could be an array with 3 dimensions (SxSxA) or 
-             a cell array (1xA), each cell containing a sparse matrix (SxS) or
-             a 2D array(SxA) possibly sparse  
-    discount = discount rate, in ]0, 1[
+    transitions : array
+        Transition probability matrices. See the documentation for the ``MDP``
+        class for details.
+    reward : array
+        Reward matrices or vectors. See the documentation for the ``MDP`` class
+        for details. 
+    discount : float
+        Discount factor. See the documentation for the ``MDP`` class for
+        details.
     policy0(S) = starting policy, optional 
-    max_iter = maximum number of iteration to be done, upper than 0, 
-             optional (default 1000)
+    max_iter : int
+        Maximum number of iterations. See the documentation for the ``MDP``
+        class for details. Default is 1000.
     eval_type = type of function used to evaluate policy: 
              0 for mdp_eval_policy_matrix, else mdp_eval_policy_iterative
              optional (default 0)
@@ -742,18 +773,19 @@ class PolicyIterationModified(PolicyIteration):
     
     Arguments
     ---------
-    Let S = number of states, A = number of actions
-    P(SxSxA) = transition matrix 
-             P could be an array with 3 dimensions or a cell array (1xA),
-             each cell containing a matrix (SxS) possibly sparse
-    R(SxSxA) or (SxA) = reward matrix
-             R could be an array with 3 dimensions (SxSxA) or 
-             a cell array (1xA), each cell containing a sparse matrix (SxS) or
-             a 2D array(SxA) possibly sparse  
-    discount = discount rate, in ]0, 1[
-    policy0(S) = starting policy, optional 
-    max_iter = maximum number of iteration to be done, upper than 0, 
-             optional (default 1000)
+    transitions : array
+        Transition probability matrices. See the documentation for the ``MDP``
+        class for details.
+    reward : array
+        Reward matrices or vectors. See the documentation for the ``MDP`` class
+        for details.
+    discount : float
+        Discount factor. See the documentation for the ``MDP`` class for
+        details.
+    *policy0(S) = starting policy, optional 
+    max_iter : int
+        Maximum number of iterations. See the documentation for the ``MDP``
+        class for details. Default is 1000.
     eval_type = type of function used to evaluate policy: 
              0 for mdp_eval_policy_matrix, else mdp_eval_policy_iterative
              optional (default 0)
@@ -859,22 +891,20 @@ class QLearning(MDP):
     
     """A discounted MDP solved using the Q learning algorithm.
     
-    Let S = number of states, A = number of actions
-    
     Parameters
     ----------
-    P : transition matrix (SxSxA)
-        P could be an array with 3 dimensions or a cell array (1xA), each
-        cell containing a sparse matrix (SxS)
-    R : reward matrix(SxSxA) or (SxA)
-        R could be an array with 3 dimensions (SxSxA) or a cell array
-        (1xA), each cell containing a sparse matrix (SxS) or a 2D
-        array(SxA) possibly sparse
-    discount : discount rate
-        in ]0; 1[    
-    n_iter : number of iterations to execute (optional).
-        Default value = 10000; it is an integer greater than the default
-        value.
+    transitions : array
+        Transition probability matrices. See the documentation for the ``MDP``
+        class for details.
+    reward : array
+        Reward matrices or vectors. See the documentation for the ``MDP`` class
+        for details.
+    discount : float
+        Discount factor. See the documentation for the ``MDP`` class for
+        details. 
+    n_iter : int
+        Number of iterations to execute. Default value = 10000. This is ignored
+        unless it is an integer greater than the default value.
     
     Results
     -------
@@ -1021,18 +1051,18 @@ class RelativeValueIteration(MDP):
     
     Arguments
     ---------
-    Let S = number of states, A = number of actions
-    P(SxSxA) = transition matrix 
-             P could be an array with 3 dimensions or a cell array (1xA), 
-             each cell containing a matrix (SxS) possibly sparse
-    R(SxSxA) or (SxA) = reward matrix
-             R could be an array with 3 dimensions (SxSxA) or 
-             a cell array (1xA), each cell containing a sparse matrix (SxS) or
-             a 2D array(SxA) possibly sparse  
-    epsilon  = epsilon-optimal policy search, upper than 0, 
-             optional (default: 0.01)
-    max_iter = maximum number of iteration to be done, upper than 0,
-             optional (default 1000)
+    transitions : array
+        Transition probability matrices. See the documentation for the ``MDP``
+        class for details.
+    reward : array
+        Reward matrices or vectors. See the documentation for the ``MDP`` class
+        for details. 
+    epsilon : float
+        Stopping criterion. See the documentation for the ``MDP`` class for
+        details. 
+    max_iter : int
+        Maximum number of iterations. See the documentation for the ``MDP``
+        class for details. Default = 1000.
     
     Evaluation
     ----------
@@ -1151,34 +1181,26 @@ class ValueIteration(MDP):
     the condition which stopped the iteration: epsilon-policy found or maximum
     number of iterations reached.
     
-    Let ``S`` = number of states, ``A`` = number of actions.
-    
     Parameters
     ----------
-    P : array
-        The transition probability matrices. There are several object type
-        options for P. It can be a list or tuple of length A, where each
-        element stores an SxS numpy array, matrix or sparse matrix. It can also
-        be an AxSxS numpy array. In summary, each action's transition matrix
-        must be indexable like ``P[a]`` where ``a`` ∈ {0, 1⋯A-1}.
-    R : array
-        The reward array. The same as for ``P`` except that in the list/tuple
-        case each element can be either a 1xA or SxS array. In addition to the
-        AxSxS array, an SxA array can also be specified. Any array can be
-        sparse.
+    transitions : array
+        Transition probability matrices. See the documentation for the ``MDP``
+        class for details.
+    reward : array
+        Reward matrices or vectors. See the documentation for the ``MDP`` class
+        for details.
     discount : float
-        The discount rate. This must be greater than 0, and less than or equal
-        to 1. Beware to check conditions of convergence for ``discount`` of 1.
-        A warning is issued if discount equals 1.
-    epsilon : float, optional (default: 0.01)
-        The epsilon-optimal policy search value. This must be greater than 0
-        if sepcified, and is used to decide when to stop iterating.
-    max_iter : int, optional (default: computed)
-        The maximum number of iterations. This must be greater than 0 if
-        specified. If the value given in argument is greater than a computed
-        bound, a warning informs that the computed bound will be considered.
-        By default, if discount is not egal to 1, a bound for max_iter is
-        computed, if not max_iter = 1000.
+        Discount factor. See the documentation for the ``MDP`` class for
+        details.
+    eepsilon : float
+        Stopping criterion. See the documentation for the ``MDP`` class for
+        details. 
+    max_iter : int
+        Maximum number of iterations. See the documentation for the ``MDP``
+        class for details. **If the value given in argument is greater than a
+        computed bound, a warning informs that the computed bound will be
+        considered. By default, if discount is not equal to 1, a bound for
+        max_iter is computed, if not max_iter = 1000.**
     initial_value : array, optional (default: zeros(S,))
         The starting value function. By default ``initial_value`` is composed
         of 0 elements.
@@ -1402,20 +1424,21 @@ class ValueIterationGS(ValueIteration):
     
     Arguments
     ---------
-    Let S = number of states, A = number of actions
-    P(SxSxA)  = transition matrix 
-             P could be an array with 3 dimensions or a cell array (1xA),
-             each cell containing a matrix (SxS) possibly sparse
-    R(SxSxA) or (SxA) = reward matrix
-             R could be an array with 3 dimensions (SxSxA) or 
-             a cell array (1xA), each cell containing a sparse matrix (SxS) or
-             a 2D array(SxA) possibly sparse  
-    discount  = discount rate in ]0; 1]
-              beware to check conditions of convergence for discount = 1.
-    epsilon   = epsilon-optimal policy search, upper than 0,
-              optional (default : 0.01)
-    max_iter  = maximum number of iteration to be done, upper than 0, 
-              optional (default : computed)
+    transitions : array
+        Transition probability matrices. See the documentation for the ``MDP``
+        class for details.
+    reward : array
+        Reward matrices or vectors. See the documentation for the ``MDP`` class
+        for details.
+    discount : float
+        Discount factor. See the documentation for the ``MDP`` class for
+        details.
+    epsilon : float
+        Stopping criterion. See the documentation for the ``MDP`` class for
+        details. 
+    max_iter : int
+        Maximum number of iterations. See the documentation for the ``MDP``
+        and ``ValueIteration`` classes for details. Default: computed.
     V0(S)     = starting value function, optional (default : zeros(S,1))
     
     Evaluation
