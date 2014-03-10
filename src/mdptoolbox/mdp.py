@@ -205,7 +205,7 @@ class MDP(object):
         except AttributeError:
             self.S = P[0].shape[0]
         # convert P to a tuple of numpy arrays
-        self.P = tuple([P[aa] for aa in range(self.A)])
+        self.P = tuple(P[aa] for aa in range(self.A))
     
     def _computePR(self, P, R):
         # Compute the reward for the system in one state chosing an action.
@@ -233,20 +233,20 @@ class MDP(object):
         try:
             if R.ndim == 1:
                 r = array(R).reshape(self.S)
-                self.R = tuple([r for aa in range(self.A)])
+                self.R = tuple(r for aa in range(self.A))
             elif R.ndim == 2:
-                self.R = tuple([array(R[:, aa]).reshape(self.S)
-                                for aa in range(self.A)])
+                self.R = tuple(array(R[:, aa]).reshape(self.S)
+                                for aa in range(self.A))
             else:
-                self.R = tuple([multiply(P[aa], R[aa]).sum(1).reshape(self.S)
-                                for aa in range(self.A)])
+                self.R = tuple(multiply(P[aa], R[aa]).sum(1).reshape(self.S)
+                                for aa in range(self.A))
         except AttributeError:
             if len(R) == self.A:
-                self.R = tuple([multiply(P[aa], R[aa]).sum(1).reshape(self.S)
-                                for aa in range(self.A)])
+                self.R = tuple(multiply(P[aa], R[aa]).sum(1).reshape(self.S)
+                                for aa in range(self.A))
             else:
                 r = array(R).reshape(self.S)
-                self.R = tuple([r for aa in range(self.A)])
+                self.R = tuple(r for aa in range(self.A))
     
     def run(self):
         # Raise error because child classes should implement this function.
