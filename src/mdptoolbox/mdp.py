@@ -1146,13 +1146,13 @@ class ValueIteration(MDP):
     discounted MDP. The algorithm consists of solving Bellman's equation
     iteratively.
     Iteration is stopped when an epsilon-optimal policy is found or after a
-    specified number (max_iter) of iterations. 
+    specified number (``max_iter``) of iterations. 
     This function uses verbose and silent modes. In verbose mode, the function
-    displays the variation of V (the value function) for each iteration and the
-    condition which stopped the iteration: epsilon-policy found or maximum
+    displays the variation of ``V`` (the value function) for each iteration and
+    the condition which stopped the iteration: epsilon-policy found or maximum
     number of iterations reached.
     
-    Let S = number of states, A = number of actions.
+    Let ``S`` = number of states, ``A`` = number of actions.
     
     Parameters
     ----------
@@ -1294,12 +1294,9 @@ class ValueIteration(MDP):
         if initial_value == 0:
             self.V = zeros(self.S)
         else:
-            assert len(initial_value) == self.S, "PyMDPtoolbox: The " \
-                "initial value must be a vector of length S."
-            try:
-                self.V = initial_value.reshape(self.S)
-            except AttributeError:
-                self.V = array(initial_value).reshape(self.S)
+            assert len(initial_value) == self.S, "The initial value must be " \
+                "a vector of length S."
+            self.V = array(initial_value).reshape(self.S)
         if self.discount < 1:
             # compute a bound for the number of iterations and update the
             # stored value of self.max_iter
@@ -1346,7 +1343,6 @@ class ValueIteration(MDP):
                     PP[aa] = self.P[aa][:, ss]
                 except ValueError:
                     PP[aa] = self.P[aa][:, ss].todense().A1
-            # the method "min()" without any arguments finds the
             # minimum of the entire array.
             h[ss] = PP.min()
         
