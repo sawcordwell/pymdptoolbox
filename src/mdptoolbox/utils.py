@@ -138,43 +138,48 @@ def check(P, R):
                     raise InvalidMDPError(mdperr["obj_square"])
         except AttributeError:
             raise InvalidMDPError(mdperr["P_shape"])
-    except:
-        raise
     # Checking R
     try:
-        if R.ndim == 2:
-            sR0, aR = R.shape
-            sR1 = sR0
-        elif R.ndim == 3:
-            aR, sR0, sR1 = R.shape
-        elif R.ndim == 1:
+        ndimR = R.ndim
+        if ndimR == 1:
             # A hack so that we can go into the next try-except statement
             raise AttributeError
+        elif ndimR == 2:
+            sR0, aR = R.shape
+            sR1 = sR0
+        elif ndimR == 3:
+            aR, sR0, sR1 = R.shape
         else:
             raise InvalidMDPError(mdperr["R_shape"])
     except AttributeError:
         try:
-            aR = len(R)
-            sR0, sR1 = R[0].shape
-            for aa in range(1, aR):
-                sR0aa, sR1aa = R[aa].shape
-                if ((sR0aa != sR0) or (sR1aa != sR1)):
-                    raise InvalidMDPError(mdperr["obj_square"])
+            lenR = len(R)
+            if lenR == aP:
+                aR = lenR
+                sR0, sR1 = R[0].shape
+                for aa in range(1, aR):
+                    sR0aa, sR1aa = R[aa].shape
+                    if ((sR0aa != sR0) or (sR1aa != sR1)):
+                        raise InvalidMDPError(mdperr["obj_square"])
+            elif lenR == sP0:
+                aR = aP
+                sR0 = sR1 = lenR
+            else:
+                raise InvalidMDPError(mdperr["R_shape"])
         except AttributeError:
             raise InvalidMDPError(mdperr["R_shape"])
-    except:
-        raise
     # Checking dimensions
-    if (sP0 < 1) or (aP < 1) or (sP0 != sP1):
-        raise InvalidMDPError(mdperr["P_shape"])   
-    if (sR0 < 1) or (aR < 1) or (sR0 != sR1):
-        raise InvalidMDPError(mdperr["R_shape"])
-    if (sP0 != sR0) or (aP != aR):
-        raise InvalidMDPError(mdperr["PR_incompat"])
+    assert sP0 > 0, "The number of states in P must be greater than 0."
+    assert aP > 0, "The number of actions in P must be greater than 0."
+    assert sP0 == sP1, "The matrix P must be square with respect to states."
+    assert sR0 > 0, "The number of states in R must be greater than 0."
+    assert aR > 0, "The number of actions in R must be greater than 0."
+    assert sR0 == sR1, "The matrix R must be square with respect to states."
+    assert sP0 == sR0, "The number of states must agree in P and R."
+    assert aP == aR, "The number of actions must agree in P and R."
     # Check that the P's are square and stochastic
     for aa in range(aP):
         checkSquareStochastic(P[aa])
-        #checkSquareStochastic(P[aa, :, :])
     # We are at the end of the checks, so if no exceptions have been raised
     # then that means there are (hopefullly) no errors and we return None
     return None
