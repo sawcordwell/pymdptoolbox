@@ -11,7 +11,7 @@ example
     Examples of transition and reward matrices that form valid MDPs
 mdp
     Makov decision process algorithms
-utils
+util
     Functions for validating and working with an MDP
 
 How to use the documentation
@@ -84,4 +84,4 @@ if __name__ == "__main__":
     import doctest
     doctest.testfile("example.py", module_relative=True)
     doctest.testfile("mdp.py", module_relative=True)
-    doctest.testfile("utils.py", module_relative=True)
+    doctest.testfile("util.py", module_relative=True)
