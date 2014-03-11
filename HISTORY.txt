@@ -1,3 +1,6 @@
+2014-03-11
+v4.0b1 - fist beta release created on the testing branch
+
 2013-09-11
 v4.0a4 - Package is useable with Python 3.3, used 2tp3 script to convert. Still
          needs a bit of cleaning up.
