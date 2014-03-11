@@ -64,7 +64,11 @@ from numpy import absolute, array, empty, mean, mod, multiply, ones, zeros
 from numpy.random import randint, random
 from scipy.sparse import csr_matrix as sparse
 
-from .util import check, getSpan
+try:
+    from .util import check, getSpan
+except ValueError:
+    # importing mdp as a module rather than as part of a package
+    from util import check, getSpan
 
 MSG_STOP_MAX_ITER = "Iterating stopped due to maximum number of iterations " \
     "condition."
