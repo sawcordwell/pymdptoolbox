@@ -66,6 +66,14 @@ from scipy.sparse import csr_matrix as sparse
 
 from .utils import check, getSpan
 
+MSG_STOP_MAX_ITER = "Iterating stopped due to maximum number of iterations " \
+    "condition."
+MSG_STOP_EPSILON_OPTIMAL_POLICY = "Iterating stopped, epsilon-optimal " \
+    "policy found."
+MSG_STOP_EPSILON_OPTIMAL_VALUE = "Iterating stopped, epsilon-optimal value " \
+    "function found."
+MSG_STOP_UNCHANGING_POLICY = "Iterating stopped, unchanging policy found."
+
 class MDP(object):
     
     """A Markov Decision Problem.
@@ -158,7 +166,7 @@ class MDP(object):
             assert 0.0 < self.discount <= 1.0, "Discount rate must be in ]0; 1]"
             if self.discount == 1:
                 print("WARNING: check conditions of convergence. With no "
-                      "discount, convergence is can not be assumed.")
+                      "discount, convergence can not be assumed.")
         # if the max_iter is None then the algorithm is assumed to not use it
         # in its computations
         if max_iter is not None:
@@ -350,7 +358,7 @@ class FiniteHorizon(MDP):
     def __init__(self, transitions, reward, discount, N, h=None):
         # Initialise a finite horizon MDP.
         self.N = int(N)
-        assert self.N > 0, 'PyMDPtoolbox: N must be greater than 0.'
+        assert self.N > 0, "N must be greater than 0."
         # Initialise the base class
         MDP.__init__(self, transitions, reward, discount, None, None)
         # remove the iteration counter, it is not meaningful for backwards
@@ -373,23 +381,19 @@ class FiniteHorizon(MDP):
         # loop through each time period
         for n in range(self.N):
             W, X = self._bellmanOperator(self.V[:, self.N - n])
-            self.V[:, self.N - n - 1] = X
-            self.policy[:, self.N - n - 1] = W
+            stage = self.N - n - 1
+            self.V[:, stage] = X
+            self.policy[:, stage] = W
             if self.verbose:
-                print(("stage: %s ... policy transpose : %s") % (
-                    self.N - n, self.policy[:, self.N - n -1].tolist()))
+                print(("stage: %s, policy: %s") % (
+                    stage, self.policy[:, stage].tolist()))
         # update time spent running
         self.time = time() - self.time
         # After this we could create a tuple of tuples for the values and 
         # policies.
-        #V = []
-        #p = []
-        #for n in xrange(self.N):
-        #    V.append()
-        #    p.append()
-        #V.append()
-        #self.V = tuple(V)
-        #self.policy = tuple(p)
+        #self.V = tuple(tuple(self.V[:, n].tolist()) for n in range(self.N))
+        #self.policy = tuple(tuple(self.policy[:, n].tolist())
+        #                    for n in range(self.N))
 
 class LP(MDP):
     
@@ -419,10 +423,6 @@ class LP(MDP):
         optimal policy
     time : float
         used CPU time
-    
-    Notes    
-    -----
-    In verbose mode, displays the current stage and policy transpose.
     
     Examples
     --------
@@ -585,10 +585,9 @@ class PolicyIteration(MDP):
         elif eval_type in (1, "iterative"):
             self.eval_type = "iterative"
         else:
-            raise ValueError("PyMDPtoolbox: eval_type should be 0 for matrix "
-                             "evaluation or 1 for iterative evaluation. "
-                             "The strings 'matrix' and 'iterative' can also "
-                             "be used.")
+            raise ValueError("'eval_type' should be '0' for matrix evaluation "
+                             "or '1' for iterative evaluation. The strings "
+                             "'matrix' and 'iterative' can also be used.")
         # Call the iteration method
         #self.run()
     
@@ -673,15 +672,15 @@ class PolicyIteration(MDP):
                 "'V0' must be a vector of length S."
             policy_V = array(V0).reshape(self.S)
         except AttributeError:
-            if len(V0) == self.S:
-                policy_V = array(V0).reshape(self.S)
-            else:
+            if V0 == 0:
                 policy_V = zeros(self.S)
+            else:
+                policy_V = array(V0).reshape(self.S)
         
         policy_P, policy_R = self._computePpolicyPRpolicy()
         
         if self.verbose:
-            print('  Iteration    V_variation')
+            print('    Iteration\t\t    V variation')
         
         itr = 0
         done = False
@@ -693,19 +692,17 @@ class PolicyIteration(MDP):
             
             variation = absolute(policy_V - Vprev).max()
             if self.verbose:
-                print(('      %s         %s') % (itr, variation))
+                print(('      %s\t\t      %s') % (itr, variation))
             
             # ensure |Vn - Vpolicy| < epsilon
             if variation < ((1 - self.discount) / self.discount) * epsilon:
                 done = True
                 if self.verbose:
-                    print("PyMDPtoolbox: iterations stopped, epsilon-optimal "
-                          "value function.")
+                    print(MSG_STOP_EPSILON_OPTIMAL_VALUE)
             elif itr == max_iter:
                 done = True
                 if self.verbose:
-                    print("PyMDPtoolbox: iterations stopped by maximum number "
-                          "of iteration condition.")
+                    print(MSG_STOP_MAX_ITER)
         
         self.V = policy_V
     
@@ -738,7 +735,7 @@ class PolicyIteration(MDP):
         # Run the policy iteration algorithm.
         # If verbose the print a header
         if self.verbose:
-            print('  Iteration  Number_of_different_actions')
+            print('  Iteration\t\tNumber of different actions')
         # Set up the while stopping condition and the current time
         done = False
         self.time = time()
@@ -760,20 +757,17 @@ class PolicyIteration(MDP):
             n_different = (policy_next != self.policy).sum()
             # if verbose then continue printing a table
             if self.verbose:
-                print(('       %s                 %s') % (self.iter,
-                                                         n_different))
+                print(('    %s\t\t  %s') % (self.iter, n_different))
             # Once the policy is unchanging of the maximum number of 
             # of iterations has been reached then stop
             if n_different == 0:
                 done = True
                 if self.verbose:
-                    print("PyMDPtoolbox: iterations stopped, unchanging "
-                          "policy found.")
+                    print(MSG_STOP_UNCHANGING_POLICY)
             elif (self.iter == self.max_iter):
                 done = True 
                 if self.verbose:
-                    print("PyMDPtoolbox: iterations stopped by maximum number "
-                          "of iteration condition.")
+                    print(MSG_STOP_MAX_ITER)
             else:
                 self.policy = policy_next
         # update the time to return th computation time
@@ -865,7 +859,7 @@ class PolicyIterationModified(PolicyIteration):
         # Run the modified policy iteration algorithm.
         
         if self.verbose:
-            print('\tIteration\tV-variation')
+            print('  \tIteration\t\tV-variation')
         
         self.time = time()
         
@@ -878,7 +872,7 @@ class PolicyIterationModified(PolicyIteration):
             
             variation = getSpan(Vnext - self.V)
             if self.verbose:
-                print(("\t%s\t%s" % (self.iter, variation)))
+                print(("    %s\t\t  %s" % (self.iter, variation)))
             
             self.V = Vnext
             if variation < self.thresh:
@@ -973,8 +967,7 @@ class QLearning(MDP):
         # The following check won't be done in MDP()'s initialisation, so let's
         # do it here
         self.max_iter = int(n_iter)
-        assert self.max_iter >= 10000, "PyMDPtoolbox: n_iter should be " \
-                                        "greater than 10000."
+        assert self.max_iter >= 10000, "'n_iter' should be greater than 10000."
         
         # We don't want to send this to MDP because _computePR should not be
         # run on it, so check that it defines an MDP
@@ -1029,7 +1022,10 @@ class QLearning(MDP):
             try:
                 r = self.R[a][s, s_new]
             except IndexError:
-                r = self.R[s, a]
+                try:
+                    r = self.R[s, a]
+                except IndexError:
+                    r = self.R[s]
             
             # Updating the value of Q
             # Decaying update coefficient (1/sqrt(n+2)) can be changed
@@ -1143,7 +1139,7 @@ class RelativeValueIteration(MDP):
         
         done = False
         if self.verbose:
-            print('  Iteration  U_variation')
+            print('  Iteration\t\tU variation')
         
         self.time = time()
         
@@ -1157,20 +1153,18 @@ class RelativeValueIteration(MDP):
             variation = getSpan(Vnext - self.V)
             
             if self.verbose:
-                print(("      %s         %s" % (self.iter, variation)))
+                print(("    %s\t\t  %s" % (self.iter, variation)))
             
             if variation < self.epsilon:
                  done = True
                  self.average_reward = self.gain + (Vnext - self.V).min()
                  if self.verbose:
-                     print("MDP Toolbox : iterations stopped, epsilon-optimal "
-                           "policy found.")
+                     print(MSG_STOP_EPSILON_OPTIMAL_POLICY)
             elif self.iter == self.max_iter:
                  done = True 
                  self.average_reward = self.gain + (Vnext - self.V).min()
                  if self.verbose:
-                     print("MDP Toolbox : iterations stopped by maximum "
-                           "number of iteration condition.")
+                     print(MSG_STOP_MAX_ITER)
             
             self.V = Vnext
             self.gain = float(self.V[self.S - 1])
@@ -1270,33 +1264,33 @@ class ValueIteration(MDP):
     >>> vi.setVerbose()
     >>> vi.run()
         Iteration       V-variation
-        1       8.0
-        2       2.76
-        3       1.9872
-        4       1.430784
-        5       1.03016448
-        6       0.7417184256
-        7       0.534037266432
-        8       0.384506831831
-        9       0.276844918918
-        10      0.199328341621
-        11      0.143516405967
-        12      0.103331812296
-        13      0.0743989048534
-        14      0.0535672114945
-        15      0.038568392276
-        16      0.0277692424387
-        17      0.0199938545559
-        18      0.0143955752802
-        19      0.0103648142018
-        20      0.00746266622526
-        21      0.00537311968218
-        22      0.00386864617116
-        23      0.00278542524322
-        24      0.00200550617512
-        25      0.00144396444609
-        26      0.0010396544012
-    PyMDPToolbox: iteration stopped, epsilon-optimal policy found.
+          1               8.0
+          2               2.76
+          3               1.9872
+          4               1.430784
+          5               1.03016448
+          6               0.7417184256
+          7               0.534037266432
+          8               0.384506831831
+          9               0.276844918918
+          10              0.199328341621
+          11              0.143516405967
+          12              0.103331812296
+          13              0.0743989048534
+          14              0.0535672114945
+          15              0.038568392276
+          16              0.0277692424387
+          17              0.0199938545559
+          18              0.0143955752802
+          19              0.0103648142018
+          20              0.00746266622526
+          21              0.00537311968218
+          22              0.00386864617116
+          23              0.00278542524322
+          24              0.00200550617512
+          25              0.00144396444609
+          26              0.0010396544012
+    Iterating stopped, epsilon-optimal policy found.
     >>> vi.V
     (40.048625392716815, 33.65371175967546)
     >>> vi.policy
@@ -1396,7 +1390,7 @@ class ValueIteration(MDP):
         # Run the value iteration algorithm.
         
         if self.verbose:
-            print('\tIteration\tV-variation')
+            print('  Iteration\t\tV-variation')
         
         self.time = time()
         while True:
@@ -1413,16 +1407,15 @@ class ValueIteration(MDP):
             variation = getSpan(self.V - Vprev)
             
             if self.verbose:
-                print(("\t%s\t%s" % (self.iter, variation)))
+                print(("    %s\t\t  %s" % (self.iter, variation)))
             
             if variation < self.thresh:
                 if self.verbose:
-                    print("Iteration stopped, epsilon-optimal policy found.")
+                    print(MSG_STOP_EPSILON_OPTIMAL_POLICY)
                 break
             elif (self.iter == self.max_iter):
                 if self.verbose:
-                    print("Iteration stopped by maximum number of iterations "
-                          "condition.")
+                    print(MSG_STOP_MAX_ITER)
                 break
         
         # store value and policy as tuples
@@ -1524,7 +1517,7 @@ class ValueIterationGS(ValueIteration):
         done = False
         
         if self.verbose:
-            print('  Iteration  V_variation')
+            print('  Iteration\t\tV-variation')
         
         self.time = time()
         
@@ -1543,18 +1536,16 @@ class ValueIterationGS(ValueIteration):
             variation = getSpan(self.V - Vprev)
             
             if self.verbose:
-                print(("      %s         %s" % (self.iter, variation)))
+                print(("    %s\t\t  %s" % (self.iter, variation)))
             
             if variation < self.thresh: 
                 done = True
                 if self.verbose:
-                    print("Iterations stopped, epsilon-optimal policy found.")
-             
+                    print(MSG_STOP_EPSILON_OPTIMAL_POLICY)
             elif self.iter == self.max_iter:
                 done = True 
                 if self.verbose:
-                    print("Iterations stopped by maximum number of iteration "
-                          "condition.")
+                    print(MSG_STOP_MAX_ITER)
         
         self.policy = []
         for s in range(self.S):
