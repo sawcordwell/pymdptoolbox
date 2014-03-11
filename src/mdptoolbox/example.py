@@ -3,7 +3,7 @@
 =========================================================
 
 The ``example`` module provides functions to generate valid MDP transition and
-reward matrices that are valid.
+reward matrices.
 
 Available functions
 -------------------
@@ -14,7 +14,7 @@ rand
 
 """
 
-# Copyright (c) 2011-2013 Steven A. W. Cordwell
+# Copyright (c) 2011-2014 Steven A. W. Cordwell
 # Copyright (c) 2009 INRA
 # 
 # All rights reserved.
@@ -58,21 +58,21 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     wood. Each year there is a probability ``p`` that a fire burns the forest.
     
     Here is how the problem is modelled.
-    Let {1, 2 . . . ``S`` } be the states of the forest, with ``S`` being the 
-    oldest. Let 'Wait' be action 1 and 'Cut' action 2.
-    After a fire, the forest is in the youngest state, that is state 1.
-    The transition matrix P of the problem can then be defined as follows::
+    Let {0, 1 . . . ``S``-1 } be the states of the forest, with ``S``-1 being
+    the oldest. Let 'Wait' be action 0 and 'Cut' be action 1.
+    After a fire, the forest is in the youngest state, that is state 0.
+    The transition matrix ``P`` of the problem can then be defined as follows::
         
                    | p 1-p 0.......0  |
                    | .  0 1-p 0....0  |
-        P[1,:,:] = | .  .  0  .       |
+        P[0,:,:] = | .  .  0  .       |
                    | .  .        .    |
                    | .  .         1-p |
                    | p  0  0....0 1-p |
         
                    | 1 0..........0 |
                    | . .          . |
-        P[2,:,:] = | . .          . |
+        P[1,:,:] = | . .          . |
                    | . .          . |
                    | . .          . |
                    | 1 0..........0 |
@@ -81,14 +81,14 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
         
                  |  0  |
                  |  .  |
-        R[:,1] = |  .  |
+        R[:,0] = |  .  |
                  |  .  |
                  |  0  |
                  |  r1 |
         
                  |  0  |
                  |  1  |
-        R[:,2] = |  .  |
+        R[:,1] = |  .  |
                  |  .  |
                  |  1  |
                  |  r2 |
@@ -96,24 +96,30 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     Parameters
     ---------
     S : int, optional
-        The number of states, which should be an integer greater than 0. By
-        default it is 3.
+        The number of states, which should be an integer greater than 1.
+        Default: 3.
     r1 : float, optional
         The reward when the forest is in its oldest state and action 'Wait' is
-        performed. By default it is 4.
+        performed. Default: 4.
     r2 : float, optional
         The reward when the forest is in its oldest state and action 'Cut' is
-        performed. By default it is 2.
+        performed. Default: 2.
     p : float, optional
-        The probability of wild fire occurence, in the range ]0, 1[. By default
-        it is 0.1.
+        The probability of wild fire occurence, in the range ]0, 1[. Default:
+        0.1.
+    is_sparse : bool, optional
+        If True, then the probability transition matrices will be returned in
+        sparse format, otherwise they will be in dense format. Default: False.
     
     Returns
     -------
     out : tuple
-        ``out[1]`` contains the transition probability matrix P with a shape of
-        (A, S, S). ``out[2]`` contains the reward matrix R with a shape of
-        (S, A).
+        ``out[0]`` contains the transition probability matrix P  and ``out[1]``
+        contains the reward matrix R. If ``is_sparse=False`` then P is a numpy
+        array with a shape of ``(A, S, S)`` and R is a numpy array with a shape
+        of ``(S, A)``. If ``is_sparse=True`` then P is a tuple of length ``A``
+        where each ``P[a]`` is a scipy sparse CSR format matrix of shape
+        ``(S, S)``; R remains the same as in the case of ``is_sparse=False``.
     
     Examples
     --------
@@ -131,19 +137,29 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     array([[ 0.,  0.],
            [ 0.,  1.],
            [ 4.,  2.]])
+    >>> Psp, Rsp = mdptoolbox.example.forest(is_sparse=True)
+    >>> len(Psp)
+    2
+    >>> Psp[0]
+    <3x3 sparse matrix of type '<type 'numpy.float64'>'
+        with 6 stored elements in Compressed Sparse Row format>
+    >>> Psp[1]
+    <3x3 sparse matrix of type '<type 'numpy.int64'>'
+        with 3 stored elements in Compressed Sparse Row format>
+    >>> Rsp
+    array([[ 0.,  0.],
+           [ 0.,  1.],
+           [ 4.,  2.]])
+    >>> (Psp[0].todense() == P[0]).all()
+    True
+    >>> (Rsp == R).all()
+    True
     
     """
     assert S > 1, "The number of states S must be greater than 1."
     assert (r1 > 0) and (r2 > 0), "The rewards must be non-negative."
     assert 0 <= p <= 1, "The probability p must be in [0; 1]."
-    # Definition of Transition matrix P(:,:,1) associated to action Wait
-    # (action 1) and P(:,:,2) associated to action Cut (action 2)
-    #             | p 1-p 0.......0  |                  | 1 0..........0 |
-    #             | .  0 1-p 0....0  |                  | . .          . |
-    #  P(:,:,1) = | .  .  0  .       |  and P(:,:,2) =  | . .          . |
-    #             | .  .        .    |                  | . .          . |
-    #             | .  .         1-p |                  | . .          . |
-    #             | p  0  0....0 1-p |                  | 1 0..........0 |
+    # Definition of Transition matrix 
     if is_sparse:
         P = []
         rows = list(range(S)) * 2
@@ -161,14 +177,7 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
         P[0, S - 1, S - 1] = (1 - p)
         P[1, :, :] = zeros((S, S))
         P[1, :, 0] = 1
-    # Definition of Reward matrix R1 associated to action Wait and 
-    # R2 associated to action Cut
-    #           | 0  |                   | 0  |
-    #           | .  |                   | 1  |
-    #  R(:,1) = | .  |  and     R(:,2) = | .  |	
-    #           | .  |                   | .  |
-    #           | 0  |                   | 1  |                   
-    #           | r1 |                   | r2 |
+    # Definition of Reward matrix
     R = zeros((S, 2))
     R[S - 1, 0] = r1
     R[:, 1] = ones(S)
@@ -183,27 +192,75 @@ def rand(S, A, is_sparse=False, mask=None):
     Parameters
     ----------
     S : int
-        number of states (> 0)
+        Number of states (> 1)
     A : int
-        number of actions (> 0)
-    is_sparse : logical, optional
-        false to have matrices in dense format, true to have sparse
-        matrices (default false).
-    mask : array or None, optional
-        matrix with 0 and 1 (0 indicates a place for a zero
-        probability), (SxS) (default, random)
+        Number of actions (> 1)
+    is_sparse : bool, optional
+        False to have matrices in dense format, True to have sparse matrices.
+        Default: False.
+    mask : array, optional
+        Array with 0 and 1 (0 indicates a place for a zero probability), shape
+        can be ``(S, S)`` or ``(A, S, S)``. Default: random.
     
     Returns
     -------
     out : tuple
-        ``out[1]`` contains the transition probability matrix P with a shape of
-        (A, S, S). ``out[2]`` contains the reward matrix R with a shape of
-        (S, A).
-
+        ``out[0]`` contains the transition probability matrix P  and ``out[1]``
+        contains the reward matrix R. If ``is_sparse=False`` then P is a numpy
+        array with a shape of ``(A, S, S)`` and R is a numpy array with a shape
+        of ``(S, A)``. If ``is_sparse=True`` then P and R are tuples of length
+        ``A``, where each ``P[a]`` is a scipy sparse CSR format matrix of shape
+        ``(S, S)`` and each ``R[a]`` is a scipy sparse csr format matrix of
+        shape ``(S, 1)``.
+    
     Examples
     --------
-    >>> import mdptoolbox.example
-    >>> P, R = mdptoolbox.example.rand(5, 3)
+    >>> import numpy, mdptoolbox.example
+    >>> numpy.random.seed(0) # Needed to get the output below
+    >>> P, R = mdptoolbox.example.rand(4, 3)
+    >>> P
+    array([[[ 0.21977283,  0.14889403,  0.30343592,  0.32789723],
+            [ 1.        ,  0.        ,  0.        ,  0.        ],
+            [ 0.        ,  0.43718772,  0.54480359,  0.01800869],
+            [ 0.39766289,  0.39997167,  0.12547318,  0.07689227]],
+    <BLANKLINE>
+           [[ 1.        ,  0.        ,  0.        ,  0.        ],
+            [ 0.32261337,  0.15483812,  0.32271303,  0.19983549],
+            [ 0.33816885,  0.2766999 ,  0.12960299,  0.25552826],
+            [ 0.41299411,  0.        ,  0.58369957,  0.00330633]],
+    <BLANKLINE>
+           [[ 0.32343037,  0.15178596,  0.28733094,  0.23745272],
+            [ 0.36348538,  0.24483321,  0.16114188,  0.23053953],
+            [ 1.        ,  0.        ,  0.        ,  0.        ],
+            [ 0.        ,  0.        ,  1.        ,  0.        ]]])
+    >>> R
+    array([[[-0.23311696,  0.58345008,  0.05778984,  0.13608912],
+            [-0.07704128,  0.        , -0.        ,  0.        ],
+            [ 0.        ,  0.22419145,  0.23386799,  0.88749616],
+            [-0.3691433 , -0.27257846,  0.14039354, -0.12279697]],
+    <BLANKLINE>
+           [[-0.77924972,  0.        , -0.        , -0.        ],
+            [ 0.47852716, -0.92162442, -0.43438607, -0.75960688],
+            [-0.81211898,  0.15189299,  0.8585924 , -0.3628621 ],
+            [ 0.35563307, -0.        ,  0.47038804,  0.92437709]],
+    <BLANKLINE>
+           [[-0.4051261 ,  0.62759564, -0.20698852,  0.76220639],
+            [-0.9616136 , -0.39685037,  0.32034707, -0.41984479],
+            [-0.13716313,  0.        , -0.        , -0.        ],
+            [ 0.        , -0.        ,  0.55810204,  0.        ]]])
+    >>> numpy.random.seed(0) # Needed to get the output below
+    >>> Psp, Rsp = mdptoolbox.example.rand(100, 5, is_sparse=True)
+    >>> len(Psp), len(Rsp)
+    (5, 5)
+    >>> Psp[0]
+    <100x100 sparse matrix of type '<type 'numpy.float64'>'
+        with 3296 stored elements in Compressed Sparse Row format>
+    >>> Rsp[0]
+    <100x100 sparse matrix of type '<type 'numpy.float64'>'
+        with 3296 stored elements in Compressed Sparse Row format>
+    >>> # The number of non-zero elements (nnz) in P and R are equal
+    >>> Psp[1].nnz == Rsp[1].nnz
+    True
     
     """
     # making sure the states and actions are more than one
@@ -282,4 +339,4 @@ def rand(S, A, is_sparse=False, mask=None):
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod()
+    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)
