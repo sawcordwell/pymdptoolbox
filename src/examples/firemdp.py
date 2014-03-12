@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Optimal fire management for a single population of a threatened species
-=======================================================================
+"""Optimal fire management for a threatened species
+================================================
 
 This PyMDPtoolbox example is based on a paper [Possingham1997]_ preseneted by
-Hugh Possingham and Geoff Tuck at the 1997 MODSIM conference. This version
-only considers a single population, rather than the two populations considered
-in the original paper. The paper is freely available to read from the link
-provided, so minimal details are given here.
+Hugh Possingham and Geoff Tuck at the 1997 MODSIM conference. The paper is 
+freely available to read from the link provided, so minimal details are given
+here.
 
 .. [Possingham1997] Possingham H & Tuck G, 1997, ‘Application of stochastic
    dynamic programming to optimal fire management of a spatially structured
@@ -56,7 +55,7 @@ FIRE_CLASSES = 13
 # The number of states
 STATES = POPULATION_CLASSES * FIRE_CLASSES
 # The number of actions
-ACTIONS = 2
+ACTIONS = 4
 
 def convertStateToIndex(population, fire):
     """Convert state parameters to transition probability matrix index.
@@ -165,6 +164,10 @@ def getTransitionProbabilities(s, x, F, a):
     elif a == 1:
         # When the patch is burned set the years since fire to 0.
         F = 0
+    elif a == 2:
+        pass
+    elif a == 3:
+        pass
     # Population transitions
     if x == 0:
         # Demographic model probabilities
@@ -182,6 +185,10 @@ def getTransitionProbabilities(s, x, F, a):
         if a == 1:
             x_1 -= 1
             x_2 -= 1
+        elif a == 2:
+            pass
+        elif a == 3:
+            pass
         # Demographic model probabilities
         new_state = convertStateToIndex(x_1, F)
         prob[new_state] = 1 - (1 - s) * (1 - r) # abundance stays the same
@@ -202,6 +209,10 @@ def getTransitionProbabilities(s, x, F, a):
             # Ensure that the abundance class doesn't go to -1
             if x_3 > 0:
                 x_3 -= 1
+        elif a == 2:
+            pass
+        elif a == 3:
+            pass
         # Demographic model probabilities
         new_state = convertStateToIndex(x_1, F)
         prob[new_state] = s # abundance stays the same
