@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Optimal fire management for a single population of a threatened species
-=======================================================================
+"""Optimal fire management of a threatened species
+===============================================
 
 This PyMDPtoolbox example is based on a paper [Possingham1997]_ preseneted by
 Hugh Possingham and Geoff Tuck at the 1997 MODSIM conference. This version
-only considers a single population, rather than the two populations considered
-in the original paper. The paper is freely available to read from the link
-provided, so minimal details are given here.
+only considers a single population, rather than the full two-patch spatially
+structured model in the paper. The paper is freely available to read from the
+link provided, so minimal details are given here.
 
 .. [Possingham1997] Possingham H & Tuck G, 1997, ‘Application of stochastic
    dynamic programming to optimal fire management of a spatially structured
