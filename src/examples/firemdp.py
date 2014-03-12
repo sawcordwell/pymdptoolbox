@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Optimal fire management for a threatened species
-================================================
+"""Optimal fire management of a spatially structured threatened species
+====================================================================
 
 This PyMDPtoolbox example is based on a paper [Possingham1997]_ preseneted by
 Hugh Possingham and Geoff Tuck at the 1997 MODSIM conference. The paper is 
