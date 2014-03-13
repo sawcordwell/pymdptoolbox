@@ -386,4 +386,3 @@ if __name__ == "__main__":
     else:
         sdp = solveMDP()
         printPolicy(sdp.policy[:, 0])
-    
