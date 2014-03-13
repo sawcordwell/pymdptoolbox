@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from scipy.sparse import dok_matrix as spdok
+from scipy.sparse import dok_matrix
 
 from mdptoolbox import mdp
 
@@ -44,8 +44,9 @@ def getLegalActions(state):
 
 def getTransitionAndRewardArrays():
     """"""
-    P = [spdok((STATES, STATES)) for a in range(ACTIONS)]
-    R = spdok((STATES, ACTIONS))
+    P = [dok_matrix((STATES, STATES)) for a in range(ACTIONS)]
+    #R = spdok((STATES, ACTIONS))
+    R = np.zeros((STATES, ACTIONS))
     # Naive approach, iterate through all possible combinations
     for a in range(ACTIONS):
         for s in range(STATES):
@@ -63,7 +64,7 @@ def getTransitionAndRewardArrays():
                 P[a][s, s1] = p
                 R[s, a] = r
         P[a] = P[a].tocsr()
-    R = R.tocsc()
+    #R = R.tolil()
     return(P, R)
 
 def getTransitionProbabilities(state, action):
