@@ -1,3 +1,7 @@
+2014-03-14
+v4.0b2 - Second beta release, new tic tac toe example which needs testing for
+         correctness. Documentation is mostly complete.
+
 2014-03-11
 v4.0b1 - fist beta release created on the testing branch
 
