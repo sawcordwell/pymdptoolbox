@@ -2,7 +2,7 @@
 from distutils.core import setup
 
 setup(name="pymdptoolbox",
-      version="4.0b1",
+      version="4.0b2",
       author="Steven A. W. Cordwell",
       author_email="steven.cordwell@uqconnect.edu.au",
       url="http://code.google.com/p/pymdptoolbox/",
