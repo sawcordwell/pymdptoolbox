@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import cPickle as pickle
+
 import numpy as np
 from scipy.sparse import dok_matrix
 
@@ -181,4 +183,8 @@ def isValid(state):
 if __name__ == "__main__":
     P, R = getTransitionAndRewardArrays()
     ttt = mdp.ValueIteration(P, R, 1)
-    print(ttt.policy)
+    ttt.setVerbose()
+    ttt.run()
+    f = "tictactoe.pkl"
+    pickle.dump(ttt.policy, open(f, "wb"))
+    print("Optimal policy pickled as '%s' in current directory." % f)
