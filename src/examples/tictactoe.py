@@ -161,7 +161,7 @@ def isWon(state, who):
     
     """
     for w in WINS:
-        S = sum(1 if (w[k] == state[k] == who) else 0
+        S = sum(1 if (w[k] == 1 and state[k] == who) else 0
                 for k in range(ACTIONS))
         if S == 3:
             # We have a win
