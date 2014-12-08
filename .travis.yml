@@ -7,7 +7,11 @@ python:
 virtualenv:
   system_site_packages: true
 before_install:
- - sudo apt-get install -qq python-numpy python-scipy python-cvxopt
-install: python setup.py install
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libatlas-dev libgsl0-dev fftw-dev libglpk-dev libdsdp-dev
+  - if [[ $TRAVIS_PYTHON_VERSION == 2* ]]; then sudo apt-get install -qq python-numpy python-scipy; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 3* ]]; then sudo apt-get install -qq python3-numpy python3-scipy; fi
+install:
+  - pip install "file://$PWD#egg=pymdptoolbox[LP]"
 # command to run tests
 script: nosetests
