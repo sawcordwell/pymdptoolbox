@@ -27,7 +27,7 @@ def test_example_forest_R_shape():
 
 def test_example_forest_check():
     P, R = mdptoolbox.example.forest(10, 5, 3, 0.2)
-    assert mdptoolbox.utils.check(P, R) == None
+    assert mdptoolbox.util.check(P, R) == None
 
 # exampleRand
 
@@ -38,7 +38,7 @@ def test_example_rand_dense_R_shape():
     assert (R_rand.shape == (ACTIONS, STATES, STATES))
 
 def test_example_rand_dense_check():
-    assert mdptoolbox.utils.check(P_rand, R_rand) == None
+    assert mdptoolbox.util.check(P_rand, R_rand) == None
 
 def test_example_rand_sparse_P_shape():
     assert (len(P_rand_sparse) == ACTIONS)
@@ -51,4 +51,4 @@ def test_example_rand_sparse_R_shape():
         assert (R_rand_sparse[a].shape == (STATES, STATES))
 
 def test_example_rand_sparse_check():
-    assert mdptoolbox.utils.check(P_rand_sparse, R_rand_sparse) == None
+    assert mdptoolbox.util.check(P_rand_sparse, R_rand_sparse) == None

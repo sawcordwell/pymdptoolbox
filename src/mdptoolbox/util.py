@@ -111,11 +111,11 @@ def check(P, R):
     --------
     >>> import mdptoolbox, mdptoolbox.example
     >>> P_valid, R_valid = mdptoolbox.example.rand(100, 5)
-    >>> mdptoolbox.utils.check(P_valid, R_valid) # Nothing should happen
+    >>> mdptoolbox.util.check(P_valid, R_valid) # Nothing should happen
     >>> 
     >>> import numpy as np
     >>> P_invalid = np.random.rand(5, 100, 100)
-    >>> mdptoolbox.utils.check(P_invalid, R_valid) # Raises an exception
+    >>> mdptoolbox.util.check(P_invalid, R_valid) # Raises an exception
 
     """
     # Checking P
