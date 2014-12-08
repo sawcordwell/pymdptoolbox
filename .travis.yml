@@ -11,10 +11,9 @@ python:
   - "3.4"
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq gcc gfortran liblapack-dev libatlas-base-dev libgsl0-dev fftw-dev libglpk-dev libdsdp-dev
-  - if [[ $TRAVIS_PYTHON_VERSION == "2.7" ]]; then sudo apt-get install -qq python-dev; fi
+  - sudo apt-get install -qq gcc liblapack-dev libatlas-base-dev libgsl0-dev fftw-dev libglpk-dev libdsdp-dev
+  - if [[ $TRAVIS_PYTHON_VERSION != *"with_system_site_packages" ]]; then sudo apt-get install -qq gfortran; fifi
   - if [[ $TRAVIS_PYTHON_VERSION == "2.7_with_system_site_packages" ]]; then sudo apt-get install -qq python-numpy python-scipy; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == "3.2" ]]; then sudo apt-get install -qq python3-dev; fi
   - if [[ $TRAVIS_PYTHON_VERSION == "3.2_with_system_site_packages" ]]; then sudo apt-get install -qq python3-numpy python3-scipy; fi
 install:
   - pip install "file://$PWD#egg=pymdptoolbox[LP]"
