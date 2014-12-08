@@ -1,4 +1,8 @@
 language: python
+branches:
+  only:
+    - master
+    - testing
 python:
 #  - "pypy"
 #  - "pypy3"
@@ -15,7 +19,13 @@ before_install:
   - if [[ $TRAVIS_PYTHON_VERSION != *"with_system_site_packages" ]]; then sudo apt-get install -qq gfortran; fi
   - if [[ $TRAVIS_PYTHON_VERSION == "2.7_with_system_site_packages" ]]; then sudo apt-get install -qq python-numpy python-scipy; fi
   - if [[ $TRAVIS_PYTHON_VERSION == "3.2_with_system_site_packages" ]]; then sudo apt-get install -qq python3-numpy python3-scipy; fi
+  - echo -e "[report]\nomit =\n    */python?.?/*\n    */site-packages/nose/*" > .coveragerc
+  - pip install coveralls
 install:
-  - pip install "file://$PWD#egg=pymdptoolbox[LP]"
+  - if [[ $TRAVIS_PYTHON_VERSION != *"with_system_site_packages" ]]; then pip install --upgrade "file://$PWD#egg=pymdptoolbox[LP]"; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == *"with_system_site_packages" ]]; then pip install "file://$PWD#egg=pymdptoolbox[LP]"; fi
 # command to run tests
-script: nosetests
+script:
+  nosetests --with-coverage --cover-package=mdptoolbox
+after_success:
+  coveralls

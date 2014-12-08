@@ -3,6 +3,8 @@ Markov Decision Process (MDP) Toolbox 4.0 for Python
 
 .. image:: https://travis-ci.org/sawcordwell/pymdptoolbox.svg?branch=master
     :target: https://travis-ci.org/sawcordwell/pymdptoolbox
+.. image:: https://coveralls.io/repos/sawcordwell/pymdptoolbox/badge.png
+  :target: https://coveralls.io/r/sawcordwell/pymdptoolbox
 
 The MDP toolbox provides classes and functions for the resolution of
 descrete-time Markov Decision Processes. The list of algorithms that have been
