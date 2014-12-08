@@ -302,7 +302,7 @@ def checkSquareStochastic(Z):
     # make sure that there are no values less than zero
     try:
         assert (Z >= 0).all(), mdperr["mat_nonneg"]
-    except (AttributeError, TypeError):
+    except (NotImplementedError, AttributeError, TypeError):
         try:
             assert (Z.data >= 0).all(), mdperr["mat_nonneg"]
         except AttributeError:
