@@ -4,7 +4,10 @@ python:
   - "3.3"
   - "3.2"
   - "2.7"
-# command to install dependencies
-install: pip install .
+virtualenv:
+  system_site_packages: true
+before_install:
+ - sudo apt-get install -qq python-numpy python-scipy python-cvxopt
+install: python setup.py install
 # command to run tests
 script: nosetests
