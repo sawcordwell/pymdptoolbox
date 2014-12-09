@@ -4,28 +4,40 @@ branches:
     - master
     - testing
 python:
-#  - "pypy"
-#  - "pypy3"
-#  - "2.6"
   - "2.7"
   - "2.7_with_system_site_packages"
   - "3.2"
   - "3.2_with_system_site_packages"
   - "3.3"
   - "3.4"
+#  - "pypy"
+#  - "pypy3"
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq gcc liblapack-dev libatlas-base-dev libgsl0-dev fftw-dev libglpk-dev libdsdp-dev
+  # python-cvxopt package is only available for Python 2.7, so in every other
+  # case the build dependencies of cvxopt are installed
+  - if [[ $TRAVIS_PYTHON_VERSION != "2.7_with_system_site_packages" ]]; then sudo apt-get install -qq gcc liblapack-dev libatlas-base-dev libgsl0-dev fftw-dev libglpk-dev libdsdp-dev; fi
+  # SciPy and NumPy compilation needs a fortran compiler, so if we aren't using
+  # sytem site packages then gfortran is installed first
   - if [[ $TRAVIS_PYTHON_VERSION != *"with_system_site_packages" ]]; then sudo apt-get install -qq gfortran; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == "2.7_with_system_site_packages" ]]; then sudo apt-get install -qq python-numpy python-scipy; fi
+  # if using system site packages then numpy, scipy and cvxopt can be installed
+  # with apt-get
+  - if [[ $TRAVIS_PYTHON_VERSION == "2.7_with_system_site_packages" ]]; then sudo apt-get install -qq python-numpy python-scipy python-cvxopt; fi
+  # There is no python3-cvxopt package, so it will be built by pip install
   - if [[ $TRAVIS_PYTHON_VERSION == "3.2_with_system_site_packages" ]]; then sudo apt-get install -qq python3-numpy python3-scipy; fi
+  # Do test coverage report using coveralls
   - echo -e "[report]\nomit =\n    */python?.?/*\n    */site-packages/nose/*" > .coveragerc
   - pip install coveralls
 install:
+  # If we aren't using system site packages then install everything from latest
+  # version that pip knows about using upgrade flag
   - if [[ $TRAVIS_PYTHON_VERSION != *"with_system_site_packages" ]]; then pip install --upgrade "file://$PWD#egg=pymdptoolbox[LP]"; fi
+  # If we are using system site packages then numpy/scipy/cvxopt won't be
+  # installed if there is a version already available
   - if [[ $TRAVIS_PYTHON_VERSION == *"with_system_site_packages" ]]; then pip install "file://$PWD#egg=pymdptoolbox[LP]"; fi
 # command to run tests
 script:
+  # IS there any difference to using ``python setup.py nosetests``?
   nosetests --with-coverage --cover-package=mdptoolbox
 after_success:
   coveralls
