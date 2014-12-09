@@ -16,12 +16,12 @@ rand
 
 # Copyright (c) 2011-2014 Steven A. W. Cordwell
 # Copyright (c) 2009 INRA
-# 
+#
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #   * Redistributions of source code must retain the above copyright notice,
 #     this list of conditions and the following disclaimer.
 #   * Redistributions in binary form must reproduce the above copyright notice,
@@ -30,7 +30,7 @@ rand
 #   * Neither the name of the <ORGANIZATION> nor the names of its contributors
 #     may be used to endorse or promote products derived from this software
 #     without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -49,50 +49,50 @@ from scipy.sparse import coo_matrix, dok_matrix
 
 def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     """Generate a MDP example based on a simple forest management scenario.
-    
+
     This function is used to generate a transition probability
     (``A`` × ``S`` × ``S``) array ``P`` and a reward (``S`` × ``A``) matrix
     ``R`` that model the following problem. A forest is managed by two actions:
     'Wait' and 'Cut'. An action is decided each year with first the objective
     to maintain an old forest for wildlife and second to make money selling cut
     wood. Each year there is a probability ``p`` that a fire burns the forest.
-    
+
     Here is how the problem is modelled.
     Let {0, 1 . . . ``S``-1 } be the states of the forest, with ``S``-1 being
     the oldest. Let 'Wait' be action 0 and 'Cut' be action 1.
     After a fire, the forest is in the youngest state, that is state 0.
     The transition matrix ``P`` of the problem can then be defined as follows::
-        
+
                    | p 1-p 0.......0  |
                    | .  0 1-p 0....0  |
         P[0,:,:] = | .  .  0  .       |
                    | .  .        .    |
                    | .  .         1-p |
                    | p  0  0....0 1-p |
-        
+
                    | 1 0..........0 |
                    | . .          . |
         P[1,:,:] = | . .          . |
                    | . .          . |
                    | . .          . |
                    | 1 0..........0 |
-    
+
     The reward matrix R is defined as follows::
-        
+
                  |  0  |
                  |  .  |
         R[:,0] = |  .  |
                  |  .  |
                  |  0  |
                  |  r1 |
-        
+
                  |  0  |
                  |  1  |
         R[:,1] = |  .  |
                  |  .  |
                  |  1  |
                  |  r2 |
-    
+
     Parameters
     ---------
     S : int, optional
@@ -110,7 +110,7 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     is_sparse : bool, optional
         If True, then the probability transition matrices will be returned in
         sparse format, otherwise they will be in dense format. Default: False.
-    
+
     Returns
     -------
     out : tuple
@@ -120,7 +120,7 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
         of ``(S, A)``. If ``is_sparse=True`` then P is a tuple of length ``A``
         where each ``P[a]`` is a scipy sparse CSR format matrix of shape
         ``(S, S)``; R remains the same as in the case of ``is_sparse=False``.
-    
+
     Examples
     --------
     >>> import mdptoolbox.example
@@ -154,12 +154,12 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     True
     >>> (Rsp == R).all()
     True
-    
+
     """
     assert S > 1, "The number of states S must be greater than 1."
     assert (r1 > 0) and (r2 > 0), "The rewards must be non-negative."
     assert 0 <= p <= 1, "The probability p must be in [0; 1]."
-    # Definition of Transition matrix 
+    # Definition of Transition matrix
     if is_sparse:
         P = []
         rows = list(range(S)) * 2
@@ -188,7 +188,7 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
 
 def rand(S, A, is_sparse=False, mask=None):
     """Generate a random Markov Decision Process.
-    
+
     Parameters
     ----------
     S : int
@@ -201,7 +201,7 @@ def rand(S, A, is_sparse=False, mask=None):
     mask : array, optional
         Array with 0 and 1 (0 indicates a place for a zero probability), shape
         can be ``(S, S)`` or ``(A, S, S)``. Default: random.
-    
+
     Returns
     -------
     out : tuple
@@ -212,7 +212,7 @@ def rand(S, A, is_sparse=False, mask=None):
         ``A``, where each ``P[a]`` is a scipy sparse CSR format matrix of shape
         ``(S, S)`` and each ``R[a]`` is a scipy sparse csr format matrix of
         shape ``(S, 1)``.
-    
+
     Examples
     --------
     >>> import numpy, mdptoolbox.example
@@ -261,7 +261,7 @@ def rand(S, A, is_sparse=False, mask=None):
     >>> # The number of non-zero elements (nnz) in P and R are equal
     >>> Psp[1].nnz == Rsp[1].nnz
     True
-    
+
     """
     # making sure the states and actions are more than one
     assert S > 1, "The number of states S must be greater than 1."
@@ -299,7 +299,12 @@ def rand(S, A, is_sparse=False, mask=None):
                 if n == 0:
                     m[randint(0, S)] = 1
                     n = 1
-                cols = where(m)[0] # m[s, :]
+                # find the columns of the vector that have non-zero elements
+                nz = m.nonzero()
+                if len(nz) == 1:
+                    cols = nz[0]
+                else:
+                    cols = nz[1]
                 vals = random(n)
                 vals = vals / vals.sum()
                 reward = 2*random(n) - ones(n)
@@ -330,7 +335,6 @@ def rand(S, A, is_sparse=False, mask=None):
                 # Make sure that there is atleast one transition in each state
                 if m.sum() == 0:
                     m[randint(0, S)] = 1
-                    n = 1
                 P[a][s] = m * random(S)
                 P[a][s] = P[a][s] / P[a][s].sum()
                 R[a][s] = (m * (2*random(S) - ones(S, dtype=int)))
