@@ -46,9 +46,7 @@ getSpan
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from numpy import absolute, ones
-
-SMALLNUM = 10e-12
+import numpy as _np
 
 # These need to be fixed so that we use classes derived from Error.
 mdperr = {
@@ -297,7 +295,7 @@ def checkSquareStochastic(Z):
         raise InvalidMDPError(mdperr["mat_square"])
     # check that the matrix is square, and that each row sums to one
     assert s1 == s2, mdperr["mat_square"]
-    assert (absolute(Z.sum(axis=1) - ones(s2))).max() < SMALLNUM, \
+    assert (_np.abs(Z.sum(axis=1) - _np.ones(s2))).max() <= _np.spacing(1), \
         mdperr["mat_stoch"]
     # make sure that there are no values less than zero
     try:
