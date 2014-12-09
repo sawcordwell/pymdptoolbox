@@ -37,7 +37,7 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION == *"with_system_site_packages" ]]; then pip install "file://$PWD#egg=pymdptoolbox[LP]"; fi
 # command to run tests
 script:
-  # IS there any difference to using ``python setup.py nosetests``?
-  nosetests --with-coverage --cover-package=mdptoolbox
+  # Is there any difference to using ``python setup.py nosetests``?
+  nosetests --with-coverage --cover-package=mdptoolbox --with-doctest --doctest-options='+NORMALIZE_WHITESPACE,+IGNORE_EXCEPTION_DETAIL'
 after_success:
   coveralls

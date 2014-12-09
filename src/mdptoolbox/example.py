@@ -340,7 +340,3 @@ def rand(S, A, is_sparse=False, mask=None):
                 R[a][s] = (m * (2*random(S) - ones(S, dtype=int)))
     # we want to return the generated transition and reward matrices
     return(P, R)
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)

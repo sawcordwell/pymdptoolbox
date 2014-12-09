@@ -335,7 +335,3 @@ class InvalidMDPError(Error):
         Error.__init__(self)
         self.message += msg
         self.args = tuple(msg)
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

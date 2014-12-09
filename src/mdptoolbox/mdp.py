@@ -1564,7 +1564,3 @@ class ValueIterationGS(ValueIteration):
         
         self.V = tuple(self.V.tolist())
         self.policy = tuple(self.policy)
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

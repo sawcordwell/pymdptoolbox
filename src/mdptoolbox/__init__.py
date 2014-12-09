@@ -79,9 +79,3 @@ http://www.inra.fr/mia/T/MDPtoolbox/.
 # POSSIBILITY OF SUCH DAMAGE.
 
 from . import mdp
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testfile("example.py", module_relative=True)
-    doctest.testfile("mdp.py", module_relative=True)
-    doctest.testfile("util.py", module_relative=True)
