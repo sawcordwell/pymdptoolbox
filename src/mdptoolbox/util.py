@@ -114,6 +114,9 @@ def check(P, R):
     >>> import numpy as np
     >>> P_invalid = np.random.rand(5, 100, 100)
     >>> mdptoolbox.util.check(P_invalid, R_valid) # Raises an exception
+    Traceback (most recent call last):
+    ...
+    AssertionError: Each row of a transition probability matrix must sum to one (1).
 
     """
     # Checking P
@@ -295,7 +298,7 @@ def checkSquareStochastic(Z):
         raise InvalidMDPError(mdperr["mat_square"])
     # check that the matrix is square, and that each row sums to one
     assert s1 == s2, mdperr["mat_square"]
-    assert (_np.abs(Z.sum(axis=1) - _np.ones(s2))).max() <= _np.spacing(1), \
+    assert (_np.abs(Z.sum(axis=1) - _np.ones(s2))).max() <= 2*_np.spacing(1), \
         mdperr["mat_stoch"]
     # make sure that there are no values less than zero
     try:
