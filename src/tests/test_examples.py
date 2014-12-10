@@ -42,7 +42,10 @@ class TestExampleForest(object):
         assert_equal(len(P), len(self.P))
         for a in range(len(self.P)):
             assert_equal(P[a].shape, self.P[a].shape)
-            assert_equal((P[a] != sp.csr_matrix(self.P[a])).nnz, 0)
+            try:
+                assert_equal((P[a] != sp.csr_matrix(self.P[a])).nnz, 0)
+            except AttributeError:
+                assert_true((P[a].todense() == self.P[a]).all())
         assert_true((R == self.R).all())
         assert_equal(R.shape, self.R.shape)
 

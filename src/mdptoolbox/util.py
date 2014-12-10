@@ -273,6 +273,10 @@ def check(P, R):
     # what the reward arrar is reporting agree as to the number of actions
     # and states. If not then fail explaining the situation
 
+def rowsSumToOne(Z, n):
+    return((_np.abs(Z.sum(axis=1) - _np.ones(n))).max() <=
+           10 * _np.spacing(_np.float64(1)))
+
 def checkSquareStochastic(Z):
     """Check if Z is a square stochastic matrix.
     
@@ -298,8 +302,7 @@ def checkSquareStochastic(Z):
         raise InvalidMDPError(mdperr["mat_square"])
     # check that the matrix is square, and that each row sums to one
     assert s1 == s2, mdperr["mat_square"]
-    assert (_np.abs(Z.sum(axis=1) - _np.ones(s2))).max() <= 2*_np.spacing(1), \
-        mdperr["mat_stoch"]
+    assert rowsSumToOne(Z, s2), mdperr["mat_stoch"]
     # make sure that there are no values less than zero
     try:
         assert (Z >= 0).all(), mdperr["mat_nonneg"]

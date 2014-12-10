@@ -546,8 +546,9 @@ class PolicyIteration(MDP):
     >>> P, R = mdptoolbox.example.forest()
     >>> pi = mdptoolbox.mdp.PolicyIteration(P, R, 0.9)
     >>> pi.run()
-    >>> pi.V
-    (26.244000000000014, 29.484000000000016, 33.484000000000016)
+    >>> expected = (26.244000000000014, 29.484000000000016, 33.484000000000016)
+    >>> all(expected[k] - pi.V[k] < 1e-12 for k in range(len(expected)))
+    True
     >>> pi.policy
     (0, 0, 0)
     """
@@ -820,8 +821,9 @@ class PolicyIterationModified(PolicyIteration):
     >>> pim.run()
     >>> pim.policy
     (0, 0, 0)
-    >>> pim.V
-    (21.81408652334702, 25.054086523347017, 29.054086523347017)
+    >>> expected = (21.81408652334702, 25.054086523347017, 29.054086523347017)
+    >>> all(expected[k] - pim.V[k] < 1e-12 for k in range(len(expected)))
+    True
 
     """
 
@@ -942,8 +944,9 @@ class QLearning(MDP):
     array([[ 11.198909  ,  10.34652034],
            [ 10.74229967,  11.74105792],
            [  2.86980001,  12.25973286]])
-    >>> ql.V
-    (11.198908998901134, 11.741057920409865, 12.259732864170232)
+    >>> expected = (11.198908998901134, 11.741057920409865, 12.259732864170232)
+    >>> all(expected[k] - ql.V[k] < 1e-12 for k in range(len(expected)))
+    True
     >>> ql.policy
     (0, 1, 1)
 
@@ -957,8 +960,9 @@ class QLearning(MDP):
     >>> ql.Q
     array([[ 33.33010866,  40.82109565],
            [ 34.37431041,  29.67236845]])
-    >>> ql.V
-    (40.82109564847122, 34.37431040682546)
+    >>> expected = (40.82109564847122, 34.37431040682546)
+    >>> all(expected[k] - ql.V[k] < 1e-12 for k in range(len(expected)))
+    True
     >>> ql.policy
     (1, 0)
 
@@ -1110,8 +1114,9 @@ class RelativeValueIteration(MDP):
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> rvi = mdptoolbox.mdp.RelativeValueIteration(P, R)
     >>> rvi.run()
-    >>> rvi.V
-    (10.0, 3.885235246411831)
+    >>> expected = (10.0, 3.885235246411831)
+    >>> all(expected[k] - rvi.V[k] < 1e-12 for k in range(len(expected)))
+    True
     >>> rvi.average_reward
     3.8852352464118312
     >>> rvi.policy
@@ -1252,8 +1257,9 @@ class ValueIteration(MDP):
     >>> vi.verbose
     False
     >>> vi.run()
-    >>> vi.V
-    (5.93215488, 9.38815488, 13.38815488)
+    >>> expected = (5.93215488, 9.38815488, 13.38815488)
+    >>> all(expected[k] - vi.V[k] < 1e-12 for k in range(len(expected)))
+    True
     >>> vi.policy
     (0, 0, 0)
     >>> vi.iter
@@ -1264,38 +1270,10 @@ class ValueIteration(MDP):
     >>> P = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> vi = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
-    >>> vi.setVerbose()
     >>> vi.run()
-        Iteration       V-variation
-          1               8.0
-          2               2.76
-          3               1.9872
-          4               1.430784
-          5               1.03016448
-          6               0.7417184256
-          7               0.534037266432
-          8               0.384506831831
-          9               0.276844918918
-          10              0.199328341621
-          11              0.143516405967
-          12              0.103331812296
-          13              0.0743989048534
-          14              0.0535672114945
-          15              0.038568392276
-          16              0.0277692424387
-          17              0.0199938545559
-          18              0.0143955752802
-          19              0.0103648142018
-          20              0.00746266622526
-          21              0.00537311968218
-          22              0.00386864617116
-          23              0.00278542524322
-          24              0.00200550617512
-          25              0.00144396444609
-          26              0.0010396544012
-    Iterating stopped, epsilon-optimal policy found.
-    >>> vi.V
-    (40.048625392716815, 33.65371175967546)
+    >>> expected = (40.048625392716815, 33.65371175967546)
+    >>> all(expected[k] - vi.V[k] < 1e-12 for k in range(len(expected)))
+    True
     >>> vi.policy
     (1, 0)
     >>> vi.iter
@@ -1310,8 +1288,9 @@ class ValueIteration(MDP):
     >>> R = np.array([[5, 10], [-1, 2]])
     >>> vi = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
     >>> vi.run()
-    >>> vi.V
-    (40.048625392716815, 33.65371175967546)
+    >>> expected = (40.048625392716815, 33.65371175967546)
+    >>> all(expected[k] - vi.V[k] < 1e-12 for k in range(len(expected)))
+    True
     >>> vi.policy
     (1, 0)
 
@@ -1469,12 +1448,13 @@ class ValueIterationGS(ValueIteration):
 
     Examples
     --------
-    >>> import mdptoolbox, mdptoolbox.example
+    >>> import mdptoolbox.example, numpy as np
     >>> P, R = mdptoolbox.example.forest()
     >>> vigs = mdptoolbox.mdp.ValueIterationGS(P, R, 0.9)
     >>> vigs.run()
-    >>> vigs.V
-    (25.5833879767579, 28.830654635546928, 32.83065463554693)
+    >>> expected = (25.5833879767579, 28.830654635546928, 32.83065463554693)
+    >>> all(expected[k] - vigs.V[k] < 1e-12 for k in range(len(expected)))
+    True
     >>> vigs.policy
     (0, 0, 0)
 

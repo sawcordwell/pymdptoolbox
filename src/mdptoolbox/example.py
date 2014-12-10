@@ -140,10 +140,10 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     >>> len(Psp)
     2
     >>> Psp[0]
-    <3x3 sparse matrix of type '<type 'numpy.float64'>'
+    <3x3 sparse matrix of type '<... 'numpy.float64'>'
         with 6 stored elements in Compressed Sparse Row format>
     >>> Psp[1]
-    <3x3 sparse matrix of type '<type 'numpy.int64'>'
+    <3x3 sparse matrix of type '<... 'numpy.int64'>'
         with 3 stored elements in Compressed Sparse Row format>
     >>> Rsp
     array([[ 0.,  0.],
@@ -252,10 +252,10 @@ def rand(S, A, is_sparse=False, mask=None):
     >>> len(Psp), len(Rsp)
     (5, 5)
     >>> Psp[0]
-    <100x100 sparse matrix of type '<type 'numpy.float64'>'
+    <100x100 sparse matrix of type '<... 'numpy.float64'>'
         with 3296 stored elements in Compressed Sparse Row format>
     >>> Rsp[0]
-    <100x100 sparse matrix of type '<type 'numpy.float64'>'
+    <100x100 sparse matrix of type '<... 'numpy.float64'>'
         with 3296 stored elements in Compressed Sparse Row format>
     >>> # The number of non-zero elements (nnz) in P and R are equal
     >>> Psp[1].nnz == Rsp[1].nnz
