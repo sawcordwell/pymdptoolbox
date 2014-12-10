@@ -16,7 +16,10 @@ before_install:
   - sudo apt-get update -qq
   # python-cvxopt package is only available for Python 2.7, so in every other
   # case the build dependencies of cvxopt are installed
-  - if [[ $TRAVIS_PYTHON_VERSION != "2.7_with_system_site_packages" ]]; then sudo apt-get install -qq gcc liblapack-dev libatlas-base-dev libgsl0-dev fftw-dev libglpk-dev libdsdp-dev; fi
+  # Optional CVXOPT dependencies are: libatlas-base-dev libgsl0-dev fftw-dev libglpk-dev libdsdp-dev
+  # However, flags need to be set in the cvxopt/setup.py script which we don't
+  # alter with the current setup
+  - if [[ $TRAVIS_PYTHON_VERSION != "2.7_with_system_site_packages" ]]; then sudo apt-get install -qq gcc liblapack-dev; fi
   # SciPy and NumPy compilation needs a fortran compiler, so if we aren't using
   # sytem site packages then gfortran is installed first
   - if [[ $TRAVIS_PYTHON_VERSION != *"with_system_site_packages" ]]; then sudo apt-get install -qq gfortran; fi
@@ -37,7 +40,6 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION == *"with_system_site_packages" ]]; then pip install "file://$PWD#egg=pymdptoolbox[LP]"; fi
 # command to run tests
 script:
-  # Is there any difference to using ``python setup.py nosetests``?
-  nosetests --with-coverage --cover-package=mdptoolbox --with-doctest --doctest-options='+NORMALIZE_WHITESPACE,+IGNORE_EXCEPTION_DETAIL'
+  ./runtests.sh
 after_success:
   coveralls
