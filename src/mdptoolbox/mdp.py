@@ -852,7 +852,7 @@ class PolicyIterationModified(PolicyIteration):
             self.thresh = self.epsilon
 
         if self.discount == 1:
-            self.V = _np.zeros((self.S, 1))
+            self.V = _np.zeros(self.S)
         else:
             Rmin = min(R.min() for R in self.R)
             self.V = 1 / (1 - self.discount) * Rmin * _np.ones((self.S,))
