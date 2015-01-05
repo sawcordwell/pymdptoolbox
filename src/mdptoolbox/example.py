@@ -362,6 +362,21 @@ def small():
     out : tuple
         ``out[0]`` is a numpy array of the probability transition matriices.
         ``out[1]`` is a numpy arrray of the reward matrix.
+
+    Examples
+    ========
+    >>> import mdptoolbox.example
+    >>> P, R = mdptoolbox.example.small()
+    >>> P
+    array([[[ 0.5,  0.5],
+            [ 0.8,  0.2]],
+    <BLANKLINE>
+           [[ 0. ,  1. ],
+            [ 0.1,  0.9]]])
+    >>> R
+    array([[ 5, 10],
+           [-1,  2]])
+
     """
     P = _np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
     R = _np.array([[5, 10], [-1, 2]])
