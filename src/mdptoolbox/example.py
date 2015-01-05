@@ -340,3 +340,29 @@ def rand(S, A, is_sparse=False, mask=None):
                                 _np.ones(S, dtype=int)))
     # we want to return the generated transition and reward matrices
     return(P, R)
+
+def small():
+    """A very small Markov decision process.
+    
+    The probability transition matrices are::
+
+            | | 0.5 0.5 | |
+            | | 0.8 0.2 | |
+        P = |             |
+            | | 0.0 1.0 | |
+            | | 0.1 0.9 | |
+
+    The reward matrix is::
+
+        R = |  5 10 |
+            | -1  2 |
+    
+    Returns
+    =======
+    out : tuple
+        ``out[0]`` is a numpy array of the probability transition matriices.
+        ``out[1]`` is a numpy arrray of the reward matrix.
+    """
+    P = _np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
+    R = _np.array([[5, 10], [-1, 2]])
+    return(P, R)
