@@ -10,6 +10,9 @@ import scipy as sp
 
 import mdptoolbox.example
 
+class BaseTestMDP(object):
+    small_P, small_R = mdptoolbox.example.small()
+
 STATES = 10
 ACTIONS = 3
 SMALLNUM = 10e-12
