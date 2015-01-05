@@ -15,12 +15,11 @@ ACTIONS = 3
 SMALLNUM = 10e-12
 
 # np.arrays
-P_small = np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
-R_small = np.array([[5, 10], [-1, 2]])
+P_small, R_small = mdptoolbox.example.small()
 
 P_sparse = np.empty(2, dtype=object)
-P_sparse[0] = sp.sparse.csr_matrix([[0.5, 0.5],[0.8, 0.2]])
-P_sparse[1] = sp.sparse.csr_matrix([[0, 1],[0.1, 0.9]])
+P_sparse[0] = sp.sparse.csr_matrix(P_small[0])
+P_sparse[1] = sp.sparse.csr_matrix(P_small[1])
 
 P_forest, R_forest = mdptoolbox.example.forest()
 
