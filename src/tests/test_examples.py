@@ -12,10 +12,13 @@ import scipy.sparse as sp
 
 import mdptoolbox.example
 
-## example.forest
+def assert_equal_numpy_spacing(A, B):
+    A = np.array(A)
+    B = np.array(B)
+    x = np.amax(np.maximum(np.abs(A), np.abs(B)))
+    assert_true((np.abs(A - B) <= np.spacing(x)).all())
 
-def assert_spacing_equal(A, B):
-    return(assert_true((np.abs(A - B) <= np.spacing(1)).all()))
+## example.forest
 
 class TestExampleForest(object):
     P = np.array(
@@ -34,8 +37,8 @@ class TestExampleForest(object):
         P, R = mdptoolbox.example.forest()
         assert_equal(P.shape, self.P.shape)
         assert_equal(R.shape, self.R.shape)
-        assert_spacing_equal(P, self.P)
-        assert_spacing_equal(R, self.R)
+        assert_equal_numpy_spacing(P, self.P)
+        assert_equal_numpy_spacing(R, self.R)
 
     def test_sparse_PR(self):
         P, R = mdptoolbox.example.forest(is_sparse=True)
@@ -97,8 +100,8 @@ class TestExampleRand(object):
         P, R = mdptoolbox.example.rand(self.S, self.A)
         assert_equal(P.shape, self.P.shape)
         assert_equal(R.shape, self.R.shape)
-        assert_spacing_equal(P, self.P)
-        assert_spacing_equal(R, self.R)
+        assert_equal_numpy_spacing(P, self.P)
+        assert_equal_numpy_spacing(R, self.R)
 
     def test_sparse_PR(self):
         P, R = mdptoolbox.example.rand(self.S, self.A, is_sparse=True)
