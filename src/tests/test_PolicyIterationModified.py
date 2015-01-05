@@ -11,7 +11,7 @@ import scipy.sparse as sp
 
 from mdptoolbox import mdp
 
-from utils import BaseTestMDP, assert_sequence_almost_equal
+from .utils import BaseTestMDP, assert_sequence_almost_equal
 
 class TestPolicyIterationModified(BaseTestMDP):
     def test_small(self):
