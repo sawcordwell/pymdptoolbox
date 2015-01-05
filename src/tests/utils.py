@@ -5,6 +5,7 @@ Created on Sat Aug 24 14:44:07 2013
 @author: steve
 """
 
+from nose.tools import assert_true
 import numpy as np
 import scipy as sp
 
@@ -12,6 +13,9 @@ import mdptoolbox.example
 
 class BaseTestMDP(object):
     small_P, small_R = mdptoolbox.example.small()
+
+def assert_sequence_almost_equal(a, b, spacing=10e-12):
+    assert_true(all(abs(a[k] - b[k]) < spacing for k in range(len(a))))
 
 STATES = 10
 ACTIONS = 3
