@@ -246,7 +246,7 @@ class MDP(object):
             if P.ndim == 3:
                 self.S = P.shape[1]
             else:
-               self.S = P[0].shape[0]
+                self.S = P[0].shape[0]
         except AttributeError:
             self.S = P[0].shape[0]
         # convert P to a tuple of numpy arrays
@@ -281,14 +281,14 @@ class MDP(object):
                 self.R = tuple(r for aa in range(self.A))
             elif R.ndim == 2:
                 self.R = tuple(_np.array(R[:, aa]).reshape(self.S)
-                                for aa in range(self.A))
+                               for aa in range(self.A))
             else:
                 self.R = tuple(_np.multiply(P[aa], R[aa]).sum(1).reshape(self.S)
-                                for aa in range(self.A))
+                               for aa in range(self.A))
         except AttributeError:
             if len(R) == self.A:
                 self.R = tuple(_np.multiply(P[aa], R[aa]).sum(1).reshape(self.S)
-                                for aa in range(self.A))
+                               for aa in range(self.A))
             else:
                 r = _np.array(R).reshape(self.S)
                 self.R = tuple(r for aa in range(self.A))
@@ -375,8 +375,6 @@ class FiniteHorizon(MDP):
         # Set the reward for the final transition to h, if specified.
         if h is not None:
             self.V[:, N] = h
-        # Call the iteration method
-        #self.run()
 
     def run(self):
         # Run the finite horizon algorithm.
@@ -459,8 +457,6 @@ class LP(MDP):
         # this doesn't do what I want it to do c.f. issue #3
         if not self.verbose:
             solvers.options['show_progress'] = False
-        # Call the iteration method
-        #self.run()
 
     def run(self):
         #Run the linear programming algorithm.
@@ -488,7 +484,7 @@ class LP(MDP):
         # only to 10e-8 places. This assumes glpk is installed of course.
         self.V = _np.array(self._linprog(f, M, -h)['x']).reshape(self.S)
         # apply the Bellman operator
-        self.policy, self.V =  self._bellmanOperator()
+        self.policy, self.V = self._bellmanOperator()
         # update the time spent solving
         self.time = _time.time() - self.time
         # store value and policy as tuples
@@ -560,7 +556,7 @@ class PolicyIteration(MDP):
         # Set up the MDP, but don't need to worry about epsilon values
         MDP.__init__(self, transitions, reward, discount, None, max_iter)
         # Check if the user has supplied an initial policy. If not make one.
-        if policy0 == None:
+        if policy0 is None:
             # Initialise the policy to the one which maximises the expected
             # immediate reward
             null = _np.zeros(self.S)
@@ -592,8 +588,6 @@ class PolicyIteration(MDP):
             raise ValueError("'eval_type' should be '0' for matrix evaluation "
                              "or '1' for iterative evaluation. The strings "
                              "'matrix' and 'iterative' can also be used.")
-        # Call the iteration method
-        #self.run()
 
     def _computePpolicyPRpolicy(self):
         # Compute the transition matrix and the reward matrix for a policy.
@@ -768,7 +762,7 @@ class PolicyIteration(MDP):
                 done = True
                 if self.verbose:
                     print(_MSG_STOP_UNCHANGING_POLICY)
-            elif (self.iter == self.max_iter):
+            elif self.iter == self.max_iter:
                 done = True
                 if self.verbose:
                     print(_MSG_STOP_MAX_ITER)
@@ -856,9 +850,6 @@ class PolicyIterationModified(PolicyIteration):
         else:
             Rmin = min(R.min() for R in self.R)
             self.V = 1 / (1 - self.discount) * Rmin * _np.ones((self.S,))
-
-        # Call the iteration method
-        #self.run()
 
     def run(self):
         # Run the modified policy iteration algorithm.
@@ -991,9 +982,6 @@ class QLearning(MDP):
         self.Q = _np.zeros((self.S, self.A))
         self.mean_discrepancy = []
 
-        # Call the iteration method
-        #self.run()
-
     def run(self):
         # Run the Q-learning algoritm.
         discrepancy = []
@@ -1006,13 +994,13 @@ class QLearning(MDP):
         for n in range(1, self.max_iter + 1):
 
             # Reinitialisation of trajectories every 100 transitions
-            if ((n % 100) == 0):
+            if (n % 100) == 0:
                 s = _np.random.randint(0, self.S)
 
             # Action choice : greedy with increasing probability
             # probability 1-(1/log(n+2)) can be changed
             pn = _np.random.random()
-            if (pn < (1 - (1 / _math.log(n + 2)))):
+            if pn < (1 - (1 / _math.log(n + 2))):
                 # optimal_action = self.Q[s, :].max()
                 a = self.Q[s, :].argmax()
             else:
@@ -1022,7 +1010,7 @@ class QLearning(MDP):
             p_s_new = _np.random.random()
             p = 0
             s_new = -1
-            while ((p < p_s_new) and (s_new < (self.S - 1))):
+            while (p < p_s_new) and (s_new < (self.S - 1)):
                 s_new = s_new + 1
                 p = p + self.P[a][s, s_new]
 
@@ -1139,9 +1127,6 @@ class RelativeValueIteration(MDP):
 
         self.average_reward = None
 
-        # Call the iteration method
-        #self.run()
-
     def run(self):
         # Run the relative value iteration algorithm.
 
@@ -1153,7 +1138,7 @@ class RelativeValueIteration(MDP):
 
         while not done:
 
-            self.iter += 1;
+            self.iter += 1
 
             self.policy, Vnext = self._bellmanOperator()
             Vnext = Vnext - self.gain
@@ -1164,15 +1149,15 @@ class RelativeValueIteration(MDP):
                 print(("    %s\t\t  %s" % (self.iter, variation)))
 
             if variation < self.epsilon:
-                 done = True
-                 self.average_reward = self.gain + (Vnext - self.V).min()
-                 if self.verbose:
-                     print(_MSG_STOP_EPSILON_OPTIMAL_POLICY)
+                done = True
+                self.average_reward = self.gain + (Vnext - self.V).min()
+                if self.verbose:
+                    print(_MSG_STOP_EPSILON_OPTIMAL_POLICY)
             elif self.iter == self.max_iter:
-                 done = True
-                 self.average_reward = self.gain + (Vnext - self.V).min()
-                 if self.verbose:
-                     print(_MSG_STOP_MAX_ITER)
+                done = True
+                self.average_reward = self.gain + (Vnext - self.V).min()
+                if self.verbose:
+                    print(_MSG_STOP_MAX_ITER)
 
             self.V = Vnext
             self.gain = float(self.V[self.S - 1])
@@ -1320,9 +1305,6 @@ class ValueIteration(MDP):
             # threshold of variation for V for an epsilon-optimal policy
             self.thresh = epsilon
 
-        # Call the iteration method
-        #self.run()
-
     def _boundIter(self, epsilon):
         # Compute a bound for the number of iterations.
         #
@@ -1395,7 +1377,7 @@ class ValueIteration(MDP):
                 if self.verbose:
                     print(_MSG_STOP_EPSILON_OPTIMAL_POLICY)
                 break
-            elif (self.iter == self.max_iter):
+            elif self.iter == self.max_iter:
                 if self.verbose:
                     print(_MSG_STOP_MAX_ITER)
                 break
@@ -1491,9 +1473,6 @@ class ValueIterationGS(ValueIteration):
             # threshold of variation for V for an epsilon-optimal policy
             self.thresh = epsilon
 
-        # Call the iteration method
-        #self.run()
-
     def run(self):
         # Run the value iteration Gauss-Seidel algorithm.
 
@@ -1534,7 +1513,7 @@ class ValueIterationGS(ValueIteration):
         for s in range(self.S):
             Q = _np.zeros(self.A)
             for a in range(self.A):
-                Q[a] =  self.R[a][s] + self.discount * self.P[a][s,:].dot(self.V)
+                Q[a] = self.R[a][s] + self.discount * self.P[a][s, :].dot(self.V)
 
             self.V[s] = Q.max()
             self.policy.append(int(Q.argmax()))

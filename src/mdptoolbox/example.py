@@ -164,11 +164,11 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
         rows = list(range(S)) * 2
         cols = [0] * S + list(range(1, S)) + [S - 1]
         vals = [p] * S + [1-p] * S
-        P.append(_sp.coo_matrix((vals, (rows, cols)), shape=(S,S)).tocsr())
+        P.append(_sp.coo_matrix((vals, (rows, cols)), shape=(S, S)).tocsr())
         rows = list(range(S))
         cols = [0] * S
         vals = [1] * S
-        P.append(_sp.coo_matrix((vals, (rows, cols)), shape=(S,S)).tocsr())
+        P.append(_sp.coo_matrix((vals, (rows, cols)), shape=(S, S)).tocsr())
     else:
         P = _np.zeros((2, S, S))
         P[0, :, :] = (1 - p) * _np.diag(_np.ones(S - 1), 1)
@@ -182,7 +182,6 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     R[:, 1] = _np.ones(S)
     R[0, 1] = 0
     R[S - 1, 1] = r2
-    # we want to return the generated transition and reward matrices
     return(P, R)
 
 def rand(S, A, is_sparse=False, mask=None):
@@ -338,12 +337,11 @@ def rand(S, A, is_sparse=False, mask=None):
                 P[a][s] = P[a][s] / P[a][s].sum()
                 R[a][s] = (m * (2 * _np.random.random(S) -
                                 _np.ones(S, dtype=int)))
-    # we want to return the generated transition and reward matrices
     return(P, R)
 
 def small():
     """A very small Markov decision process.
-    
+
     The probability transition matrices are::
 
             | | 0.5 0.5 | |
@@ -356,7 +354,7 @@ def small():
 
         R = |  5 10 |
             | -1  2 |
-    
+
     Returns
     =======
     out : tuple
@@ -378,6 +376,6 @@ def small():
            [-1,  2]])
 
     """
-    P = _np.array([[[0.5, 0.5],[0.8, 0.2]],[[0, 1],[0.1, 0.9]]])
+    P = _np.array([[[0.5, 0.5], [0.8, 0.2]], [[0, 1], [0.1, 0.9]]])
     R = _np.array([[5, 10], [-1, 2]])
     return(P, R)

@@ -19,12 +19,12 @@ getSpan
 
 # Copyright (c) 2011-2013 Steven A. W. Cordwell
 # Copyright (c) 2009 INRA
-# 
+#
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #   * Redistributions of source code must retain the above copyright notice,
 #     this list of conditions and the following disclaimer.
 #   * Redistributions in binary form must reproduce the above copyright notice,
@@ -33,7 +33,7 @@ getSpan
 #   * Neither the name of the <ORGANIZATION> nor the names of its contributors
 #     may be used to endorse or promote products derived from this software
 #     without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -49,7 +49,7 @@ getSpan
 import numpy as _np
 
 # These need to be fixed so that we use classes derived from Error.
-mdperr = {
+MDPERR = {
 "mat_nonneg" :
     "Transition probabilities must be non-negative.",
 "mat_square" :
@@ -84,9 +84,9 @@ mdperr = {
 
 def check(P, R):
     """Check if ``P`` and ``R`` define a valid Markov Decision Process (MDP).
-    
+
     Let ``S`` = number of states, ``A`` = number of actions.
-    
+
     Parameters
     ---------
     P : array
@@ -99,18 +99,18 @@ def check(P, R):
         shape of (S, A, A). It can also be a one dimensional array with a
         shape of (A, ), where each element contains matrix with a shape of
         (S, S) which can possibly be sparse. It can also be an array with
-        a shape of (S, A) which can possibly be sparse.  
-    
+        a shape of (S, A) which can possibly be sparse.
+
     Notes
     -----
     Raises an error if ``P`` and ``R`` do not define a MDP.
-    
+
     Examples
     --------
     >>> import mdptoolbox, mdptoolbox.example
     >>> P_valid, R_valid = mdptoolbox.example.rand(100, 5)
     >>> mdptoolbox.util.check(P_valid, R_valid) # Nothing should happen
-    >>> 
+    >>>
     >>> import numpy as np
     >>> P_invalid = np.random.rand(5, 100, 100)
     >>> mdptoolbox.util.check(P_invalid, R_valid) # Raises an exception
@@ -128,7 +128,7 @@ def check(P, R):
             # continue checking from there
             raise AttributeError
         else:
-            raise InvalidMDPError(mdperr["P_shape"])
+            raise InvalidMDPError(MDPERR["P_shape"])
     except AttributeError:
         try:
             aP = len(P)
@@ -136,9 +136,9 @@ def check(P, R):
             for aa in range(1, aP):
                 sP0aa, sP1aa = P[aa].shape
                 if (sP0aa != sP0) or (sP1aa != sP1):
-                    raise InvalidMDPError(mdperr["obj_square"])
+                    raise InvalidMDPError(MDPERR["obj_square"])
         except AttributeError:
-            raise InvalidMDPError(mdperr["P_shape"])
+            raise InvalidMDPError(MDPERR["P_shape"])
     # Checking R
     try:
         ndimR = R.ndim
@@ -151,7 +151,7 @@ def check(P, R):
         elif ndimR == 3:
             aR, sR0, sR1 = R.shape
         else:
-            raise InvalidMDPError(mdperr["R_shape"])
+            raise InvalidMDPError(MDPERR["R_shape"])
     except AttributeError:
         try:
             lenR = len(R)
@@ -160,15 +160,15 @@ def check(P, R):
                 sR0, sR1 = R[0].shape
                 for aa in range(1, aR):
                     sR0aa, sR1aa = R[aa].shape
-                    if ((sR0aa != sR0) or (sR1aa != sR1)):
-                        raise InvalidMDPError(mdperr["obj_square"])
+                    if (sR0aa != sR0) or (sR1aa != sR1):
+                        raise InvalidMDPError(MDPERR["obj_square"])
             elif lenR == sP0:
                 aR = aP
                 sR0 = sR1 = lenR
             else:
-                raise InvalidMDPError(mdperr["R_shape"])
+                raise InvalidMDPError(MDPERR["R_shape"])
         except AttributeError:
-            raise InvalidMDPError(mdperr["R_shape"])
+            raise InvalidMDPError(MDPERR["R_shape"])
     # Checking dimensions
     assert sP0 > 0, "The number of states in P must be greater than 0."
     assert aP > 0, "The number of actions in P must be greater than 0."
@@ -183,13 +183,12 @@ def check(P, R):
         checkSquareStochastic(P[aa])
     # We are at the end of the checks, so if no exceptions have been raised
     # then that means there are (hopefullly) no errors and we return None
-    return None
-    
+
     # These are the old code comments, which need to be converted to
     # information in the docstring:
     #
-    # tranitions must be a numpy array either an AxSxS ndarray (with any 
-    # dtype other than "object"); or, a 1xA ndarray with a "object" dtype, 
+    # tranitions must be a numpy array either an AxSxS ndarray (with any
+    # dtype other than "object"); or, a 1xA ndarray with a "object" dtype,
     # and each element containing an SxS array. An AxSxS array will be
     # be converted to an object array. A numpy object array is similar to a
     # MATLAB cell array.
@@ -208,7 +207,7 @@ def check(P, R):
     # As above but for the reward array. A difference is that the reward
     # array can have either two or 3 dimensions.
     #
-    # We want to make sure that the transition probability array and the 
+    # We want to make sure that the transition probability array and the
     # reward array are in agreement. This means that both should show that
     # there are the same number of actions and the same number of states.
     # Furthermore the probability of transition matrices must be SxS in
@@ -238,7 +237,7 @@ def check(P, R):
             # telling the user what needs to be fixed.
             #
         # if we are using a normal array for this, then the first
-        # dimension should be the number of actions, and the second and 
+        # dimension should be the number of actions, and the second and
         # third should be the number of states
         #
     # the first dimension of the transition matrix must report the same
@@ -253,14 +252,14 @@ def check(P, R):
     # normal arrays this is a matrix formed by taking a slice of the array
     #
         # if the rewarad array has an object dtype, then we check that
-        # each element contains a matrix of the same shape as we did 
+        # each element contains a matrix of the same shape as we did
         # above with the transition array.
         #
-        # This indicates that the reward matrices are constructed per 
+        # This indicates that the reward matrices are constructed per
         # transition, so that the first dimension is the actions and
         # the second two dimensions are the states.
         #
-        # then the reward matrix is per state, so the first dimension is 
+        # then the reward matrix is per state, so the first dimension is
         # the states and the second dimension is the actions.
         #
         # this is added just so that the next check doesn't error out
@@ -279,19 +278,19 @@ def rowsSumToOne(Z, n):
 
 def checkSquareStochastic(Z):
     """Check if Z is a square stochastic matrix.
-    
+
     Let S = number of states.
-    
+
     Parameters
     ----------
     Z : matrix
         This should be a two dimensional array with a shape of (S, S). It can
         possibly be sparse.
-    
-    Notes 
+
+    Notes
     ----------
     Returns None if no error has been detected, else it raises an error.
-    
+
     """
     # try to get the shape of the matrix
     try:
@@ -299,42 +298,40 @@ def checkSquareStochastic(Z):
     except AttributeError:
         raise TypeError("Matrix should be a numpy type.")
     except ValueError:
-        raise InvalidMDPError(mdperr["mat_square"])
+        raise InvalidMDPError(MDPERR["mat_square"])
     # check that the matrix is square, and that each row sums to one
-    assert s1 == s2, mdperr["mat_square"]
-    assert rowsSumToOne(Z, s2), mdperr["mat_stoch"]
+    assert s1 == s2, MDPERR["mat_square"]
+    assert rowsSumToOne(Z, s2), MDPERR["mat_stoch"]
     # make sure that there are no values less than zero
     try:
-        assert (Z >= 0).all(), mdperr["mat_nonneg"]
+        assert (Z >= 0).all(), MDPERR["mat_nonneg"]
     except (NotImplementedError, AttributeError, TypeError):
         try:
-            assert (Z.data >= 0).all(), mdperr["mat_nonneg"]
+            assert (Z.data >= 0).all(), MDPERR["mat_nonneg"]
         except AttributeError:
             raise TypeError("Matrix should be a numpy type.")
-    
-    return(None)
 
 def getSpan(W):
     """Return the span of W
-    
+
     sp(W) = max W(s) - min W(s)
-    
+
     """
-    return (W.max() - W.min())
+    return(W.max() - W.min())
 
 class Error(Exception):
     """Base class for exceptions in this module."""
-    
+
     def __init__(self):
         Exception.__init__(self)
         self.message = "PyMDPToolbox: "
-    
+
     def __str__(self):
         return repr(self.message)
 
 class InvalidMDPError(Error):
     """Class for invalid definitions of a MDP."""
-    
+
     def __init__(self, msg):
         Error.__init__(self)
         self.message += msg
