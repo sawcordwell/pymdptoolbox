@@ -184,6 +184,80 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     R[S - 1, 1] = r2
     return(P, R)
 
+def _randDense(states, actions, mask):
+    """Generate random dense ``P`` and ``R``. See ``rand`` for details.
+
+    """
+    # definition of transition matrix : square stochastic matrix
+    P = _np.zeros((actions, states, states))
+    # definition of reward matrix (values between -1 and +1)
+    R = _np.zeros((actions, states, states))
+    for action in range(actions):
+        for state in range(states):
+            # create our own random mask if there is no user supplied one
+            if mask is None:
+                m = _np.random.random(states)
+                r = _np.random.random()
+                m[m <= r] = 0
+                m[m > r] = 1
+            elif mask.shape == (actions, states, states):
+                m = mask[action][state] # mask[action, state, :]
+            else:
+                m = mask[state]
+            # Make sure that there is atleast one transition in each state
+            if m.sum() == 0:
+                m[_np.random.randint(0, states)] = 1
+            P[action][state] = m * _np.random.random(states)
+            P[action][state] = P[action][state] / P[action][state].sum()
+            R[action][state] = (m * (2 * _np.random.random(states) -
+                                _np.ones(states, dtype=int)))
+    return(P, R)
+
+def _randSparse(states, actions, mask):
+    """Generate random sparse ``P`` and ``R``. See ``rand`` for details.
+
+    """
+    # definition of transition matrix : square stochastic matrix
+    P = [None] * actions
+    # definition of reward matrix (values between -1 and +1)
+    R = [None] * actions
+    for action in range(actions):
+        # it may be more efficient to implement this by constructing lists
+        # of rows, columns and values then creating a coo_matrix, but this
+        # works for now
+        PP = _sp.dok_matrix((states, states))
+        RR = _sp.dok_matrix((states, states))
+        for state in range(states):
+            if mask is None:
+                m = _np.random.random(states)
+                m[m <= 2/3.0] = 0
+                m[m > 2/3.0] = 1
+            elif mask.shape == (actions, states, states):
+                m = mask[action][state] # mask[action, state, :]
+            else:
+                m = mask[state]
+            n = int(m.sum()) # m[state, :]
+            if n == 0:
+                m[_np.random.randint(0, states)] = 1
+                n = 1
+            # find the columns of the vector that have non-zero elements
+            nz = m.nonzero()
+            if len(nz) == 1:
+                cols = nz[0]
+            else:
+                cols = nz[1]
+            vals = _np.random.random(n)
+            vals = vals / vals.sum()
+            reward = 2*_np.random.random(n) - _np.ones(n)
+            PP[state, cols] = vals
+            RR[state, cols] = reward
+        # PP.tocsr() takes the same amount of time as PP.tocoo().tocsr()
+        # so constructing PP and RR as coo_matrix in the first place is
+        # probably "better"
+        P[action] = PP.tocsr()
+        R[action] = RR.tocsr()
+    return(P, R)
+
 def rand(S, A, is_sparse=False, mask=None):
     """Generate a random Markov Decision Process.
 
@@ -274,69 +348,9 @@ def rand(S, A, is_sparse=False, mask=None):
             raise TypeError("'mask' must be a numpy array or matrix.")
     # generate the transition and reward matrices based on S, A and mask
     if is_sparse:
-        # definition of transition matrix : square stochastic matrix
-        P = [None] * A
-        # definition of reward matrix (values between -1 and +1)
-        R = [None] * A
-        for a in range(A):
-            # it may be more efficient to implement this by constructing lists
-            # of rows, columns and values then creating a coo_matrix, but this
-            # works for now
-            PP = _sp.dok_matrix((S, S))
-            RR = _sp.dok_matrix((S, S))
-            for s in range(S):
-                if mask is None:
-                    m = _np.random.random(S)
-                    m[m <= 2/3.0] = 0
-                    m[m > 2/3.0] = 1
-                elif mask.shape == (A, S, S):
-                    m = mask[a][s] # mask[a, s, :]
-                else:
-                    m = mask[s]
-                n = int(m.sum()) # m[s, :]
-                if n == 0:
-                    m[_np.random.randint(0, S)] = 1
-                    n = 1
-                # find the columns of the vector that have non-zero elements
-                nz = m.nonzero()
-                if len(nz) == 1:
-                    cols = nz[0]
-                else:
-                    cols = nz[1]
-                vals = _np.random.random(n)
-                vals = vals / vals.sum()
-                reward = 2*_np.random.random(n) - _np.ones(n)
-                PP[s, cols] = vals
-                RR[s, cols] = reward
-            # PP.tocsr() takes the same amount of time as PP.tocoo().tocsr()
-            # so constructing PP and RR as coo_matrix in the first place is
-            # probably "better"
-            P[a] = PP.tocsr()
-            R[a] = RR.tocsr()
+        P, R = _randSparse(S, A, mask)
     else:
-        # definition of transition matrix : square stochastic matrix
-        P = _np.zeros((A, S, S))
-        # definition of reward matrix (values between -1 and +1)
-        R = _np.zeros((A, S, S))
-        for a in range(A):
-            for s in range(S):
-                # create our own random mask if there is no user supplied one
-                if mask is None:
-                    m = _np.random.random(S)
-                    r = _np.random.random()
-                    m[m <= r] = 0
-                    m[m > r] = 1
-                elif mask.shape == (A, S, S):
-                    m = mask[a][s] # mask[a, s, :]
-                else:
-                    m = mask[s]
-                # Make sure that there is atleast one transition in each state
-                if m.sum() == 0:
-                    m[_np.random.randint(0, S)] = 1
-                P[a][s] = m * _np.random.random(S)
-                P[a][s] = P[a][s] / P[a][s].sum()
-                R[a][s] = (m * (2 * _np.random.random(S) -
-                                _np.ones(S, dtype=int)))
+        P, R = _randDense(S, A, mask)
     return(P, R)
 
 def small():
