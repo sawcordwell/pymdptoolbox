@@ -28,7 +28,7 @@ ValueIterationGS
 
 """
 
-# Copyright (c) 2011-2013 Steven A. W. Cordwell
+# Copyright (c) 2011-2015 Steven A. W. Cordwell
 # Copyright (c) 2009 INRA
 #
 # All rights reserved.
@@ -63,11 +63,7 @@ import time as _time
 import numpy as _np
 import scipy.sparse as _sp
 
-try:
-    from .util import check, getSpan
-except ValueError:
-    # importing mdp as a module rather than as part of a package
-    from util import check, getSpan
+import mdptoolbox.util as _util
 
 _MSG_STOP_MAX_ITER = "Iterating stopped due to maximum number of iterations " \
     "condition."
@@ -182,7 +178,7 @@ class MDP(object):
             assert self.epsilon > 0, "Epsilon must be greater than 0."
         # we run a check on P and R to make sure they are describing an MDP. If
         # an exception isn't raised then they are assumed to be correct.
-        check(transitions, reward)
+        _util.check(transitions, reward)
         # computePR will assign the variables self.S, self.A, self.P and self.R
         self._computePR(transitions, reward)
         # the verbosity is by default turned off
@@ -269,7 +265,7 @@ class MDP(object):
         #    PR(SxA)   = reward matrix
         #
         # We assume that P and R define a MDP i,e. assumption is that
-        # check(P, R) has already been run and doesn't fail.
+        # _util.check(P, R) has already been run and doesn't fail.
         #
         # First compute store P, S, and A
         self._computeP(P)
@@ -866,7 +862,7 @@ class PolicyIterationModified(PolicyIteration):
             self.policy, Vnext = self._bellmanOperator()
             #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
 
-            variation = getSpan(Vnext - self.V)
+            variation = _util.getSpan(Vnext - self.V)
             if self.verbose:
                 print(("    %s\t\t  %s" % (self.iter, variation)))
 
@@ -969,7 +965,7 @@ class QLearning(MDP):
 
         # We don't want to send this to MDP because _computePR should not be
         # run on it, so check that it defines an MDP
-        check(transitions, reward)
+        _util.check(transitions, reward)
 
         # Store P, S, and A
         self._computeP(transitions)
@@ -1143,7 +1139,7 @@ class RelativeValueIteration(MDP):
             self.policy, Vnext = self._bellmanOperator()
             Vnext = Vnext - self.gain
 
-            variation = getSpan(Vnext - self.V)
+            variation = _util.getSpan(Vnext - self.V)
 
             if self.verbose:
                 print(("    %s\t\t  %s" % (self.iter, variation)))
@@ -1344,8 +1340,9 @@ class ValueIteration(MDP):
         Vprev = self.V
         null, value = self._bellmanOperator()
         # p 201, Proposition 6.6.5
+        span = _util.getSpan(value - Vprev)
         max_iter = (_math.log((epsilon * (1 - self.discount) / self.discount) /
-                    getSpan(value - Vprev) ) / _math.log(self.discount * k))
+                    span ) / _math.log(self.discount * k))
         #self.V = Vprev
 
         self.max_iter = int(_math.ceil(max_iter))
@@ -1368,7 +1365,7 @@ class ValueIteration(MDP):
             # The values, based on Q. For the function "max()": the option
             # "axis" means the axis along which to operate. In this case it
             # finds the maximum of the the rows. (Operates along the columns?)
-            variation = getSpan(self.V - Vprev)
+            variation = _util.getSpan(self.V - Vprev)
 
             if self.verbose:
                 print(("    %s\t\t  %s" % (self.iter, variation)))
@@ -1495,7 +1492,7 @@ class ValueIterationGS(ValueIteration):
 
                 self.V[s] = max(Q)
 
-            variation = getSpan(self.V - Vprev)
+            variation = _util.getSpan(self.V - Vprev)
 
             if self.verbose:
                 print(("    %s\t\t  %s" % (self.iter, variation)))
