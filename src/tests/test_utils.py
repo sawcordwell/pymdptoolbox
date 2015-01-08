@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sat Aug 24 14:52:17 2013
-
-@author: steve
-"""
 
 import numpy as np
 import scipy as sp
@@ -174,19 +169,66 @@ def test_check_vector_R():
     P = [np.matrix(np.eye(STATES))] * 3
     assert mdptoolbox.util.check(P, R) is None
 
+def test_check_vector_R_error():
+    R = np.random.rand(STATES+1)
+    P = [np.matrix(np.eye(STATES))] * 3
+    assert_raises(mdptoolbox.error.InvalidError,
+                  mdptoolbox.util.check, P=P, R=R)
+
 # Exception tests
 def test_check_P_shape_error_1():
     P = np.eye(STATES)[:STATES - 1, :STATES]
-    assert_raises(mdptoolbox.util.InvalidMDPError, mdptoolbox.util.check,
-                  P=P, R=np.random.rand(10, 3))
+    assert_raises(mdptoolbox.error.InvalidError, mdptoolbox.util.check,
+                  P=P, R=np.random.rand(STATES, ACTIONS))
 
 def test_check_P_shape_error_2():
     P = (np.random.rand(9, 9), np.random.rand(9, 9), np.random.rand(9, 5))
-    assert_raises(mdptoolbox.util.InvalidMDPError, mdptoolbox.util.check,
+    assert_raises(mdptoolbox.error.InvalidError, mdptoolbox.util.check,
                   P=P, R=np.random.rand(9))
 
 def test_check_R_shape_error_1():
     R = (np.random.rand(9, 9), np.random.rand(9, 9), np.random.rand(9, 5))
     P = np.random.rand(3, 10, 10)
-    assert_raises(mdptoolbox.util.InvalidMDPError, mdptoolbox.util.check,
+    assert_raises(mdptoolbox.error.InvalidError, mdptoolbox.util.check,
                   P=P, R=R)
+
+def test_isSqaure_tuple():
+    P = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+    assert mdptoolbox.util.isSquare(P)
+
+def test_isSqaure_string():
+    P = "a string, the wrong type"
+    assert not mdptoolbox.util.isSquare(P)
+
+def test_isStochastic_tuple():
+    P = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+    assert mdptoolbox.util.isStochastic(P)
+
+def test_isStochastic_string():
+    P = "a string, the wrong type"
+    assert_raises(TypeError, mdptoolbox.util.isStochastic, matrix=P)
+
+def test_isNonNegative_tuple():
+    P = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+    assert mdptoolbox.util.isStochastic(P)
+
+def test_isNonNegative_string():
+    P = "a string, the wrong type"
+    assert_raises(TypeError, mdptoolbox.util.isStochastic, matrix=P)
+
+def test_checkSquareStochastic_SquareError():
+    P = np.eye(STATES)[:STATES - 1, :STATES]
+    assert_raises(mdptoolbox.error.SquareError,
+                  mdptoolbox.util.checkSquareStochastic, matrix=P)
+
+def test_checkSquareStochastic_StochasticError():
+    P = np.random.rand(STATES, STATES)
+    assert_raises(mdptoolbox.error.StochasticError,
+                  mdptoolbox.util.checkSquareStochastic, matrix=P)
+
+def test_checkSquareStochastic_NonNegativeError():
+    P = np.eye(STATES)
+    P[0, 0] = -0.5
+    P[0, 1] = 1.5
+    assert_raises(mdptoolbox.error.NonNegativeError,
+                  mdptoolbox.util.checkSquareStochastic, matrix=P)
