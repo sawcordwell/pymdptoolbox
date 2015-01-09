@@ -56,6 +56,14 @@ import numpy as _np
 
 import mdptoolbox.error as _error
 
+_MSG_STOP_MAX_ITER = "Iterating stopped due to maximum number of iterations " \
+    "condition."
+_MSG_STOP_EPSILON_OPTIMAL_POLICY = "Iterating stopped, epsilon-optimal " \
+    "policy found."
+_MSG_STOP_EPSILON_OPTIMAL_VALUE = "Iterating stopped, epsilon-optimal value " \
+    "function found."
+_MSG_STOP_UNCHANGING_POLICY = "Iterating stopped, unchanging policy found."
+
 _MDPERR = {
 "mat_nonneg" :
     "Transition probabilities must be non-negative.",
