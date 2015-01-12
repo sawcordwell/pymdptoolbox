@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(name="pymdptoolbox",
-      version="4.0-b3",
+      version="4.0-b4-dev",
       author="Steven A. W. Cordwell",
       author_email="steven.cordwell@uqconnect.edu.au",
       url="https://github.com/sawcordwell/pymdptoolbox",
