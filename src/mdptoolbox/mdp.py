@@ -11,8 +11,6 @@ MDP
     Base Markov decision process class
 FiniteHorizon
     Backwards induction finite horizon MDP
-LP
-    Linear programming MDP
 PolicyIteration
     Policy iteration MDP
 PolicyIterationModified
@@ -406,7 +404,7 @@ class FiniteHorizon(MDP):
         #self.policy = tuple(tuple(self.policy[:, n].tolist())
         #                    for n in range(self.N))
 
-class LP(MDP):
+class _LP(MDP):
 
     """A discounted MDP soloved using linear programming.
 
@@ -439,13 +437,13 @@ class LP(MDP):
     --------
     >>> import mdptoolbox.example
     >>> P, R = mdptoolbox.example.forest()
-    >>> lp = mdptoolbox.mdp.LP(P, R, 0.9)
+    >>> lp = mdptoolbox.mdp._LP(P, R, 0.9)
     >>> lp.run()
 
     >>> import numpy, mdptoolbox
     >>> P = numpy.array((((0.5, 0.5), (0.8, 0.2)), ((0, 1), (0.1, 0.9))))
     >>> R = numpy.array(((5, 10), (-1, 2)))
-    >>> lp = mdptoolbox.mdp.LP(P, R, 0.9)
+    >>> lp = mdptoolbox.mdp._LP(P, R, 0.9)
     >>> lp.run()
     >>> #lp.policy #FIXME: gives (1, 1), should be (1, 0)
 

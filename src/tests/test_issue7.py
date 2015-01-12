@@ -121,19 +121,19 @@ class BaseTestIssue7(object):
 #    def test_sparse_P_sparse_R(self):
 #       self.sparse_P_sparse_R(mdptoolbox.mdp.FiniteHorizon)
 
-class TestLP(BaseTestIssue7):
-
-    def test_dense_P_dense_R(self):
-        self.dense_P_dense_R(mdptoolbox.mdp.LP)
-
-    def test_sparse_P_dense_R(self):
-        self.sparse_P_dense_R(mdptoolbox.mdp.LP)
-
-    def test_dense_P_sparse_R(self):
-        self.dense_P_sparse_R(mdptoolbox.mdp.LP)
-
-    def test_sparse_P_sparse_R(self):
-       self.sparse_P_sparse_R(mdptoolbox.mdp.LP)
+#class TestLP(BaseTestIssue7):
+#
+#    def test_dense_P_dense_R(self):
+#        self.dense_P_dense_R(mdptoolbox.mdp.LP)
+#
+#    def test_sparse_P_dense_R(self):
+#        self.sparse_P_dense_R(mdptoolbox.mdp.LP)
+#
+#    def test_dense_P_sparse_R(self):
+#        self.dense_P_sparse_R(mdptoolbox.mdp.LP)
+#
+#    def test_sparse_P_sparse_R(self):
+#       self.sparse_P_sparse_R(mdptoolbox.mdp.LP)
 
 class TestPolicyIteration(BaseTestIssue7):
 
