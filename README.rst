@@ -17,7 +17,10 @@ The classes and functions were developped based on the
 `Biometry and Artificial Intelligence Unit <http://mia.toulouse.inra.fr/>`_ of
 `INRA Toulouse <http://www.toulouse.inra.fr/>`_ (France). There are editions
 available for MATLAB, GNU Octave, Scilab and R.
-The suite of MDP toolboxes are described in Chades I, Chapron G, Cros M-J, Garcia F & Sabbadin R (2014) 'MDPtoolbox: a multi-platform toolbox to solve stochastic dynamic programming problems', *Ecography*, vol. 37, no. 9, pp. 916–920, doi `10.1111/ecog.00888 <http://dx.doi.org/10.1111/ecog.00888>`_.
+The suite of MDP toolboxes are described in Chades I, Chapron G, Cros M-J,
+Garcia F & Sabbadin R (2014) 'MDPtoolbox: a multi-platform toolbox to solve
+stochastic dynamic programming problems', *Ecography*, vol. 37, no. 9, pp.
+916–920, doi `10.1111/ecog.00888 <http://dx.doi.org/10.1111/ecog.00888>`_.
 
 Features
 --------
@@ -31,6 +34,18 @@ Features
 Documentation
 -------------
 Documentation is available as docstrings in the module code.
+If you use `IPython <http://ipython.scipy.org>`_ to work with the toolbox,
+then you can view the docstrings by using question mark ``?``. For example:
+
+.. code:: python
+
+    mdptoolbox?<ENTER>
+    mdptoolbox.mdp?<ENTER>
+    mdptoolbox.mdp.ValueIteration<ENTER>
+
+will all display the relevant documentation.
+Once the Sphinx document geneator has been set up correctly then the
+documentation will be available at http://sawcordwell.github.io/pymdptoolbox/.
 
 .. TODO and as html in the doc folder or from `the MDPtoolbox homepage <>`_.
 
