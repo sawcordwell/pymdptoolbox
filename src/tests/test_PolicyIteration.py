@@ -6,11 +6,13 @@ Created on Sat Aug 24 15:00:29 2013
 """
 
 import numpy as np
+import scipy.sparse as sp
 
 import mdptoolbox
 
-from .utils import SMALLNUM, P_forest, R_forest, P_small, R_small, P_sparse
-from .utils import P_forest_sparse, R_forest_sparse
+from .utils import SMALLNUM, P_forest, R_forest, P_small, R_small, P_sparse, \
+                   P_forest_sparse, R_forest_sparse, \
+                   assert_sequence_almost_equal
 
 def test_PolicyIteration_init_policy0():
     sdp = mdptoolbox.mdp.PolicyIteration(P_small, R_small, 0.9)
@@ -120,3 +122,13 @@ def test_PolicyIterative_forest_sparse():
     assert sdp.policy == p
     assert (np.absolute(np.array(sdp.V) - v) < SMALLNUM).all()
     assert sdp.iter == itr
+
+def test_goggle_code_issue_5():
+    P = [sp.csr_matrix([[0.5, 0.5], [0.8, 0.2]]),
+         sp.csr_matrix([[0.0, 1.0], [0.1, 0.9]])]
+    P = np.array(P)
+    R = np.array([[5, 10], [-1, 2]])
+    pi = mdptoolbox.mdp.PolicyIteration(P, R, 0.96)
+    pi.run()
+    expected = (100.67873303167413, 94.45701357466055)
+    assert_sequence_almost_equal(pi.V, expected)
