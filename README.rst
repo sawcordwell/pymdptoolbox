@@ -17,6 +17,7 @@ The classes and functions were developped based on the
 `Biometry and Artificial Intelligence Unit <http://mia.toulouse.inra.fr/>`_ of
 `INRA Toulouse <http://www.toulouse.inra.fr/>`_ (France). There are editions
 available for MATLAB, GNU Octave, Scilab and R.
+The suite of MDP toolboxes are described in Chades I, Chapron G, Cros M-J, Garcia F & Sabbadin R (2014) 'MDPtoolbox: a multi-platform toolbox to solve stochastic dynamic programming problems', *Ecography*, vol. 37, no. 9, pp. 916–920, doi `10.1111/ecog.00888 <http://dx.doi.org/10.1111/ecog.00888>`_.
 
 Features
 --------
