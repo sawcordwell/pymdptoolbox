@@ -3,8 +3,19 @@ Markov Decision Process (MDP) Toolbox for Python
 
 .. image:: https://travis-ci.org/sawcordwell/pymdptoolbox.svg?branch=master
     :target: https://travis-ci.org/sawcordwell/pymdptoolbox
+    :alt: Build Status
 .. image:: https://coveralls.io/repos/sawcordwell/pymdptoolbox/badge.png
-  :target: https://coveralls.io/r/sawcordwell/pymdptoolbox
+    :target: https://coveralls.io/r/sawcordwell/pymdptoolbox
+    :alt: Code Coverage
+.. image:: https://pypip.in/py_versions/pymdptoolbox/badge.svg
+    :target: https://pypi.python.org/pypi/pymdptoolbox/
+    :alt: Supported Python versions
+.. image:: https://pypip.in/implementation/pymdptoolbox/badge.svg
+    :target: https://pypi.python.org/pypi/pymdptoolbox/
+    :alt: Supported Python implementations
+.. image:: https://pypip.in/license/pymdptoolbox/badge.svg
+    :target: https://pypi.python.org/pypi/pymdptoolbox/
+    :alt: License
 
 The MDP toolbox provides classes and functions for the resolution of
 descrete-time Markov Decision Processes. The list of algorithms that have been
@@ -31,27 +42,12 @@ Features
   - Optional linear programming support using
     `cvxopt <http://abel.ee.ucla.edu/cvxopt/>`_
 
-Documentation
--------------
-Documentation is available as docstrings in the module code.
-If you use `IPython <http://ipython.scipy.org>`_ to work with the toolbox,
-then you can view the docstrings by using question mark ``?``. For example:
-
-.. code:: python
-
-    mdptoolbox?<ENTER>
-    mdptoolbox.mdp?<ENTER>
-    mdptoolbox.mdp.ValueIteration<ENTER>
-
-will all display the relevant documentation.
-Once the Sphinx document geneator has been set up correctly then the
-documentation will be available at http://sawcordwell.github.io/pymdptoolbox/.
-
-.. TODO and as html in the doc folder or from `the MDPtoolbox homepage <>`_.
+PLEASE NOTE: the linear programming algorithm is currently unavailable except
+for testing purposes due to incorrect behaviour.
 
 Installation
 ------------
-NumPy and SciPy must be on your system to use of this toolbox. Please have a
+NumPy and SciPy must be on your system to use this toolbox. Please have a
 look at their documentation to get them installed. If you are installing
 onto Ubuntu or Debian and using Python 2 then this will pull in all the
 dependencies:
@@ -64,14 +60,40 @@ dependencies to have a fully featured cvxopt then run:
 
   ``sudo apt-get install python3-numpy python3-scipy liblapack-dev libatlas-base-dev libgsl0-dev fftw-dev libglpk-dev libdsdp-dev``
 
-I recommend using `pip <https://pip.pypa.io/en/latest/>`_ to install
+The two main ways of downloading the package is either from the Python Package
+Index or from GitHub. Both of these are explained below.
+
+Python Package Index (PyPI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. image:: https://pypip.in/download/pymdptoolbox/badge.svg
+    :target: https://pypi.python.org/pypi//pymdptoolbox/
+    :alt: Downloads
+.. image:: https://pypip.in/version/pymdptoolbox/badge.svg
+    :target: https://pypi.python.org/pypi/pymdptoolbox/
+    :alt: Latest Version
+.. image:: https://pypip.in/status/pymdptoolbox/badge.svg
+    :target: https://pypi.python.org/pypi/pymdptoolbox/
+    :alt: Development Status
+.. image:: https://pypip.in/wheel/pymdptoolbox/badge.svg
+    :target: https://pypi.python.org/pypi/pymdptoolbox/
+    :alt: Wheel Status
+.. image:: https://pypip.in/egg/pymdptoolbox/badge.svg
+    :target: https://pypi.python.org/pypi/pymdptoolbox/
+    :alt: Egg Status
+.. image:: https://pypip.in/format/pymdptoolbox/badge.svg
+    :target: https://pypi.python.org/pypi/pymdptoolbox/
+    :alt: Download format
+
+The toolbox's PyPI page is https://pypi.python.org/pypi/pymdptoolbox/ and there
+are both zip and tar.gz archive options available that can be downloaded.
+However, I recommend using `pip <https://pip.pypa.io/en/latest/>`_ to install
 the toolbox if you have it available. Just type
 
   ``pip install pymdptoolbox``
 
 at the console and it should take care of downloading and installing everything
 for you. If you also want cvxopt to be automatically downloaded and installed
-so that you can solve MDPs using linear programming then type:
+so that you can help test the linear programming algorithm then type
 
   ``pip install "pymdptoolbox[LP]"``
 
@@ -79,33 +101,42 @@ If you want it to be installed just for you rather than system wide then do
 
   ``pip install --user pymdptoolbox``
 
-Otherwise, you can download the package manually from the web
+If you downloaded the package manually from PyPI
 
-  1. Download the latest stable release from
-     https://pypi.python.org/pypi/pymdptoolbox or clone the Git repository
-
-     ``git clone https://github.com/sawcordwell/pymdptoolbox.git``
-
-  2. If you downloaded the `*.zip` or `*.tar.gz` archive, then extract it
+  1. Extract the `*.zip` or `*.tar.gz` archive
 
      ``tar -xzvf pymdptoolbox-<VERSION>.tar.gz``
 
      ``unzip pymdptoolbox-<VERSION>``
 
-  3. Change to the PyMDPtoolbox directory
+  2. Change to the PyMDPtoolbox directory
 
      ``cd pymdptoolbox``
 
-  4. Install via Setuptools, either to the root filesystem or to your home
+  3. Install via Setuptools, either to the root filesystem or to your home
      directory if you don't have administrative access.
 
      ``python setup.py install``
 
      ``python setup.py install --user``
-       
+
      Read the
      `Setuptools documentation <https://pythonhosted.org/setuptools/>`_ for
      more advanced information.
+
+Of course you can also use virtualenv or simply just unpack it to your working
+directory.
+
+GitHub
+~~~~~~
+
+Clone the Git repository
+
+    ``git clone https://github.com/sawcordwell/pymdptoolbox.git``
+
+and then follow from step two above. To learn how to use Git then I reccomend
+reading the freely available `Pro Git book <http://git-scm.com/book>`_ written
+by Scott Chacon and Ben Straub and published by Apress.
 
 Quick Use
 ---------
@@ -121,6 +152,25 @@ optimal policy.
   vi = mdptoolbox.mdp.ValueIteration(P, R, 0.9)
   vi.run()
   vi.policy # result is (0, 0, 0)
+
+Documentation
+-------------
+Documentation is available as docstrings in the module code.
+If you use `IPython <http://ipython.scipy.org>`_ to work with the toolbox,
+then you can view the docstrings by using a question mark ``?``. For example:
+
+.. code:: python
+
+    import mdptoolbox
+    mdptoolbox?<ENTER>
+    mdptoolbox.mdp?<ENTER>
+    mdptoolbox.mdp.ValueIteration?<ENTER>
+
+will display the relevant documentation.
+Once the Sphinx document geneator has been set up correctly then the
+documentation will be available at http://sawcordwell.github.io/pymdptoolbox/.
+
+.. TODO and as html in the doc folder.
 
 Contribute
 ----------
