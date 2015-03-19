@@ -293,10 +293,11 @@ def check(P, R):
     for aa in range(aP):
         checkSquareStochastic(P[aa])
 
-def getSpan(W):
-    """Return the span of W
 
-    sp(W) = max W(s) - min W(s)
+def getSpan(array):
+    """Return the span of `array`
+
+    span(array) = max array(s) - min array(s)
 
     """
-    return W.max() - W.min()
+    return array.max() - array.min()
