@@ -71,6 +71,7 @@ _MSG_STOP_EPSILON_OPTIMAL_VALUE = "Iterating stopped, epsilon-optimal value " \
     "function found."
 _MSG_STOP_UNCHANGING_POLICY = "Iterating stopped, unchanging policy found."
 
+
 def _computeDimensions(transition):
     A = len(transition)
     try:
@@ -81,6 +82,7 @@ def _computeDimensions(transition):
     except AttributeError:
         S = transition[0].shape[0]
     return S, A
+
 
 class MDP(object):
 
@@ -176,7 +178,9 @@ class MDP(object):
         # in its computations
         if discount is not None:
             self.discount = float(discount)
-            assert 0.0 < self.discount <= 1.0, "Discount rate must be in ]0; 1]"
+            assert 0.0 < self.discount <= 1.0, (
+                "Discount rate must be in ]0; 1]"
+            )
             if self.discount == 1:
                 print("WARNING: check conditions of convergence. With no "
                       "discount, convergence can not be assumed.")
@@ -185,8 +189,9 @@ class MDP(object):
         # in its computations
         if max_iter is not None:
             self.max_iter = int(max_iter)
-            assert self.max_iter > 0, "The maximum number of iterations " \
-                                      "must be greater than 0."
+            assert self.max_iter > 0, (
+                "The maximum number of iterations must be greater than 0."
+            )
 
         # check that epsilon is something sane
         if epsilon is not None:
@@ -194,8 +199,9 @@ class MDP(object):
             assert self.epsilon > 0, "Epsilon must be greater than 0."
 
         if not skip_check:
-            # We run a check on P and R to make sure they are describing an MDP.
-            # If an exception isn't raised then they are assumed to be correct.
+            # We run a check on P and R to make sure they are describing an
+            # MDP. If an exception isn't raised then they are assumed to be
+            # correct.
             _util.check(transitions, reward)
 
         self.S, self.A = _computeDimensions(transitions)
@@ -293,17 +299,19 @@ class MDP(object):
         if _sp.issparse(reward):
             raise NotImplementedError
         else:
-            func = lambda x: _np.array(x).reshape(self.S)
+            def func(x):
+                return _np.array(x).reshape(self.S)
+
             return tuple(func(reward[:, a]) for a in range(self.A))
 
     def _computeMatrixReward(self, reward, transition):
         if _sp.issparse(reward):
             # An approach like this might be more memory efficeint
-            #reward.data = reward.data * transition[reward.nonzero()]
-            #return reward.sum(1).A.reshape(self.S)
+            # reward.data = reward.data * transition[reward.nonzero()]
+            # return reward.sum(1).A.reshape(self.S)
             # but doesn't work as it is.
             return reward.multiply(transition).sum(1).A.reshape(self.S)
-        elif  _sp.issparse(transition):
+        elif _sp.issparse(transition):
             return transition.multiply(reward).sum(1).A.reshape(self.S)
         else:
             return _np.multiply(transition, reward).sum(1).reshape(self.S)
@@ -319,6 +327,7 @@ class MDP(object):
     def setVerbose(self):
         """Set the MDP algorithm to verbose mode."""
         self.verbose = True
+
 
 class FiniteHorizon(MDP):
 
@@ -413,9 +422,10 @@ class FiniteHorizon(MDP):
         self.time = _time.time() - self.time
         # After this we could create a tuple of tuples for the values and
         # policies.
-        #self.V = tuple(tuple(self.V[:, n].tolist()) for n in range(self.N))
-        #self.policy = tuple(tuple(self.policy[:, n].tolist())
+        # self.V = tuple(tuple(self.V[:, n].tolist()) for n in range(self.N))
+        # self.policy = tuple(tuple(self.policy[:, n].tolist())
         #                    for n in range(self.N))
+
 
 class _LP(MDP):
 
@@ -485,7 +495,7 @@ class _LP(MDP):
             solvers.options['show_progress'] = False
 
     def run(self):
-        #Run the linear programming algorithm.
+        # Run the linear programming algorithm.
         self.time = _time.time()
         # The objective is to resolve : min V / V >= PR + discount*P*V
         # The function linprog of the optimisation Toolbox of Mathworks
@@ -516,6 +526,7 @@ class _LP(MDP):
         # store value and policy as tuples
         self.V = tuple(self.V.tolist())
         self.policy = tuple(self.policy.tolist())
+
 
 class PolicyIteration(MDP):
 
@@ -642,7 +653,7 @@ class PolicyIteration(MDP):
         #
         Ppolicy = _np.empty((self.S, self.S))
         Rpolicy = _np.zeros(self.S)
-        for aa in range(self.A): # avoid looping over S
+        for aa in range(self.A):  # avoid looping over S
             # the rows that use action a.
             ind = (self.policy == aa).nonzero()[0]
             # if no rows use action a, then no need to assign this
@@ -651,7 +662,7 @@ class PolicyIteration(MDP):
                     Ppolicy[ind, :] = self.P[aa][ind, :]
                 except ValueError:
                     Ppolicy[ind, :] = self.P[aa][ind, :].todense()
-                #PR = self._computePR() # an apparently uneeded line, and
+                # PR = self._computePR() # an apparently uneeded line, and
                 # perhaps harmful in this implementation c.f.
                 # mdp_computePpolicyPRpolicy.m
                 Rpolicy[ind] = self.R[aa][ind]
@@ -661,8 +672,8 @@ class PolicyIteration(MDP):
         # from a dense to sparse matrix doesn't seem very memory efficient
         if type(self.R) is _sp.csr_matrix:
             Rpolicy = _sp.csr_matrix(Rpolicy)
-        #self.Ppolicy = Ppolicy
-        #self.Rpolicy = Rpolicy
+        # self.Ppolicy = Ppolicy
+        # self.Rpolicy = Rpolicy
         return (Ppolicy, Rpolicy)
 
     def _evalPolicyIterative(self, V0=0, epsilon=0.0001, max_iter=10000):
@@ -746,8 +757,8 @@ class PolicyIteration(MDP):
         #      each cell containing a matrix (SxS) possibly sparse
         # R(SxSxA) or (SxA) = reward matrix
         #      R could be an array with 3 dimensions (SxSxA) or
-        #      a cell array (1xA), each cell containing a sparse matrix (SxS) or
-        #      a 2D array(SxA) possibly sparse
+        #      a cell array (1xA), each cell containing a sparse matrix (SxS)
+        #      or a 2D array(SxA) possibly sparse
         # discount = discount rate in ]0; 1[
         # policy(S) = a policy
         #
@@ -804,6 +815,7 @@ class PolicyIteration(MDP):
         # store value and policy as tuples
         self.V = tuple(self.V.tolist())
         self.policy = tuple(self.policy.tolist())
+
 
 class PolicyIterationModified(PolicyIteration):
 
@@ -899,7 +911,7 @@ class PolicyIterationModified(PolicyIteration):
             self.iter += 1
 
             self.policy, Vnext = self._bellmanOperator()
-            #[Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
+            # [Ppolicy, PRpolicy] = mdp_computePpolicyPRpolicy(P, PR, policy);
 
             variation = _util.getSpan(Vnext - self.V)
             if self.verbose:
@@ -924,6 +936,7 @@ class PolicyIterationModified(PolicyIteration):
         # store value and policy as tuples
         self.V = tuple(self.V.tolist())
         self.policy = tuple(self.policy.tolist())
+
 
 class QLearning(MDP):
 
@@ -1008,8 +1021,8 @@ class QLearning(MDP):
         assert self.max_iter >= 10000, "'n_iter' should be greater than 10000."
 
         if not skip_check:
-            # We don't want to send this to MDP because _computePR should not be
-            # run on it, so check that it defines an MDP
+            # We don't want to send this to MDP because _computePR should not
+            #  be run on it, so check that it defines an MDP
             _util.check(transitions, reward)
 
         # Store P, S, and A
@@ -1091,6 +1104,7 @@ class QLearning(MDP):
         self.V = tuple(self.V.tolist())
         self.policy = tuple(self.policy.tolist())
 
+
 class RelativeValueIteration(MDP):
 
     """A MDP solved using the relative value iteration algorithm.
@@ -1171,7 +1185,7 @@ class RelativeValueIteration(MDP):
         self.discount = 1
 
         self.V = _np.zeros(self.S)
-        self.gain = 0 # self.U[self.S]
+        self.gain = 0  # self.U[self.S]
 
         self.average_reward = None
 
@@ -1215,6 +1229,7 @@ class RelativeValueIteration(MDP):
         # store value and policy as tuples
         self.V = tuple(self.V.tolist())
         self.policy = tuple(self.policy.tolist())
+
 
 class ValueIteration(MDP):
 
@@ -1354,7 +1369,7 @@ class ValueIteration(MDP):
             # computation of threshold of variation for V for an epsilon-
             # optimal policy
             self.thresh = epsilon * (1 - self.discount) / self.discount
-        else: # discount == 1
+        else:  # discount == 1
             # threshold of variation for V for an epsilon-optimal policy
             self.thresh = epsilon
 
@@ -1399,8 +1414,8 @@ class ValueIteration(MDP):
         # p 201, Proposition 6.6.5
         span = _util.getSpan(value - Vprev)
         max_iter = (_math.log((epsilon * (1 - self.discount) / self.discount) /
-                    span ) / _math.log(self.discount * k))
-        #self.V = Vprev
+                    span) / _math.log(self.discount * k))
+        # self.V = Vprev
 
         self.max_iter = int(_math.ceil(max_iter))
 
@@ -1441,6 +1456,7 @@ class ValueIteration(MDP):
         self.policy = tuple(self.policy.tolist())
 
         self.time = _time.time() - self.time
+
 
 class ValueIterationGS(ValueIteration):
 
@@ -1528,7 +1544,7 @@ class ValueIterationGS(ValueIteration):
             # computation of threshold of variation for V for an epsilon-
             # optimal policy
             self.thresh = epsilon * (1 - self.discount) / self.discount
-        else: # discount == 1
+        else:  # discount == 1
             # threshold of variation for V for an epsilon-optimal policy
             self.thresh = epsilon
 
@@ -1548,7 +1564,7 @@ class ValueIterationGS(ValueIteration):
             Vprev = self.V.copy()
 
             for s in range(self.S):
-                Q = [float(self.R[a][s]+
+                Q = [float(self.R[a][s] +
                            self.discount * self.P[a][s, :].dot(self.V))
                      for a in range(self.A)]
 
@@ -1572,7 +1588,8 @@ class ValueIterationGS(ValueIteration):
         for s in range(self.S):
             Q = _np.zeros(self.A)
             for a in range(self.A):
-                Q[a] = self.R[a][s] + self.discount * self.P[a][s, :].dot(self.V)
+                Q[a] = (self.R[a][s] +
+                        self.discount * self.P[a][s, :].dot(self.V))
 
             self.V[s] = Q.max()
             self.policy.append(int(Q.argmax()))

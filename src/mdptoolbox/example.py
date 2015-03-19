@@ -49,6 +49,7 @@ Available functions
 import numpy as _np
 import scipy.sparse as _sp
 
+
 def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     """Generate a MDP example based on a simple forest management scenario.
 
@@ -187,6 +188,7 @@ def forest(S=3, r1=4, r2=2, p=0.1, is_sparse=False):
     R[S - 1, 1] = r2
     return(P, R)
 
+
 def _randDense(states, actions, mask):
     """Generate random dense ``P`` and ``R``. See ``rand`` for details.
 
@@ -204,7 +206,7 @@ def _randDense(states, actions, mask):
                 m[m <= r] = 0
                 m[m > r] = 1
             elif mask.shape == (actions, states, states):
-                m = mask[action][state] # mask[action, state, :]
+                m = mask[action][state]  # mask[action, state, :]
             else:
                 m = mask[state]
             # Make sure that there is atleast one transition in each state
@@ -215,6 +217,7 @@ def _randDense(states, actions, mask):
             R[action][state] = (m * (2 * _np.random.random(states) -
                                 _np.ones(states, dtype=int)))
     return(P, R)
+
 
 def _randSparse(states, actions, mask):
     """Generate random sparse ``P`` and ``R``. See ``rand`` for details.
@@ -236,10 +239,10 @@ def _randSparse(states, actions, mask):
                 m[m <= 2/3.0] = 0
                 m[m > 2/3.0] = 1
             elif mask.shape == (actions, states, states):
-                m = mask[action][state] # mask[action, state, :]
+                m = mask[action][state]  # mask[action, state, :]
             else:
                 m = mask[state]
-            n = int(m.sum()) # m[state, :]
+            n = int(m.sum())  # m[state, :]
             if n == 0:
                 m[_np.random.randint(0, states)] = 1
                 n = 1
@@ -260,6 +263,7 @@ def _randSparse(states, actions, mask):
         P[action] = PP.tocsr()
         R[action] = RR.tocsr()
     return(P, R)
+
 
 def rand(S, A, is_sparse=False, mask=None):
     """Generate a random Markov Decision Process.
@@ -345,8 +349,9 @@ def rand(S, A, is_sparse=False, mask=None):
     if mask is not None:
         # the mask needs to be SxS or AxSxS
         try:
-            assert mask.shape in ((S, S), (A, S, S)), "'mask' must have " \
-            "dimensions S×S or A×S×S."
+            assert mask.shape in ((S, S), (A, S, S)), (
+                "'mask' must have dimensions S×S or A×S×S."
+            )
         except AttributeError:
             raise TypeError("'mask' must be a numpy array or matrix.")
     # generate the transition and reward matrices based on S, A and mask
@@ -355,6 +360,7 @@ def rand(S, A, is_sparse=False, mask=None):
     else:
         P, R = _randDense(S, A, mask)
     return(P, R)
+
 
 def small():
     """A very small Markov decision process.

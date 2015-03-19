@@ -18,7 +18,7 @@ Available modules
 How to use the documentation
 ----------------------------
 Documentation is available both as docstrings provided with the code and
-in html or pdf format from 
+in html or pdf format from
 `The MDP toolbox homepage <http://www.somewhere.com>`_. The docstring
 examples assume that the ``mdptoolbox`` package is imported like so::
 
@@ -45,19 +45,19 @@ source code use ``mdp.ValueIteration??<ENTER>``.
 
 Acknowledgments
 ---------------
-This module is modified from the MDPtoolbox (c) 2009 INRA available at 
+This module is modified from the MDPtoolbox (c) 2009 INRA available at
 http://www.inra.fr/mia/T/MDPtoolbox/.
 
 """
 
 # Copyright (c) 2011-2013 Steven A. W. Cordwell
 # Copyright (c) 2009 INRA
-# 
+#
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #   * Redistributions of source code must retain the above copyright notice,
 #     this list of conditions and the following disclaimer.
 #   * Redistributions in binary form must reproduce the above copyright notice,
@@ -66,7 +66,7 @@ http://www.inra.fr/mia/T/MDPtoolbox/.
 #   * Neither the name of the <ORGANIZATION> nor the names of its contributors
 #     may be used to endorse or promote products derived from this software
 #     without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE

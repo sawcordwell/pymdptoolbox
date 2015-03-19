@@ -90,6 +90,7 @@ _MDPERR = {
     "actions greater than 0. i.e. R.shape = (S, A) or (A, S, S)."
 }
 
+
 def _checkDimensionsListLike(arrays):
     """Check that each array in a list of arrays has the same size.
 
@@ -101,6 +102,7 @@ def _checkDimensionsListLike(arrays):
         if (dim2_aa != dim2) or (dim3_aa != dim3):
             raise _error.InvalidError(_MDPERR["obj_square"])
     return dim1, dim2, dim3
+
 
 def _checkRewardsListLike(reward, n_actions, n_states):
     """Check that a list-like reward input is valid.
@@ -118,6 +120,7 @@ def _checkRewardsListLike(reward, n_actions, n_states):
     except AttributeError:
         raise _error.InvalidError(_MDPERR["R_shape"])
     return dim1, dim2, dim3
+
 
 def isSquare(matrix):
     """Check that ``matrix`` is square.
@@ -139,6 +142,7 @@ def isSquare(matrix):
         return True
     return False
 
+
 def isStochastic(matrix):
     """Check that ``matrix`` is row stochastic.
 
@@ -154,6 +158,7 @@ def isStochastic(matrix):
         matrix = _np.array(matrix)
         absdiff = (_np.abs(matrix.sum(axis=1) - _np.ones(matrix.shape[0])))
     return (absdiff.max() <= 10*_np.spacing(_np.float64(1)))
+
 
 def isNonNegative(matrix):
     """Check that ``matrix`` is row non-negative.
@@ -176,6 +181,7 @@ def isNonNegative(matrix):
             if (matrix.data >= 0).all():
                 return True
     return False
+
 
 def checkSquareStochastic(matrix):
     """Check if ``matrix`` is a square and row-stochastic.
@@ -205,6 +211,7 @@ def checkSquareStochastic(matrix):
         raise _error.StochasticError
     if not isNonNegative(matrix):
         raise _error.NonNegativeError
+
 
 def check(P, R):
     """Check if ``P`` and ``R`` define a valid Markov Decision Process (MDP).
