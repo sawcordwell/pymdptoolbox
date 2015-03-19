@@ -7,11 +7,12 @@ descrete-time Markov Decision Processes.
 
 Available modules
 -----------------
-example
+
+:mod:`~mdptoolbox.example`
     Examples of transition and reward matrices that form valid MDPs
-mdp
+:mod:`~mdptoolbox.mdp`
     Makov decision process algorithms
-util
+:mod:`~mdptoolbox.util`
     Functions for validating and working with an MDP
 
 How to use the documentation

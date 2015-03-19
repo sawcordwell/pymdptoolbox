@@ -7,21 +7,21 @@ Decision Processes.
 
 Available classes
 -----------------
-MDP
+:class:`~mdptoolbox.mdp.MDP`
     Base Markov decision process class
-FiniteHorizon
+:class:`~mdptoolbox.mdp.FiniteHorizon`
     Backwards induction finite horizon MDP
-PolicyIteration
+:class:`~mdptoolbox.mdp.PolicyIteration`
     Policy iteration MDP
-PolicyIterationModified
+:class:`~mdptoolbox.mdp.PolicyIterationModified`
     Modified policy iteration MDP
-QLearning
+:class:`~mdptoolbox.mdp.QLearning`
     Q-learning MDP
-RelativeValueIteration
+:class:`~mdptoolbox.mdp.RelativeValueIteration`
     Relative value iteration MDP
-ValueIteration
+:class:`~mdptoolbox.mdp.ValueIteration`
     Value iteration MDP
-ValueIterationGS
+:class:`~mdptoolbox.mdp.ValueIterationGS`
     Gauss-Seidel value iteration MDP
 
 """

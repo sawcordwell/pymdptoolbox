@@ -8,17 +8,18 @@ solved.
 
 Available functions
 -------------------
-check
+
+:func:`~mdptoolbox.util.check`
     Check that an MDP is properly defined
-checkSquareStochastic
+:func:`~mdptoolbox.util.checkSquareStochastic`
     Check that a matrix is square and stochastic
-getSpan
+:func:`~mdptoolbox.util.getSpan`
     Calculate the span of an array
-isNonNegative
+:func:`~mdptoolbox.util.isNonNegative`
     Check if a matrix has only non-negative elements
-isSquare
+:func:`~mdptoolbox.util.isSquare`
     Check if a matrix is square
-isStochastic
+:func:`~mdptoolbox.util.isStochastic`
     Check if a matrix is row stochastic
 
 """

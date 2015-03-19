@@ -7,10 +7,13 @@ reward matrices.
 
 Available functions
 -------------------
-forest
+
+:func:`~mdptoolbox.example.forest`
     A simple forest management example
-rand
+:func:`~mdptoolbox.example.rand`
     A random example
+:func:`~mdptoolbox.example.small`
+    A very small example
 
 """
 
