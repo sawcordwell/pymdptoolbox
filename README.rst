@@ -155,7 +155,8 @@ optimal policy.
 
 Documentation
 -------------
-Documentation is available as docstrings in the module code.
+Documentation is available at http://pymdptoolbox.readthedocs.org/
+and also as docstrings in the module code.
 If you use `IPython <http://ipython.scipy.org>`_ to work with the toolbox,
 then you can view the docstrings by using a question mark ``?``. For example:
 
@@ -167,10 +168,6 @@ then you can view the docstrings by using a question mark ``?``. For example:
     mdptoolbox.mdp.ValueIteration?<ENTER>
 
 will display the relevant documentation.
-Once the Sphinx document geneator has been set up correctly then the
-documentation will be available at http://sawcordwell.github.io/pymdptoolbox/.
-
-.. TODO and as html in the doc folder.
 
 Contribute
 ----------

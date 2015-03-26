@@ -17,6 +17,24 @@ import sys
 import os
 import shlex
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
+# When on read the docs stub out the modules that cannot be loaded
+if on_rtd:
+    try:
+        from unittest.mock import MagicMock
+    except ImportError:
+        from mock import MagicMock
+
+
+    class Mock(MagicMock):
+        @classmethod
+        def __getattr__(cls, name):
+            return Mock()
+
+    MOCK_MODULES = ['numpy', 'scipy', 'scipy.sparse', 'cvxopt']
+    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -31,13 +49,23 @@ sys.path.insert(0, os.path.abspath('../src'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.viewcode',
+    'sphinx.ext.autodoc'
 ]
+
+if on_rtd:
+    extensions.extend([
+        'sphinx.ext.mathjax',
+        'sphinxcontrib.napoleon',
+        'sphinx.ext.viewcode',
+    ])
+else:
+    extensions.extend([
+        'sphinx.ext.doctest',
+        'sphinx.ext.coverage',
+        'sphinx.ext.mathjax',
+        'sphinx.ext.napoleon',
+        'sphinx.ext.viewcode',
+    ])
 
 # Napoleon settings
 napoleon_google_docstrings = False
@@ -120,7 +148,7 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'alabaster'
+html_theme = 'default'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
