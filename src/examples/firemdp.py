@@ -262,7 +262,7 @@ def getTransitionAndRewardArrays(s):
         # Loop over all actions
         for a in range(ACTIONS):
             # Assign the transition probabilities for this state, action pair
-            P[a][idx] = getTransitionProbabilities(x, F, s, a)
+            P[a][idx] = getTransitionProbabilities(s, x, F, a)
     return(P, R)
 
 def solveMDP():
