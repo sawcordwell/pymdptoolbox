@@ -8,9 +8,29 @@ Created on Sat Aug 24 14:18:51 2013
 import numpy as np
 import scipy.sparse as sp
 
-import mdptoolbox, mdptoolbox.example
+import mdptoolbox.example
 
 from .utils import SMALLNUM, P_small, R_small
+
+
+class TestUnitsMDP(object):
+
+    def test_MDP_has_startRun_method(self):
+        P, R = mdptoolbox.example.small()
+        sdp = mdptoolbox.mdp.MDP(P, R, None, None, None)
+        sdp._startRun()
+        assert sdp.time is not None
+
+    def test_MDP_has_endRun_method(self):
+        P, R = mdptoolbox.example.small()
+        sdp = mdptoolbox.mdp.MDP(P, R, None, None, None)
+        sdp._startRun()
+        sdp.V = np.zeros(1)  # to prevent AttributeError in sdp._endRun()
+        sdp.policy = np.zeros(1)  # to prevent AttributeError in sdp._endRun()
+        time = sdp.time
+        sdp._endRun()
+        assert time != sdp.time
+
 
 class TestMDP(object):
     P = (((0.0, 0.0, 0.6, 0.4, 0.0),
@@ -90,6 +110,7 @@ class TestMDP(object):
         assert (sdp.R[0] == np.array(self.computed_R[0])).all()
         assert (sdp.R[1] == np.array(self.computed_R[1])).all()
 
+
 def test_MDP_P_R_1():
     P1 = []
     P1.append(np.array(np.matrix('0.5 0.5; 0.8 0.2')))
@@ -105,6 +126,7 @@ def test_MDP_P_R_1():
     for kk in range(2):
         assert (a.P[kk] == P1[kk]).all()
         assert (a.R[kk] == R1[kk]).all()
+
 
 def test_MDP_P_R_2():
     R = np.array([[[5, 10], [-1, 2]], [[1, 2], [3, 4]]])
@@ -123,8 +145,9 @@ def test_MDP_P_R_2():
         assert (a.P[kk] == P1[kk]).all()
         assert (np.absolute(a.R[kk] - R1[kk]) < SMALLNUM).all()
 
+
 def test_MDP_P_R_3():
-    P = np.array([[[0.6116, 0.3884],[0, 1]],[[0.6674, 0.3326],[0, 1]]])
+    P = np.array([[[0.6116, 0.3884], [0, 1]], [[0.6674, 0.3326], [0, 1]]])
     R = np.array([[[-0.2433, 0.7073],[0, 0.1871]],[[-0.0069, 0.6433],[0, 0.2898]]])
     PR = []
     PR.append(np.array(np.matrix('0.12591304, 0.1871')))

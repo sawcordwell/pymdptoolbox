@@ -84,6 +84,15 @@ def _computeDimensions(transition):
     return S, A
 
 
+def _printVerbosity(iteration, variation):
+    if isinstance(variation, float):
+        print("{:>10}{:>12f}".format(iteration, variation))
+    elif isinstance(variation, int):
+        print("{:>10}{:>12d}".format(iteration, variation))
+    else:
+        print("{:>10}{:>12}".format(iteration, variation))
+
+
 class MDP(object):
 
     """A Markov Decision Problem.
@@ -316,8 +325,26 @@ class MDP(object):
         else:
             return _np.multiply(transition, reward).sum(1).reshape(self.S)
 
+    def _startRun(self):
+        if self.verbose:
+            _printVerbosity('Iteration', 'Variation')
+
+        self.time = _time.time()
+
+    def _endRun(self):
+        # store value and policy as tuples
+        self.V = tuple(self.V.tolist())
+
+        try:
+            self.policy = tuple(self.policy.tolist())
+        except AttributeError:
+            self.policy = tuple(self.policy)
+
+        self.time = _time.time() - self.time
+
     def run(self):
-        # Raise error because child classes should implement this function.
+        """Raises error because child classes should implement this function.
+        """
         raise NotImplementedError("You should create a run() method.")
 
     def setSilent(self):
@@ -720,7 +747,7 @@ class PolicyIteration(MDP):
         policy_P, policy_R = self._computePpolicyPRpolicy()
 
         if self.verbose:
-            print('    Iteration\t\t    V variation')
+            _printVerbosity("Iteration", "V variation")
 
         itr = 0
         done = False
@@ -732,7 +759,7 @@ class PolicyIteration(MDP):
 
             variation = _np.absolute(policy_V - Vprev).max()
             if self.verbose:
-                print(('      %s\t\t      %s') % (itr, variation))
+                _printVerbosity(itr, variation)
 
             # ensure |Vn - Vpolicy| < epsilon
             if variation < ((1 - self.discount) / self.discount) * epsilon:
@@ -773,14 +800,9 @@ class PolicyIteration(MDP):
 
     def run(self):
         # Run the policy iteration algorithm.
-        # If verbose the print a header
-        if self.verbose:
-            print('  Iteration\t\tNumber of different actions')
-        # Set up the while stopping condition and the current time
-        done = False
-        self.time = _time.time()
-        # loop until a stopping condition is reached
-        while not done:
+        self._startRun()
+
+        while True:
             self.iter += 1
             # these _evalPolicy* functions will update the classes value
             # attribute
@@ -797,24 +819,21 @@ class PolicyIteration(MDP):
             n_different = (policy_next != self.policy).sum()
             # if verbose then continue printing a table
             if self.verbose:
-                print(('    %s\t\t  %s') % (self.iter, n_different))
+                _printVerbosity(self.iter, n_different)
             # Once the policy is unchanging of the maximum number of
             # of iterations has been reached then stop
             if n_different == 0:
-                done = True
                 if self.verbose:
                     print(_MSG_STOP_UNCHANGING_POLICY)
+                break
             elif self.iter == self.max_iter:
-                done = True
                 if self.verbose:
                     print(_MSG_STOP_MAX_ITER)
+                break
             else:
                 self.policy = policy_next
-        # update the time to return th computation time
-        self.time = _time.time() - self.time
-        # store value and policy as tuples
-        self.V = tuple(self.V.tolist())
-        self.policy = tuple(self.policy.tolist())
+
+        self._endRun()
 
 
 class PolicyIterationModified(PolicyIteration):
@@ -901,13 +920,9 @@ class PolicyIterationModified(PolicyIteration):
     def run(self):
         # Run the modified policy iteration algorithm.
 
-        if self.verbose:
-            print('  \tIteration\t\tV-variation')
+        self._startRun()
 
-        self.time = _time.time()
-
-        done = False
-        while not done:
+        while True:
             self.iter += 1
 
             self.policy, Vnext = self._bellmanOperator()
@@ -915,11 +930,11 @@ class PolicyIterationModified(PolicyIteration):
 
             variation = _util.getSpan(Vnext - self.V)
             if self.verbose:
-                print(("    %s\t\t  %s" % (self.iter, variation)))
+                _printVerbosity(self.iter, variation)
 
             self.V = Vnext
             if variation < self.thresh:
-                done = True
+                break
             else:
                 is_verbose = False
                 if self.verbose:
@@ -931,11 +946,7 @@ class PolicyIterationModified(PolicyIteration):
                 if is_verbose:
                     self.setVerbose()
 
-        self.time = _time.time() - self.time
-
-        # store value and policy as tuples
-        self.V = tuple(self.V.tolist())
-        self.policy = tuple(self.policy.tolist())
+        self._endRun()
 
 
 class QLearning(MDP):
@@ -1098,11 +1109,7 @@ class QLearning(MDP):
             self.V = self.Q.max(axis=1)
             self.policy = self.Q.argmax(axis=1)
 
-        self.time = _time.time() - self.time
-
-        # convert V and policy to tuples
-        self.V = tuple(self.V.tolist())
-        self.policy = tuple(self.policy.tolist())
+        self._endRun()
 
 
 class RelativeValueIteration(MDP):
@@ -1192,13 +1199,9 @@ class RelativeValueIteration(MDP):
     def run(self):
         # Run the relative value iteration algorithm.
 
-        done = False
-        if self.verbose:
-            print('  Iteration\t\tU variation')
+        self._startRun()
 
-        self.time = _time.time()
-
-        while not done:
+        while True:
 
             self.iter += 1
 
@@ -1208,27 +1211,23 @@ class RelativeValueIteration(MDP):
             variation = _util.getSpan(Vnext - self.V)
 
             if self.verbose:
-                print(("    %s\t\t  %s" % (self.iter, variation)))
+                _printVerbosity(self.iter, variation)
 
             if variation < self.epsilon:
-                done = True
                 self.average_reward = self.gain + (Vnext - self.V).min()
                 if self.verbose:
                     print(_MSG_STOP_EPSILON_OPTIMAL_POLICY)
+                break
             elif self.iter == self.max_iter:
-                done = True
                 self.average_reward = self.gain + (Vnext - self.V).min()
                 if self.verbose:
                     print(_MSG_STOP_MAX_ITER)
+                break
 
             self.V = Vnext
             self.gain = float(self.V[self.S - 1])
 
-        self.time = _time.time() - self.time
-
-        # store value and policy as tuples
-        self.V = tuple(self.V.tolist())
-        self.policy = tuple(self.policy.tolist())
+        self._endRun()
 
 
 class ValueIteration(MDP):
@@ -1421,11 +1420,8 @@ class ValueIteration(MDP):
 
     def run(self):
         # Run the value iteration algorithm.
+        self._startRun()
 
-        if self.verbose:
-            print('  Iteration\t\tV-variation')
-
-        self.time = _time.time()
         while True:
             self.iter += 1
 
@@ -1440,7 +1436,7 @@ class ValueIteration(MDP):
             variation = _util.getSpan(self.V - Vprev)
 
             if self.verbose:
-                print(("    %s\t\t  %s" % (self.iter, variation)))
+                _printVerbosity(self.iter, variation)
 
             if variation < self.thresh:
                 if self.verbose:
@@ -1451,11 +1447,7 @@ class ValueIteration(MDP):
                     print(_MSG_STOP_MAX_ITER)
                 break
 
-        # store value and policy as tuples
-        self.V = tuple(self.V.tolist())
-        self.policy = tuple(self.policy.tolist())
-
-        self.time = _time.time() - self.time
+        self._endRun()
 
 
 class ValueIterationGS(ValueIteration):
@@ -1551,14 +1543,9 @@ class ValueIterationGS(ValueIteration):
     def run(self):
         # Run the value iteration Gauss-Seidel algorithm.
 
-        done = False
+        self._startRun()
 
-        if self.verbose:
-            print('  Iteration\t\tV-variation')
-
-        self.time = _time.time()
-
-        while not done:
+        while True:
             self.iter += 1
 
             Vprev = self.V.copy()
@@ -1573,16 +1560,16 @@ class ValueIterationGS(ValueIteration):
             variation = _util.getSpan(self.V - Vprev)
 
             if self.verbose:
-                print(("    %s\t\t  %s" % (self.iter, variation)))
+                _printVerbosity(self.iter, variation)
 
             if variation < self.thresh:
-                done = True
                 if self.verbose:
                     print(_MSG_STOP_EPSILON_OPTIMAL_POLICY)
+                break
             elif self.iter == self.max_iter:
-                done = True
                 if self.verbose:
                     print(_MSG_STOP_MAX_ITER)
+                break
 
         self.policy = []
         for s in range(self.S):
@@ -1594,7 +1581,4 @@ class ValueIterationGS(ValueIteration):
             self.V[s] = Q.max()
             self.policy.append(int(Q.argmax()))
 
-        self.time = _time.time() - self.time
-
-        self.V = tuple(self.V.tolist())
-        self.policy = tuple(self.policy)
+        self._endRun()
