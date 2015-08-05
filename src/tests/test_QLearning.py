@@ -10,7 +10,8 @@ import numpy as np
 import mdptoolbox
 
 from .utils import SMALLNUM, P_forest, R_forest, P_forest_sparse
-from .utils import R_forest_sparse, P_small, R_small, P_sparse
+from .utils import R_forest_sparse, P_small, R_small, P_sparse, \
+                   P_gridworld, R_gridworld, policy_gridworld
 
 def test_QLearning_small():
     np.random.seed(0)
@@ -55,3 +56,8 @@ def test_QLearning_forest_sparse():
     sdp.run()
     p = (0, 1, 1, 1, 1, 1, 0, 0, 0, 0)
     assert sdp.policy == p
+
+def test_QLearning_gridworld():
+    qlearning = mdptoolbox.mdp.QLearning(P_gridworld, R_gridworld, 1.0)
+    qlearning.run()
+    assert qlearning.policy == policy_gridworld

@@ -12,6 +12,7 @@ import mdptoolbox
 from .utils import SMALLNUM, P_forest, R_forest, P_forest_sparse
 from .utils import R_forest_sparse, P_rand, R_rand, P_rand_sparse, R_rand_sparse
 from .utils import P_small, R_small, P_sparse
+from .utils import P_gridworld, R_gridworld, policy_gridworld
 
 def test_ValueIteration_small():
     sdp = mdptoolbox.mdp.ValueIteration(P_small, R_small, 0.9)
@@ -58,3 +59,8 @@ def test_ValueIteration_rand_sparse():
     sdp = mdptoolbox.mdp.ValueIteration(P_rand_sparse, R_rand_sparse, 0.9)
     sdp.run()
     assert sdp.policy
+
+def test_ValueIteration_gridworld():
+    vi = mdptoolbox.mdp.ValueIteration(P_gridworld, R_gridworld, 1.0)
+    vi.run()
+    assert vi.policy == policy_gridworld

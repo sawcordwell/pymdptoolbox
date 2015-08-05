@@ -39,3 +39,13 @@ P_rand, R_rand = mdptoolbox.example.rand(STATES, ACTIONS)
 np.random.seed(0)
 P_rand_sparse, R_rand_sparse = mdptoolbox.example.rand(STATES, ACTIONS,
                                                        is_sparse=True)
+
+
+P_gridworld, R_gridworld = mdptoolbox.example.gridworld()
+up, down, right, left = range(4)
+policy_gridworld = (left, left, down,
+                    up, up, up, down,
+                    up, up, down, down,
+                    up, right, right,
+                    up)  # for the terminal state
+del up, down, right, left

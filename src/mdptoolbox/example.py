@@ -402,3 +402,81 @@ def small():
     P = _np.array([[[0.5, 0.5], [0.8, 0.2]], [[0, 1], [0.1, 0.9]]])
     R = _np.array([[5, 10], [-1, 2]])
     return(P, R)
+
+
+def gridworld():
+    """4x4 gridworld example.
+
+    Example 4.1 of `Reinforcement Learning: An Introduction
+    <http://webdocs.cs.ualberta.ca/~sutton/book/the-book.html>`_,
+    by Richard S. Sutton and Andrew G. Barto.
+
+    Returns
+    -------
+    out : tuple
+        ``out[0]`` contains the transition probability matrix P,
+        and ``out[1]`` contains the reward matrix R. The non-terminal
+        states correspond to the indices 0-13 in both matrices,
+        and the terminal state to the index 14.
+
+    Examples
+    --------
+    >>> import mdptoolbox.example
+    >>> P, R = mdptoolbox.example.gridworld()
+    >>> P.shape
+    (4, 15, 15)
+    >>> R.shape
+    (4, 15, 15)
+    """
+    # States: labelled 1, 2, ..., 14 in the figure, plus the terminal
+    # state associated with the two terminal positions.
+    S = 15  # number of states
+    terminal_state = 14  # terminal state index
+
+    # Actions: up, down, right, left.
+    A = 4  # number of actions
+    up, down, right, left = range(A)  # indices of the actions
+
+    # Transitions.
+    P = _np.zeros((A, S, S))
+
+    # Grid transitions.
+    grid_transitions = {
+        # from_state: ((action, to_state), ...)
+        1: ((down, 5), (right, 2), (left, 15)),
+        2: ((down, 6), (right, 3), (left, 1)),
+        3: ((down, 7), (left, 2)),
+        4: ((up, 15), (down, 8), (right, 5)),
+        5: ((up, 1), (down, 9), (right, 6), (left, 4)),
+        6: ((up, 2), (down, 10), (right, 7), (left, 5)),
+        7: ((up, 3), (down, 11), (left, 6)),
+        8: ((up, 4), (down, 12), (right, 9)),
+        9: ((up, 5), (down, 13), (right, 10), (left, 8)),
+        10: ((up, 6), (down, 14), (right, 11), (left, 9)),
+        11: ((up, 7), (down, 15), (left, 10)),
+        12: ((up, 8), (right, 13)),
+        13: ((up, 9), (right, 14), (left, 12)),
+        14: ((up, 10), (right, 15), (left, 13))
+    }
+    for i, moves in grid_transitions.items():
+        for a, j in moves:
+            P[a, i - 1, j - 1] = 1.0
+
+    # Border transitions.
+    for i in (1, 2, 3):
+        P[up, i - 1, i - 1] = 1.0
+    for i in (12, 13, 14):
+        P[down, i - 1, i - 1] = 1.0
+    for i in (3, 7, 11):
+        P[right, i - 1, i - 1] = 1.0
+    for i in (4, 8, 12):
+        P[left, i - 1, i - 1] = 1.0
+
+    # The terminal state should be an absorbing state.
+    P[:, terminal_state, terminal_state] = 1.0
+
+    # Rewards.
+    R = -1 * _np.ones((A, S, S))
+    R[:, terminal_state, :] = 0
+
+    return P, R
