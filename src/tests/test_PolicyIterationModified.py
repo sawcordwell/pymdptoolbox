@@ -11,7 +11,8 @@ import scipy.sparse as sp
 
 from mdptoolbox import mdp
 
-from .utils import BaseTestMDP, assert_sequence_almost_equal
+from .utils import BaseTestMDP, P_gridworld, R_gridworld, policy_gridworld, \
+                   assert_sequence_almost_equal
 
 class TestPolicyIterationModified(BaseTestMDP):
     def test_small(self):
@@ -25,3 +26,8 @@ class TestPolicyIterationModified(BaseTestMDP):
         pim = mdp.PolicyIterationModified(self.small_P, self.small_R, 1)
         pim.run()
         assert_equal(pim.policy, (1, 0))
+
+    def test_gridworld(self):
+        pim = mdp.PolicyIterationModified(P_gridworld, R_gridworld, 1.0)
+        pim.run()
+        assert pim.policy == policy_gridworld

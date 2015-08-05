@@ -11,6 +11,7 @@ import mdptoolbox
 
 from .utils import SMALLNUM, P_forest, R_forest, P_small, R_small, P_sparse
 from .utils import P_forest_sparse, R_forest_sparse
+from .utils import P_gridworld, R_gridworld, policy_gridworld
 
 def test_ValueIterationGS_small():
     sdp = mdptoolbox.mdp.ValueIterationGS(P_small, R_small, 0.9)
@@ -51,3 +52,8 @@ def test_ValueIterationGS_forest_sparse():
     itr = 16 # from Octave MDPtoolbox
     assert sdp.policy == p
     assert sdp.iter == itr
+
+def test_ValueIterationGS_gridworld():
+    vigs = mdptoolbox.mdp.ValueIterationGS(P_gridworld, R_gridworld, 1.0)
+    vigs.run()
+    assert vigs.policy == policy_gridworld

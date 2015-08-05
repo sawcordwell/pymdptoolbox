@@ -12,6 +12,7 @@ import mdptoolbox
 
 from .utils import SMALLNUM, P_forest, R_forest, P_small, R_small, P_sparse, \
                    P_forest_sparse, R_forest_sparse, \
+                   P_gridworld, R_gridworld, policy_gridworld, \
                    assert_sequence_almost_equal
 
 def test_PolicyIteration_init_policy0():
@@ -122,6 +123,11 @@ def test_PolicyIterative_forest_sparse():
     assert sdp.policy == p
     assert (np.absolute(np.array(sdp.V) - v) < SMALLNUM).all()
     assert sdp.iter == itr
+
+def test_PolicyIteration_gridworld():
+    pi = mdptoolbox.mdp.PolicyIteration(P_gridworld, R_gridworld, 1.0)
+    pi.run()
+    assert pi.policy == policy_gridworld
 
 def test_goggle_code_issue_5():
     P = [sp.csr_matrix([[0.5, 0.5], [0.8, 0.2]]),
