@@ -496,7 +496,7 @@ class _LP(MDP):
         # To avoid loop on states, the matrix M is structured following actions
         # M(A*S,S)
         f = self._cvxmat(_np.ones((self.S, 1)))
-        h = _np.array(self.R).reshape(self.S * self.A, 1, order="F")
+        h = _np.array(self.R).reshape(self.S * self.A, 1)
         h = self._cvxmat(h, tc='d')
         M = _np.zeros((self.A * self.S, self.S))
         for aa in range(self.A):
