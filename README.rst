@@ -7,13 +7,13 @@ Markov Decision Process (MDP) Toolbox for Python
 .. image:: https://coveralls.io/repos/sawcordwell/pymdptoolbox/badge.png
     :target: https://coveralls.io/r/sawcordwell/pymdptoolbox
     :alt: Code Coverage
-.. image:: https://pypip.in/py_versions/pymdptoolbox/badge.svg
+.. image:: https://img.shields.io/pypi/pyversions/pymdptoolbox.svg
     :target: https://pypi.python.org/pypi/pymdptoolbox/
     :alt: Supported Python versions
-.. image:: https://pypip.in/implementation/pymdptoolbox/badge.svg
+.. image:: https://img.shields.io/pypi/implementation/pymdptoolbox.svg
     :target: https://pypi.python.org/pypi/pymdptoolbox/
     :alt: Supported Python implementations
-.. image:: https://pypip.in/license/pymdptoolbox/badge.svg
+.. image:: https://img.shields.io/pypi/l/pymdptoolbox.svg
     :target: https://pypi.python.org/pypi/pymdptoolbox/
     :alt: License
 
@@ -65,22 +65,22 @@ Index or from GitHub. Both of these are explained below.
 
 Python Package Index (PyPI)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. image:: https://pypip.in/download/pymdptoolbox/badge.svg
+.. image:: https://img.shields.io/pypi/dm/pymdptoolbox.svg
     :target: https://pypi.python.org/pypi//pymdptoolbox/
     :alt: Downloads
-.. image:: https://pypip.in/version/pymdptoolbox/badge.svg
+.. image:: https://img.shields.io/pypi/v/pymdptoolbox.svg
     :target: https://pypi.python.org/pypi/pymdptoolbox/
     :alt: Latest Version
-.. image:: https://pypip.in/status/pymdptoolbox/badge.svg
+.. image:: https://img.shields.io/pypi/status/pymdptoolbox.svg
     :target: https://pypi.python.org/pypi/pymdptoolbox/
     :alt: Development Status
-.. image:: https://pypip.in/wheel/pymdptoolbox/badge.svg
+.. image:: https://img.shields.io/pypi/wheel/pymdptoolbox.svg
     :target: https://pypi.python.org/pypi/pymdptoolbox/
     :alt: Wheel Status
 .. image:: https://pypip.in/egg/pymdptoolbox/badge.svg
     :target: https://pypi.python.org/pypi/pymdptoolbox/
     :alt: Egg Status
-.. image:: https://pypip.in/format/pymdptoolbox/badge.svg
+.. image:: https://img.shields.io/pypi/format/pymdptoolbox.svg
     :target: https://pypi.python.org/pypi/pymdptoolbox/
     :alt: Download format
 
