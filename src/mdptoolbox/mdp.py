@@ -1416,7 +1416,7 @@ class ValueIteration(MDP):
                     span) / _math.log(self.discount * k))
         # self.V = Vprev
 
-        self.max_iter = int(_math.ceil(max_iter))
+        self.max_iter = min(self.max_iter, int(_math.ceil(max_iter)))
 
     def run(self):
         # Run the value iteration algorithm.
