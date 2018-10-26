@@ -985,7 +985,7 @@ class QLearning(MDP):
         this vector for the default value of N is 100 (N/100).
 
     Examples
-    ---------
+    --------
     >>> # These examples are reproducible only if random seed is set to 0 in
     >>> # both the random and numpy.random modules.
     >>> import numpy as np
