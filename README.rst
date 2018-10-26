@@ -20,7 +20,7 @@ Markov Decision Process (MDP) Toolbox for Python
 The MDP toolbox provides classes and functions for the resolution of
 descrete-time Markov Decision Processes. The list of algorithms that have been
 implemented includes backwards induction, linear programming, policy iteration,
-q-learning and value iteration along with several variations.
+Q-learning and value iteration along with several variations.
 
 The classes and functions were developped based on the
 `MATLAB <http://www.mathworks.com/products/matlab/>`_
