@@ -58,3 +58,9 @@ def test_ValueIteration_rand_sparse():
     sdp = mdptoolbox.mdp.ValueIteration(P_rand_sparse, R_rand_sparse, 0.9)
     sdp.run()
     assert sdp.policy
+
+def test_ValueIteration_all_zero():
+    sdp = mdptoolbox.mdp.ValueIteration(P_rand, np.zeros_like(R_rand), 0.9)
+    sdp.run()
+    assert sdp.policy
+    assert (np.array(sdp.V) == 0.0).all()
