@@ -1412,9 +1412,12 @@ class ValueIteration(MDP):
         null, value = self._bellmanOperator()
         # p 201, Proposition 6.6.5
         span = _util.getSpan(value - Vprev)
-        max_iter = (_math.log((epsilon * (1 - self.discount) / self.discount) /
-                    span) / _math.log(self.discount * k))
-        # self.V = Vprev
+        if span == 0:  # avoid divide-by-zero error
+            max_iter = 0
+        else:
+            max_iter = (_math.log((epsilon * (1 - self.discount) / self.discount) /
+                        span) / _math.log(self.discount * k))
+            # self.V = Vprev
 
         self.max_iter = int(_math.ceil(max_iter))
 
