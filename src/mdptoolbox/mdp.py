@@ -255,7 +255,7 @@ class MDP(object):
                     "right shape (Bellman operator)."
             except AttributeError:
                 raise TypeError("V must be a numpy array or matrix.")
-        # Looping through each action the the Q-value matrix is calculated.
+        # Looping through each action the Q-value matrix is calculated.
         # P and V can be any object that supports indexing, so it is important
         # that you know they define a valid MDP before calling the
         # _bellmanOperator method. Otherwise the results will be meaningless.
