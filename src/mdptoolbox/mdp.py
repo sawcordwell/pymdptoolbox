@@ -838,7 +838,7 @@ class PolicyIteration(MDP):
 
 class PolicyIterationModified(PolicyIteration):
 
-    """A discounted MDP  solved using a modifified policy iteration algorithm.
+    """A discounted MDP  solved using a modified policy iteration algorithm.
 
     Arguments
     ---------
