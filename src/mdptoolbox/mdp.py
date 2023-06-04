@@ -1347,19 +1347,19 @@ class ValueIteration(MDP):
 
     """
 
-    def __init__(self, transitions, reward, discount, epsilon=0.01,
-                 max_iter=1000, initial_value=0, skip_check=False):
-        # Initialise a value iteration MDP.
+    def __init__(self, transitions, reward, discount, epsilon=0.01,         
+                 max_iter=1000, initial_value=_np.zeros(1), skip_check=False):     #initial_value=0 -> initial_value=_np.zeros(1) To prevent Error when comparing numpy and integer. 
+        # Initialise a value iteration MDP.         
 
         MDP.__init__(self, transitions, reward, discount, epsilon, max_iter,
                      skip_check=skip_check)
-
+    
         # initialization of optional arguments
-        if initial_value == 0:
+        if len(initial_value) != self.S:            #When initial_value is given as array(numpy), integer and numpy can't be compared. 
+            assert initial_value == _np.zeros(1), "The initial value must be " \
+                "a vector of length S."
             self.V = _np.zeros(self.S)
         else:
-            assert len(initial_value) == self.S, "The initial value must be " \
-                "a vector of length S."
             self.V = _np.array(initial_value).reshape(self.S)
         if self.discount < 1:
             # compute a bound for the number of iterations and update the
